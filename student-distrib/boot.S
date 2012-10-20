@@ -25,7 +25,8 @@ _start:
 
 continue:
 	# Load the GDT
-
+	movl $gdt, gdt_reg+2
+	lgdt gdt_reg
 	# Load CS with the new descriptor value
 	ljmp    $KERNEL_CS, $keep_going
 
@@ -54,3 +55,9 @@ keep_going:
 halt:
 	hlt
 	jmp     halt
+
+gdt_reg:
+	.word 0x3F
+	.long 0x0
+
+gdt_reg_bottom:
