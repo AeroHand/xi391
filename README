@@ -41,7 +41,7 @@ fsdir/
 	filesystem image that contains the rtc device file.
 
 README
-    This file.
+    This file. so meta. << this was added for a git commit and push test
 
 student-distrib/
     This is the directory that contains the source code for your
