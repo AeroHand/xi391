@@ -29,8 +29,14 @@ continue:
 	# the value of the label.
 	movl	$gdt, gdt_reg+2		# gdt_reg+2 <- gdt
 	lgdt	gdt_reg				# Load the GDTR
+
+	# Load the IDT
+	movl	$idt, idt_reg+2		# idt_reg+2 <- idt
+	lidt	idt_reg				# Load the IDTR
+
 	# Load CS with the new descriptor value
 	ljmp    $KERNEL_CS, $keep_going
+	
 
 keep_going:
 	# Set up ESP so we can have an initial stack
@@ -62,7 +68,16 @@ halt:
 	# for the GDT. Thus we make space for a word and a long. We init the long above
 	# with "movl $gdt, gdt_reg+2".
 gdt_reg:
-	.word 0x3F
+	.word 0x003F
 	.long 0x0
 
 gdt_reg_bottom:
+
+	# We put the IDTR here. It holds the 32-bit base address and 16-bit table limit
+	# for the IDT. Thus we make space for a word and a long. We init the long above
+	# with "movl $idt, idt_reg+2".
+idt_reg:
+	.word 0x07FF
+	.long 0x0
+
+idt_reg_bottom:
