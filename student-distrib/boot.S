@@ -25,8 +25,10 @@ _start:
 
 continue:
 	# Load the GDT
-	movl $gdt, gdt_reg+2
-	lgdt gdt_reg
+	# A label (gdt) preceded by a dollar sign results in an immediate operand with
+	# the value of the label.
+	movl	$gdt, gdt_reg+2		# gdt_reg+2 <- gdt
+	lgdt	gdt_reg				# Load the GDTR
 	# Load CS with the new descriptor value
 	ljmp    $KERNEL_CS, $keep_going
 
@@ -56,6 +58,9 @@ halt:
 	hlt
 	jmp     halt
 
+	# We put the GDTR here. It holds the 32-bit base address and 16-bit table limit
+	# for the GDT. Thus we make space for a word and a long. We init the long above
+	# with "movl $gdt, gdt_reg+2".
 gdt_reg:
 	.word 0x3F
 	.long 0x0
