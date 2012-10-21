@@ -7,6 +7,7 @@
 #include "lib.h"
 #include "i8259.h"
 #include "debug.h"
+#include "rtc.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -143,6 +144,12 @@ entry (unsigned long magic, unsigned long addr)
 		ltr(KERNEL_TSS);
 	}
 
+	x = 2;
+	printf("x=%i",x);
+
+	/* Init the RTC before the PIC so that interrupts aren't enabled */
+	rtc_init();
+
 	/* Init the PIC */
 	i8259_init();
 
@@ -151,6 +158,8 @@ entry (unsigned long magic, unsigned long addr)
 
 	/** Initialize keyboard **/
 	enable_irq(1);
+	/** Initialize Slave PIC **/
+	enable_irq(2);
 	/** Initialize RTC **/
 	enable_irq(8);
 
