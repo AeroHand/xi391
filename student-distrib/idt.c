@@ -80,7 +80,9 @@ void exception_XF(){
 }
 
 void general_interruption(){
+	cli();
 	printf("Stop bothering me with your motherfucking unnamed interruptions");
+	sti();
 	send_eoi(1);
 }
 
