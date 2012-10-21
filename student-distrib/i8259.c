@@ -31,6 +31,9 @@ i8259_init(void)
 	/* ICW4 */
 	outb( 0x05, MASTER_8259_PORT + 1 ); /* Set as master */
 	outb( ICW4, SLAVE_8259_PORT  + 1 ); /* Set as slave */
+
+	/** Enable Slave PIC **/
+	enable_irq(2);
 }
 
 /* Enable (unmask) the specified IRQ 

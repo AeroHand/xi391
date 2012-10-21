@@ -149,21 +149,21 @@ entry (unsigned long magic, unsigned long addr)
 	x = 2;
 	printf("x=%i",x);
 
-	/* Init the RTC before the PIC so that interrupts aren't enabled */
-	rtc_init();
-
 	/* Init the PIC */
 	i8259_init();
+
+	/* Init the RTC */
+	rtc_init();
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 
+	/* TODO make a keyboard.c and keyboard.h that contain a keyboard_init.
+	 * This keyboard_init function will essentially just call enable_irq(1);
+	 *  - @robstein
+	 */
 	/** Initialize keyboard **/
 	enable_irq(1);
-	/** Initialize Slave PIC **/
-	enable_irq(2);
-	/** Initialize RTC **/
-	enable_irq(8);
 
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
