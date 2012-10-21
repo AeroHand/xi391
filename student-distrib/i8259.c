@@ -58,7 +58,7 @@ enable_irq(uint32_t irq_num)
 		}
 
 		master_mask = master_mask & mask;
-		outb( master_mask, MASTER_8259_PORT + 1 )
+		outb( master_mask, MASTER_8259_PORT + 1 );
 		return;
 	}
 
@@ -82,7 +82,6 @@ enable_irq(uint32_t irq_num)
  * InActive high!
  */
 void
-void
 disable_irq(uint32_t irq_num)
 {
 	/* Return if irq_num is invalid */
@@ -101,8 +100,8 @@ disable_irq(uint32_t irq_num)
 			mask = (mask << 1);
 		}
 
-		master_mask = master_mask ^ mask;
-		outb( master_mask, MASTER_8259_PORT + 1 )
+		master_mask = master_mask | mask;
+		outb( master_mask, MASTER_8259_PORT + 1 );
 		return;
 	}
 
@@ -115,7 +114,7 @@ disable_irq(uint32_t irq_num)
 			mask = (mask << 1);
 		}
 
-		slave_mask = slave_mask ^ mask;
+		slave_mask = slave_mask | mask;
 		outb( slave_mask, SLAVE_8259_PORT + 1 );
 		return;
 	}
