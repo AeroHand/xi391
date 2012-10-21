@@ -33,40 +33,102 @@ i8259_init(void)
 	outb( ICW4, SLAVE_8259_PORT  + 1 ); /* Set as slave */
 }
 
-/* Enable (unmask) the specified IRQ */
+/* Enable (unmask) the specified IRQ 
+ * Write an 8-bit value corresponding to the mask 
+ * Active low!
+ */
 void
 enable_irq(uint32_t irq_num)
 {
-}
 
-/* Disable (mask) the specified IRQ */
-void
-disable_irq(uint32_t irq_num)
-{
-	/* Ensure irq_num is in proper bounds */
-	if ((irq_num > 7) || (irq_num < 0)) {
+	/* Return if irq_num is invalid */
+	if ((irq_num > 15) || (irq_num < 0)) {
 		return;
 	}
 
-	/* If irq_num is in proper bounds: */
-
 	/* initially mask = 11111110 */
-	uint8_t mask = 0xF7; 
-	/* left circular shift by irq_num */
-	int b;
-	for (b = 0; b < irq_num; b++) {
-		mask = (mask << 1) + 1;
+	uint8_t mask = 0xFE; 
+
+	/**** If irq_num is in master bounds: ****/
+	if ((irq_num >= 0) && (irq_num <= 7)) {
+		/* left circular shift by irq_num */
+		int b;
+		for (b = 0; b < irq_num; b++) {
+			mask = (mask << 1) + 1;
+		}
+
+		master_mask = master_mask & mask;
+		outb( master_mask, MASTER_8259_PORT + 1 )
+		return;
 	}
 
-	/* Write an 8-bit value corresponding to the mask */
-	outb( mask, MASTER_8259_PORT + 1 );
-	outb( mask, SLAVE_8259_PORT  + 1 );
+	/**** If irq_num is in slave bounds: ****/
+	if ((irq_num >= 8) && (irq_num <= 15)) {
+		irq_num -= 8; /* Get irq_num into 0-7 range */
+		/* left circular shift by irq_num */
+		int b;
+		for (b = 0; b < irq_num; b++) {
+			mask = (mask << 1) + 1;
+		}
+
+		slave_mask = slave_mask & mask;
+		outb( slave_mask, SLAVE_8259_PORT + 1 );
+		return;
+	}
+}
+
+/* Disable (mask) the specified IRQ
+ * Write an 8-bit value corresponding to the mask 
+ * InActive high!
+ */
+void
+void
+disable_irq(uint32_t irq_num)
+{
+	/* Return if irq_num is invalid */
+	if ((irq_num > 15) || (irq_num < 0)) {
+		return;
+	}
+
+	/* initially mask = 00000001 */
+	uint8_t mask = 0x01; 
+
+	/**** If irq_num is in master bounds: ****/
+	if ((irq_num >= 0) && (irq_num <= 7)) {
+		/* left circular shift by irq_num */
+		int b;
+		for (b = 0; b < irq_num; b++) {
+			mask = (mask << 1);
+		}
+
+		master_mask = master_mask ^ mask;
+		outb( master_mask, MASTER_8259_PORT + 1 )
+		return;
+	}
+
+	/**** If irq_num is in slave bounds: ****/
+	if ((irq_num >= 8) && (irq_num <= 15)) {
+		irq_num -= 8; /* Get irq_num into 0-7 range */
+		/* left circular shift by irq_num */
+		int b;
+		for (b = 0; b < irq_num; b++) {
+			mask = (mask << 1);
+		}
+
+		slave_mask = slave_mask ^ mask;
+		outb( slave_mask, SLAVE_8259_PORT + 1 );
+		return;
+	}
 }
 
 /* Send end-of-interrupt signal for the specified IRQ */
 void
 send_eoi(uint32_t irq_num)
 {
-	
+	/* FIXME @robstein - I'm pretty sure this is wrong: */
+
+	/* Send eoi to both master and slave */
+	outb( 0x20, MASTER_8259_PORT);
+	outb( 0x20, SLAVE_8259_PORT );
 }
 
