@@ -79,8 +79,13 @@ void exception_XF(){
 }
 
 void general_interruption(){
-	printf("Stop bothering me with your motherfucking unnamed interruptions\n");
+	printf("Stop bothering me with your motherfucking unnamed interruptions");
 }
+
+void keyboard_interruption(){
+	printf("Well congradu-fucku-lations, you pressed the keyboard");
+}
+
 void 
 init_idt (){
 	int index;
@@ -121,4 +126,5 @@ init_idt (){
 	SET_IDT_ENTRY(idt[17], exception_AC);
 	SET_IDT_ENTRY(idt[18], exception_MC);
 	SET_IDT_ENTRY(idt[19], exception_XF);
+	SET_IDT_ENTRY(idt[33], keyboard_interruption);
 }

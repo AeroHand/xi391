@@ -102,7 +102,6 @@ ldt_bottom:
 
 	.word 0 # Padding
 idt_desc_ptr:
-	
 	.word idt_bottom - idt - 1
 	.long idt
 	
