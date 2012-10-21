@@ -7,8 +7,8 @@
 
 /* Interrupt masks to determine which interrupts
  * are enabled and disabled */
-uint8_t master_mask; /* IRQs 0-7 */
-uint8_t slave_mask; /* IRQs 8-15 */
+uint8_t master_mask = 0xFF; /* IRQs 0-7 */
+uint8_t slave_mask = 0xFF; /* IRQs 8-15 */
 
 /* Initialize the 8259 PIC */
 void
@@ -25,7 +25,7 @@ i8259_init(void)
 	outb( ICW2_SLAVE , SLAVE_8259_PORT  + 1 ); /* offset in the IDT */
 	
 	/* ICW3 */
-	outb( ICW3_MASTER, MASTER_8259_PORT + 1 ); /* Slaves attached to IR line 2 */
+	outb( ICW3_MASTER, MASTER_8259_PORT + 1 ); /* Slave attached to IR line 2 */
 	outb( ICW3_SLAVE , SLAVE_8259_PORT  + 1 ); /* This in IR line 2 of master */
 	
 	/* ICW4 */
