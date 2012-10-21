@@ -83,22 +83,21 @@ void general_interruption(){
 	cli();
 	printf("Stop bothering me with your motherfucking unnamed interruptions");
 	sti();
-	send_eoi(1);
 }
 
 void keyboard_interruption(){
 	cli();
 	int scancode = inb(0x60);
 	printf("We got something=%x\n",scancode);
-	sti();
 	send_eoi(1);
+	sti();
 }
 
 void clock_interruption(){
 	cli();
 	printf("Tick Tock Fuck Clocks");
-	sti();
 	send_eoi(8);
+	sti();
 }
 
 void 
