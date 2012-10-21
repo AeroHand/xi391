@@ -8,6 +8,7 @@
 #include "i8259.h"
 #include "debug.h"
 #include "rtc.h"
+#include "keyboard.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -143,8 +144,6 @@ entry (unsigned long magic, unsigned long addr)
 		tss.esp0 = 0x800000;
 		ltr(KERNEL_TSS);
 	}
-	/* Init the RTC before the PIC so that interrupts aren't enabled */
-	//rtc_init();
 
 	/* Init the PIC */
 	i8259_init();
@@ -152,12 +151,12 @@ entry (unsigned long magic, unsigned long addr)
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 
+	/* Init the RTC */
+	rtc_init();
+
 	/** Initialize keyboard **/
-	enable_irq(1);
-	/** Initialize Slave PIC **/
-	//enable_irq(2);
-	/** Initialize RTC **/
-	//enable_irq(8);
+	keyboard_init();
+
 
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your

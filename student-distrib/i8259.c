@@ -10,6 +10,31 @@
 uint8_t master_mask = 0xFF; /* IRQs 0-7 */
 uint8_t slave_mask = 0xFF; /* IRQs 8-15 */
 
+uint8_t master_mask_backup = 0xFF; /* IRQs backup 0-7 */
+uint8_t slave_mask_backup = 0xFF; /* IRQs backup 8-15 */
+
+/* Mask all interrupts */
+void
+mask_all(void)
+{
+	master_mask_backup = master_mask;
+	slave_mask_backup = slave_mask;
+	master_mask = 0xFF;
+	slave_mask = 0xFF;
+	outb( master_mask, MASTER_8259_PORT + 1 );
+	outb( slave_mask , SLAVE_8259_PORT  + 1 );
+}
+
+/* Re-nable all interrupts */
+void
+undo_mask_all(void)
+{
+	master_mask = master_mask_backup;
+	slave_mask = slave_mask_backup;
+	outb( master_mask, MASTER_8259_PORT + 1 );
+	outb( slave_mask , SLAVE_8259_PORT  + 1 );
+}
+
 /* Initialize the 8259 PIC */
 void
 i8259_init(void)
@@ -31,6 +56,9 @@ i8259_init(void)
 	/* ICW4 */
 	outb( 0x05, MASTER_8259_PORT + 1 ); /* Set as master */
 	outb( ICW4, SLAVE_8259_PORT  + 1 ); /* Set as slave */
+
+	/** Enable Slave PIC **/
+	enable_irq(2);
 }
 
 /* Enable (unmask) the specified IRQ 
