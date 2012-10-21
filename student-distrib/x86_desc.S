@@ -9,7 +9,7 @@
 .globl  ldt_size, tss_size
 .globl  gdt_desc, ldt_desc, tss_desc
 .globl  tss, tss_desc_ptr, ldt, ldt_desc_ptr
-.globl  gdt, gdt_ptr
+.globl  gdt_desc_ptr, gdt_ptr
 .globl  idt_desc_ptr, idt
 
 .align 4
@@ -85,6 +85,13 @@ ldt_desc_ptr:
 gdt_bottom:
 
 	.align 16
+
+gdt_desc_ptr:
+	.word gdt_bottom - gdt - 1
+	.long gdt
+	
+
+	.align  16
 ldt:
 	.rept 4
 	.quad 0
