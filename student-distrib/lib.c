@@ -445,9 +445,7 @@ void
 test_interrupts(void)
 {
 	int32_t i;
-	printf("I THINK YOU DONE FUCKED UP!\n");
 	for (i=0; i < NUM_ROWS*NUM_COLS; i++) {
 		video_mem[i<<1]++;
 	}
-	printf("I THINK YOU DONE FUCKED UP!\n");
 }
