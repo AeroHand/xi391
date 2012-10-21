@@ -93,7 +93,9 @@ void keyboard_interruption(){
 }
 
 void clock_interruption(){
+	cli();
 	printf("Tick Tock Fuck Clocks");
+	sti();
 	send_eoi(8);
 }
 
