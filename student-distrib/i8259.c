@@ -134,7 +134,7 @@ send_eoi(uint32_t irq_num)
 	/**** If irq_num is in master bounds: ****/
 
 	if ((irq_num >= 0) && (irq_num <= 7)) {
-		outb( EOI + irq_num, MASTER_8259_PORT);
+		outb( EOI | irq_num, MASTER_8259_PORT);
 	}
 
 	/**** If irq_num is in slave bounds: ****/
