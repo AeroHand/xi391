@@ -85,11 +85,10 @@ void general_interruption(){
 }
 
 void keyboard_interruption(){
-	int x =0;
-	printf("Well congradu-fucku-lations, you pressed the keyboard");
-	x++;
-
-
+	cli();
+	int scancode = inb(0x60);
+	printf("We got something=%x\n",scancode);
+	sti();
 	send_eoi(1);
 }
 
@@ -140,5 +139,5 @@ init_idt (){
 	SET_IDT_ENTRY(idt[18], exception_MC);
 	SET_IDT_ENTRY(idt[19], exception_XF);
 	SET_IDT_ENTRY(idt[33], keyboard_interruption);
-	SET_IDT_ENTRY(idt[40], keyboard_interruption);
+	SET_IDT_ENTRY(idt[40], clock_interruption);
 }

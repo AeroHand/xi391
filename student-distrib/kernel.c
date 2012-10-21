@@ -143,12 +143,8 @@ entry (unsigned long magic, unsigned long addr)
 		tss.esp0 = 0x800000;
 		ltr(KERNEL_TSS);
 	}
-
-	x = 2;
-	printf("x=%i",x);
-
 	/* Init the RTC before the PIC so that interrupts aren't enabled */
-	rtc_init();
+	//rtc_init();
 
 	/* Init the PIC */
 	i8259_init();
@@ -159,9 +155,9 @@ entry (unsigned long magic, unsigned long addr)
 	/** Initialize keyboard **/
 	enable_irq(1);
 	/** Initialize Slave PIC **/
-	enable_irq(2);
+	//enable_irq(2);
 	/** Initialize RTC **/
-	enable_irq(8);
+	//enable_irq(8);
 
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
