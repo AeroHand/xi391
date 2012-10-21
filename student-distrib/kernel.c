@@ -17,8 +17,6 @@
 void
 entry (unsigned long magic, unsigned long addr)
 {
-	int x =2;
-
 	multiboot_info_t *mbi;
 
 	/* Clear the screen. */
@@ -144,9 +142,6 @@ entry (unsigned long magic, unsigned long addr)
 		tss.esp0 = 0x800000;
 		ltr(KERNEL_TSS);
 	}
-
-	x = 2;
-	printf("x=%i",x);
 
 	/* Init the PIC */
 	i8259_init();
