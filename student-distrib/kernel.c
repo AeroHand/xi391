@@ -144,8 +144,6 @@ entry (unsigned long magic, unsigned long addr)
 		ltr(KERNEL_TSS);
 	}
 
-	x = 2;
-	printf("x=%i",x);
 
 	/* Init the PIC */
 	i8259_init();
