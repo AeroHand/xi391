@@ -125,10 +125,13 @@ disable_irq(uint32_t irq_num)
 void
 send_eoi(uint32_t irq_num)
 {
-	/* FIXME @robstein - I'm pretty sure this is wrong: */
-
-	/* Send eoi to both master and slave */
-	outb( 0x20, MASTER_8259_PORT);
-	outb( 0x20, SLAVE_8259_PORT );
+	/**** If irq_num is in master bounds: ****/
+	if ((irq_num >= 0) && (irq_num <= 7)) {
+		outb( EOI + irq_num, MASTER_8259_PORT);
+	}
+	/**** If irq_num is in slave bounds: ****/
+	if ((irq_num >= 8) && (irq_num <= 15)) {
+		outb( EOI + irq_num, SLAVE_8259_PORT );
+	}
 }
 
