@@ -9,7 +9,7 @@ void
 keyboard_init(void) {
 
 	/* Unmask IRQ1 */
-	enable_irq(1);
+	enable_irq(KEYBOARD_IRQ);
 
 }
 

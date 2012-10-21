@@ -2,108 +2,156 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "i8259.h"
+#include "rtc.h"
+#include "keyboard.h"
 
-void exception_DE(){
+/* Divide Error Exception */
+void
+exception_DE(){
 	printf("Divide Error!\n");
 }
 
-void exception_DB(){
+/* Debug Exception */
+void
+exception_DB(){
 	printf("Debug Exception!\n");
 }
 
-void exception_NMI(){
+/* Non Maskable Interrupt Exception */
+void
+exception_NMI(){
 	printf("Non Maskable Interrupt Exception!\n");
 }
 
-void exception_BP(){
+/* Breakpoint Exception */
+void
+exception_BP(){
 	printf("Breakpoint Exception!\n");
 }
 
-void exception_OF(){
+/* Overflow Exception */
+void
+exception_OF(){
 	printf("Overflow Exception!\n");
 }
 
-void exception_BR(){
+/* BOUND Range Exceeded Exception */
+void
+exception_BR(){
 	printf("BOUND Range Exceeded Exception!\n");
 }
 
-void exception_UD(){
+/* Invalid Opcode Exception */
+void
+exception_UD(){
 	printf("Invalid Opcode Exception!\n");
 }
 
-void exception_NM(){
+/* Device Not Available Exception */
+void
+exception_NM(){
 	printf("Device Not Available Exception!\n");
 }
 
-void exception_DF(){
+/* Double Fault Exception */
+void
+exception_DF(){
 	printf("Double Fault Exception!\n");
 }
 
-void exception_CS(){
+/* Coprocessor Segment Exception */
+void
+exception_CS(){
 	printf("Coprocessor Segment Exception!\n");
 }
 
-void exception_TS(){
+/* Invalid TSS Exception */
+void
+exception_TS(){
 	printf("Invalid TSS Exception!\n");
 }
 
-void exception_NP(){
+/* Segment Not Present */
+void
+exception_NP(){
 	printf("Segment Not Present!\n");
 }
 
-void exception_SS(){
+/* Stack Fault Exception */
+void
+exception_SS(){
 	printf("Stack Fault Exception!\n");
 }
 
-void exception_GP(){
+/* General Protection Exception */
+void
+exception_GP(){
 	printf("General Protection Exception!\n");
 }
 
-void exception_PF(){
+/* Page Fault Exception */
+void
+exception_PF(){
 	printf("Page Fault Exception!\n");
 }
 
-void exception_MF(){
-	printf("Floating Point Error\n");
+/* Floating Point Exception */
+void
+exception_MF(){
+	printf("Floating Point Exception!\n");
 }
 
-void exception_AC(){
+/* Alignment Check Exception */
+void
+exception_AC(){
 	printf("Alignment Check Exception!\n");
 }
 
-void exception_MC(){
+/* Machine Check Exception */
+void
+exception_MC(){
 	printf("Machine Check Exception!\n");
 }
 
-void exception_XF(){
+/* SIMD Floating-Point Exception */
+void
+exception_XF(){
 	printf("SIMD Floating-Point Exception!\n");
 }
 
-void general_interruption(){
-	printf("Stop bothering me with your motherfucking unnamed interruptions");
-	send_eoi(1);
+/* Undefined Interrupt */
+void
+general_interruption(){
+	printf("Undefined interruption!");
 }
 
-void keyboard_interruption(){
+/* Keyboard Interrupt */
+void
+keyboard_interruption(){
 	cli();
 	int scancode = inb(0x60);
-	printf("We got something=%x\n",scancode);
+	printf("Keyboard interrupt scan=%x\n",scancode);
 	sti();
-	send_eoi(1);
+	sen
+			d_eoi(KEYBOARD_IRQ);
 }
 
-void clock_interruption(){
-	printf("Tick Tock Fuck Clocks");
-	send_eoi(8);
+/* RTC Interrupt */
+void
+clock_interruption(){
+	printf("\"T
+					ick Tock\" - RTC");
+	send_eoi(RTC_IRQ);
 }
 
+/* Initialize the IDT */
 void 
 init_idt (){
 	int index;
 
     lidt(idt_desc_ptr);
 
-	for(index = 0; index < NUM_VEC ; index++){
+	for(index = 0; index < NUM_VEC; index++){
 		idt[index].present = 0x1;
 		idt[index].dpl = 0x0;
 		idt[index].reserved0 = 0x0;
@@ -112,7 +160,7 @@ init_idt (){
 		idt[index].reserved2 = 0x1;
 		idt[index].reserved3 = 0x1;
 		idt[index].reserved4 = 0x0;
-		idt[index].seg_selector = 0x10;
+		idt[index].seg_selector = KERNEL_CS;
 		if(index >= 32){
 			idt[index].reserved3 = 0x0;
 			SET_IDT_ENTRY(idt[index], general_interruption);

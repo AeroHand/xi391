@@ -13,27 +13,6 @@ uint8_t slave_mask = 0xFF; /* IRQs 8-15 */
 uint8_t master_mask_backup = 0xFF; /* IRQs backup 0-7 */
 uint8_t slave_mask_backup = 0xFF; /* IRQs backup 8-15 */
 
-/* Mask all interrupts */
-void
-mask_all(void)
-{
-	master_mask_backup = master_mask;
-	slave_mask_backup = slave_mask;
-	master_mask = 0xFF;
-	slave_mask = 0xFF;
-	outb( master_mask, MASTER_8259_PORT + 1 );
-	outb( slave_mask , SLAVE_8259_PORT  + 1 );
-}
-
-/* Re-nable all interrupts */
-void
-undo_mask_all(void)
-{
-	master_mask = master_mask_backup;
-	slave_mask = slave_mask_backup;
-	outb( master_mask, MASTER_8259_PORT + 1 );
-	outb( slave_mask , SLAVE_8259_PORT  + 1 );
-}
 
 /* Initialize the 8259 PIC */
 void
@@ -46,16 +25,16 @@ i8259_init(void)
 	outb( ICW1, SLAVE_8259_PORT ); /* Slave port */
 	
 	/* ICW2 */
-	outb( ICW2_MASTER, MASTER_8259_PORT + 1 ); /* offset in the IDT */
-	outb( ICW2_SLAVE , SLAVE_8259_PORT  + 1 ); /* offset in the IDT */
+	outb( ICW2_MASTER, MASTER_8259_PORT + 1 ); 
+	outb( ICW2_SLAVE , SLAVE_8259_PORT  + 1 );
 	
 	/* ICW3 */
-	outb( ICW3_MASTER, MASTER_8259_PORT + 1 ); /* Slave attached to IR line 2 */
-	outb( ICW3_SLAVE , SLAVE_8259_PORT  + 1 ); /* This in IR line 2 of master */
+	outb( ICW3_MASTER, MASTER_8259_PORT + 1 );
+	outb( ICW3_SLAVE , SLAVE_8259_PORT  + 1 );
 	
 	/* ICW4 */
-	outb( 0x05, MASTER_8259_PORT + 1 ); /* Set as master */
-	outb( ICW4, SLAVE_8259_PORT  + 1 ); /* Set as slave */
+	outb( ICW4_MASTER, MASTER_8259_PORT + 1 );
+	outb( ICW4_SLAVE , SLAVE_8259_PORT  + 1 );
 
 	/** Enable Slave PIC **/
 	enable_irq(2);
@@ -165,5 +144,27 @@ send_eoi(uint32_t irq_num)
 		outb( EOI | irq_num, MASTER_8259_PORT);
 	}
 
+}
+
+/* Mask all interrupts */
+void
+mask_all(void)
+{
+	master_mask_backup = master_mask;
+	slave_mask_backup = slave_mask;
+	master_mask = 0xFF;
+	slave_mask = 0xFF;
+	outb( master_mask, MASTER_8259_PORT + 1 );
+	outb( slave_mask , SLAVE_8259_PORT  + 1 );
+}
+
+/* Re-nable all interrupts */
+void
+undo_mask_all(void)
+{
+	master_mask = master_mask_backup;
+	slave_mask = slave_mask_backup;
+	outb( master_mask, MASTER_8259_PORT + 1 );
+	outb( slave_mask , SLAVE_8259_PORT  + 1 );
 }
 
