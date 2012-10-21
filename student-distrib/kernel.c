@@ -151,6 +151,8 @@ entry (unsigned long magic, unsigned long addr)
 
 	/** Initialize keyboard **/
 	enable_irq(1);
+	/** Initialize Slave PIC **/
+	enable_irq(2);
 	/** Initialize RTC **/
 	enable_irq(8);
 
