@@ -86,13 +86,17 @@ void keyboard_interruption(){
 	printf("Well congradu-fucku-lations, you pressed the keyboard");
 }
 
+void clock_interruption(){
+	printf("Tick Tock Fuck Clocks");
+}
+
 void 
 init_idt (){
 	int index;
 
     lidt(idt_desc_ptr);
 
-	for(index = 0; index < 256 ; index++){
+	for(index = 0; index < NUM_VEC ; index++){
 		idt[index].present = 0x1;
 		idt[index].dpl = 0x0;
 		idt[index].reserved0 = 0x0;
@@ -103,6 +107,7 @@ init_idt (){
 		idt[index].reserved4 = 0x0;
 		idt[index].seg_selector = 0x10;
 		if(index >= 32){
+			idt[index].reserved3 = 0x0;
 			SET_IDT_ENTRY(idt[index], general_interruption);
 		}
 	}
@@ -127,4 +132,5 @@ init_idt (){
 	SET_IDT_ENTRY(idt[18], exception_MC);
 	SET_IDT_ENTRY(idt[19], exception_XF);
 	SET_IDT_ENTRY(idt[33], keyboard_interruption);
+	SET_IDT_ENTRY(idt[40], keyboard_interruption);
 }
