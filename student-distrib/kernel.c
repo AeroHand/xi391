@@ -7,6 +7,7 @@
 #include "lib.h"
 #include "i8259.h"
 #include "debug.h"
+#include "rtc.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -147,6 +148,9 @@ entry (unsigned long magic, unsigned long addr)
 
 	x = 2;
 	printf("x=%i",x);
+
+	/* Init the RTC before the PIC so that interrupts aren't enabled */
+	rtc_init();
 
 	/* Init the PIC */
 	i8259_init();
