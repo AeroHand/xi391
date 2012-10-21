@@ -1,6 +1,7 @@
 #include "idt.h"
 #include "x86_desc.h"
 #include "lib.h"
+#include "i8259.h"
 
 void exception_DE(){
 	printf("Divide Error!\n");
@@ -80,14 +81,21 @@ void exception_XF(){
 
 void general_interruption(){
 	printf("Stop bothering me with your motherfucking unnamed interruptions");
+	send_eoi(1);
 }
 
 void keyboard_interruption(){
+	int x =0;
 	printf("Well congradu-fucku-lations, you pressed the keyboard");
+	x++;
+
+
+	send_eoi(1);
 }
 
 void clock_interruption(){
 	printf("Tick Tock Fuck Clocks");
+	send_eoi(8);
 }
 
 void 

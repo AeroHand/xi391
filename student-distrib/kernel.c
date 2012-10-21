@@ -18,8 +18,6 @@
 void
 entry (unsigned long magic, unsigned long addr)
 {
-	int x =2;
-
 	multiboot_info_t *mbi;
 
 	/* Clear the screen. */

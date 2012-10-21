@@ -127,13 +127,24 @@ disable_irq(uint32_t irq_num)
 void
 send_eoi(uint32_t irq_num)
 {
+	if(irq_num >= 8)
+		outb(EOI | irq_num, ICW2_SLAVE);
+ 
+	outb(EOI | irq_num, ICW2_MASTER);
+
 	/**** If irq_num is in master bounds: ****/
+/*
 	if ((irq_num >= 0) && (irq_num <= 7)) {
 		outb( EOI + irq_num, MASTER_8259_PORT);
+		outb( EOI, MASTER_8259_PORT);
 	}
+*/
 	/**** If irq_num is in slave bounds: ****/
+/*	
 	if ((irq_num >= 8) && (irq_num <= 15)) {
 		outb( EOI + irq_num, SLAVE_8259_PORT );
+		outb( EOI, MASTER_8259_PORT);
 	}
+*/
 }
 
