@@ -121,32 +121,34 @@ exception_XF(){
 
 /* Undefined Interrupt */
 void
-general_interruption(){
+general_interruption() {
+	cli();
 	printf("Undefined interruption!");
+	sti();
 }
 
 /* Keyboard Interrupt */
 void
-keyboard_interruption(){
+keyboard_interruption() {
 	cli();
 	int scancode = inb(0x60);
 	printf("Keyboard interrupt scan=%x\n",scancode);
+	send_eoi(KEYBOARD_IRQ);
 	sti();
-	sen
-			d_eoi(KEYBOARD_IRQ);
 }
 
 /* RTC Interrupt */
 void
-clock_interruption(){
-	printf("\"T
-					ick Tock\" - RTC");
+clock_interruption() {
+	cli();
+	printf("\"Tick Tock\" - RTC");
 	send_eoi(RTC_IRQ);
+	sti();
 }
 
 /* Initialize the IDT */
 void 
-init_idt (){
+init_idt () {
 	int index;
 
     lidt(idt_desc_ptr);
