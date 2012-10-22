@@ -40,10 +40,19 @@ continue:
 	call init_idt
 	call init_paging
 
+	# init CR3 (PDBR)
 	movl $initial_space_pde, %eax
+	andl $0xFFFFFFE7, %eax
 	movl %eax, %cr3
-	movl %cr0, %eax
-	orl $0x80000000, %eax  
+
+	# init CR4
+	movl $0, %eax             #movl %cr4, %eax
+	orl $0x00000010, %eax
+	movl %eax, %cr4
+
+	# init CR0
+	movl $0, %eax             #movl %cr0, %eax
+	orl $0x80000001, %eax 	 
 	movl %eax, %cr0
 
 	movl $0, %ecx

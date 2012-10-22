@@ -11,7 +11,7 @@
 .globl  tss, tss_desc_ptr, ldt, ldt_desc_ptr
 .globl  gdt_desc_ptr, gdt_ptr
 .globl  idt_desc_ptr, idt
-.globl  initial_space_pde, kernel_page_pde, page_table
+.globl  initial_space_pde, kernel_page_pde, page_table, remaining_pdes
 
 .align 4
 
@@ -126,6 +126,11 @@ initial_space_pde:
 
 kernel_page_pde:
 	.long 0x0
+
+remaining_pdes:
+	.rept MAX_PAGE_DIRECTORY_SIZE-2
+	.long 0x0
+	.endr
 
 page_directory_bottom:
 
