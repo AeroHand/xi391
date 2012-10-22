@@ -14,9 +14,9 @@ void init_paging
 
 	/* Initialize page table for initial space pages. */
 	for( i = 0; i < MAX_PAGE_TABLE_SIZE; i++ ) {
-		page_table[i].present = 0;
-		if( i == 0xB8 )
-			page_table[i].present = 1;
+		page_table[i].present = 1;
+		if( i == 0 )
+			page_table[i].present = 0;
 		page_table[i].read_write = 0;
 		page_table[i].user_supervisor = 0;
 		page_table[i].write_through = 0;
@@ -72,11 +72,15 @@ void init_paging
 	remaining_pdes[i].page_addr = 2+i;
 	}
 
-	//initial_space_pde.val = (page_table & 0xFFFFF000) | 0x1; // present bit
-	//kernel_page_pde.val = 0x00400000 | 0x80 | 0x1; // address 4MB, page size bit, present bit
-	/*
-	asm volatile (
-	"movl $initial_space_pde, %%cr3   ;"
-	"orl $0x80000000, %%cr0           "
-    : );*/
+	asm (
+	"movl $initial_space_pde, %%eax   ;"
+	"andl $0xFFFFFFE7, %%eax          ;"
+	"movl %%eax, %%cr3                ;"
+	"movl %%cr4, %%eax                ;"
+	"orl $0x00000010, %%eax           ;"
+	"movl %%eax, %%cr4                ;"
+	"movl %%cr0, %%eax                ;"
+	"orl $0x80000000, %%eax 	      ;"
+	"movl %%eax, %%cr0                 "
+	: : : "eax", "cc" );
 }

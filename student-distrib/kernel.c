@@ -10,7 +10,7 @@
 #include "rtc.h"
 #include "keyboard.h"
 #include "interrupthandler.h"
-
+#include "paging.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -152,6 +152,7 @@ entry (unsigned long magic, unsigned long addr)
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
+	init_paging();
 
 	/* Init the RTC */
 	rtc_init();
@@ -168,6 +169,9 @@ entry (unsigned long magic, unsigned long addr)
 	sti();
 
 	/* Execute the first program (`shell') ... */
+
+	int * ptr = NULL;
+	int deref_null_ptr = *ptr;
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
