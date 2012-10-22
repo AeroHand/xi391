@@ -22,6 +22,10 @@
 /* Number of vectors in the interrupt descriptor table (IDT) */
 #define NUM_VEC 256
 
+/* Paging constants. */
+#define MAX_PAGE_DIRECTORY_SIZE  1024
+#define MAX_PAGE_TABLE_SIZE      1024
+
 #ifndef ASM
 
 /* This structure is used to load descriptor base registers
@@ -111,6 +115,65 @@ typedef struct __attribute__((packed)) tss_t {
 	uint16_t io_base_addr;
 } tss_t;
 
+
+/* Page directory entry format for a 4KB page table. */
+typedef union pde_4KB_t {
+	uint32_t val;
+	struct {
+		uint32_t present : 1;
+		uint32_t read_write : 1;
+		uint32_t user_supervisor : 1;
+		uint32_t write_through : 1;
+		uint32_t cache_disabled : 1;
+		uint32_t accessed : 1;
+		uint32_t reserved : 1; /* reserved */
+		uint32_t page_size : 1;
+		uint32_t global : 1;
+		uint32_t avail : 3;
+		uint32_t table_addr : 20;
+	} __attribute__((packed));
+} pde_4KB_t;
+
+/* Page directory entry format for a 4MB page. */
+typedef union pde_4MB_t {
+	uint32_t val;
+	struct {
+		uint32_t present : 1;
+		uint32_t read_write : 1;
+		uint32_t user_supervisor : 1;
+		uint32_t write_through : 1;
+		uint32_t cache_disabled : 1;
+		uint32_t accessed : 1;
+		uint32_t dirty : 1;
+		uint32_t page_size : 1;
+		uint32_t global : 1;
+		uint32_t avail : 3;
+		uint32_t pat : 1;
+		uint32_t reserved : 9; /* reserved */
+		uint32_t page_addr : 10;
+	} __attribute__((packed));
+} pde_4MB_t;
+
+/* Page table entry format for a 4KB page. */
+typedef union pte_4KB_t {
+	uint32_t val;
+	struct {
+		uint32_t present : 1;
+		uint32_t read_write : 1;
+		uint32_t user_supervisor : 1;
+		uint32_t write_through : 1;
+		uint32_t cache_disabled : 1;
+		uint32_t accessed : 1;
+		uint32_t dirty : 1;
+		uint32_t pat : 1;
+		uint32_t global : 1;
+		uint32_t avail : 3;
+		uint32_t page_addr : 20;
+	} __attribute__((packed));
+} pte_4KB_t;
+
+
+
 /* Some external descriptors declared in .S files */
 extern x86_desc_t gdt_desc;
 
@@ -123,6 +186,14 @@ extern uint32_t ldt;
 extern uint32_t tss_size;
 extern seg_desc_t tss_desc_ptr;
 extern tss_t tss;
+
+/* Page directory entries (declared in x86_desc.S) */
+extern pde_4KB_t initial_space_pde;
+extern pde_4MB_t kernel_page_pde;
+
+/* Page table entries (declared in x86_desc.S) */
+extern pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE];
+
 
 /* Sets runtime-settable parameters in the GDT entry for the LDT */
 #define SET_LDT_PARAMS(str, addr, lim) \
@@ -162,7 +233,7 @@ typedef union idt_desc_t {
 	} __attribute__((packed));
 } idt_desc_t;
 
-/* The IDT itself (declared in x86_desc.S */
+/* The IDT itself (declared in x86_desc.S) */
 extern idt_desc_t idt[NUM_VEC];
 /* The descriptor used to load the IDTR */
 extern x86_desc_t idt_desc_ptr;

@@ -38,6 +38,13 @@ continue:
 	push %ecx
 	
 	call init_idt
+	call init_paging
+
+	movl $initial_space_pde, %eax
+	movl %eax, %cr3
+	movl %cr0, %eax
+	orl $0x80000000, %eax  
+	movl %eax, %cr0
 
 	pop %ecx
 	pop %edx

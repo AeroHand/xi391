@@ -11,6 +11,7 @@
 .globl  tss, tss_desc_ptr, ldt, ldt_desc_ptr
 .globl  gdt_desc_ptr, gdt_ptr
 .globl  idt_desc_ptr, idt
+.globl  initial_space_pde, kernel_page_pde, page_table
 
 .align 4
 
@@ -114,3 +115,28 @@ _idt:
 	.endr
 
 idt_bottom:
+
+### The Page Directory ###
+.align 4
+page_directory:
+_page_directory:
+
+initial_space_pde:
+	.long 0x0
+
+kernel_page_pde:
+	.long 0x0
+
+page_directory_bottom:
+
+
+### The Page Table ###
+.align 4
+page_table:
+_page_table:
+
+	.rept MAX_PAGE_TABLE_SIZE
+	.long 0x0
+	.endr
+
+page_table_bottom:
