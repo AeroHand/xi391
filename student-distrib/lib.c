@@ -444,11 +444,8 @@ strncpy(int8_t* dest, const int8_t* src, uint32_t n)
 void
 test_interrupts(void)
 {
-	/*
 	int32_t i;
 	for (i=0; i < NUM_ROWS*NUM_COLS; i++) {
 		video_mem[i<<1]++;
 	}
-	*/
-	printf("I THINK YOU DONE FUCKED UP!\n");
 }

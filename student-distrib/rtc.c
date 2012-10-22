@@ -44,8 +44,11 @@ clock_interruption() {
 	outb(INDEX_REGISTER_C, RTC_PORT);
 	/* We don't even care what it is at this point */
 	inb(CMOS_PORT);
+
 	/* Print a ticker to the screen */
-	printf("Tick tock                                                                       \n");
+	//printf("Tick tock                                                                       \n");
+	/* As specified in the MP3 spec, we call test_interrupts() */
+	test_interrupts();
 
 	/* Send End-of-Interrupt */
 	send_eoi(RTC_IRQ);
