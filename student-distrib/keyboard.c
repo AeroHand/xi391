@@ -28,11 +28,13 @@ keyboard_interruption() {
 
 	do {
 		nowcode= inb(KEYBOARD_PORT);			//Deque the typed character from the keyboard buffer
-		printf("We got tyeped character=  %x                                                    \n",nowcode);
+		//printf("We got tyeped character=  %x                                                    \n",nowcode);
 		newcode= inb(KEYBOARD_STATUS_PORT);		//Check to see if the keyboard buffer is full
-		printf("Buff Status=       %x                                                           \n",newcode);
+		//printf("Buff Status=       %x                                                           \n",newcode);
+		/* As specified in the MP3 spec, we call test_interrupts() */
+		test_interrupts();
 	} while ((newcode & 0x01) != 0x00);			//If the buffer is still full repeat the process unitl the buffer is empty
-		printf("                                                                                \n");
+		//printf("                                                                                \n");
 
 	/* Send End-of-Interrupt */
 	send_eoi(KEYBOARD_IRQ);

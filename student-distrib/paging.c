@@ -1,3 +1,5 @@
+/* paging.c - the paging initialization part of the kernel
+ */
 
 #include "lib.h"
 #include "paging.h"
@@ -82,3 +84,4 @@ void init_paging
 	"movl %%eax, %%cr0                 "
 	: : : "eax", "cc" );
 }
+
