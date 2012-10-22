@@ -128,7 +128,7 @@ kernel_page_pde:
 	.long 0x0
 
 remaining_pdes:
-	.rept MAX_PAGE_DIRECTORY_SIZE-2
+	.rept 1022
 	.long 0x0
 	.endr
 

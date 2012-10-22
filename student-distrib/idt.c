@@ -97,6 +97,7 @@ exception_GP(){
 void
 exception_PF(){
 	printf("Page Fault Exception!\n");
+	while(1){}
 }
 
 /* Floating Point Exception */
