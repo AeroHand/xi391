@@ -7,6 +7,8 @@
 /* Called to initialize keyboard before using it. */
 void keyboard_init(void);
 
+void keyboard_interruption(void);
+
 #endif
 
 
