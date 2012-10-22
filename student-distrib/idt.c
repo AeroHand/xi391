@@ -155,9 +155,11 @@ keyboard_interruption() {
 void
 clock_interruption() {
 	cli();
-	printf("Tick Tock Fuck Clocks");
+	out(INDEX_REGISTER_C, RTC_PORT);
+	in(CMOS_PORT);
+	printf("Tic tok");
 	sti();
-	send_eoi(8);
+	send_eoi(RTC_IRQ);
 }
 
 /* Initialize the IDT */

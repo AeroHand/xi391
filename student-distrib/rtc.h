@@ -22,9 +22,10 @@
 
 #define RTC_PORT		0x70
 #define CMOS_PORT		0x71
-#define INDEX_REGISTER_A	0x8A
-#define	INDEX_REGISTER_B	0x8B
-#define ENABLE_PIE		0xDE
+#define INDEX_REGISTER_A	0x0A
+#define	INDEX_REGISTER_B	0x0B
+#define	INDEX_REGISTER_C	0x0C
+#define ENABLE_PIE		0x30
 #define SET_FREQ_1028_HZ	0x26
 
 #define RTC_IRQ			8
