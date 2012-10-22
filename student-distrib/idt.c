@@ -5,6 +5,8 @@
 #include "rtc.h"
 #include "keyboard.h"
 
+#include "interrupthandler.h"
+
 /* Divide Error Exception */
 void
 exception_DE(){
@@ -131,19 +133,31 @@ general_interruption() {
 void
 keyboard_interruption() {
 	cli();
-	int scancode = inb(0x60);
-	printf("Keyboard interrupt scan=%x\n",scancode);
-	send_eoi(KEYBOARD_IRQ);
+	
+	int nowcode;
+	int newcode;
+	
+	do{
+		newcode= inb(0x64);
+		printf("Buff Status=  %x                           \n",newcode);
+		nowcode= inb(0x60);
+		printf("We got something=  %x                      \n",nowcode);
+		newcode= inb(0x64);
+		printf("Buff Status=  %x                           \n",newcode);
+	}while((newcode & 0x01) != 0x0);
+		printf("finish                                     \n");
+	send_eoi(1);
 	sti();
+	
 }
 
 /* RTC Interrupt */
 void
 clock_interruption() {
 	cli();
-	printf("\"Tick Tock\" - RTC");
-	send_eoi(RTC_IRQ);
+	printf("Tick Tock Fuck Clocks");
 	sti();
+	send_eoi(8);
 }
 
 /* Initialize the IDT */
@@ -188,6 +202,7 @@ init_idt () {
 	SET_IDT_ENTRY(idt[17], exception_AC);
 	SET_IDT_ENTRY(idt[18], exception_MC);
 	SET_IDT_ENTRY(idt[19], exception_XF);
-	SET_IDT_ENTRY(idt[33], keyboard_interruption);
-	SET_IDT_ENTRY(idt[40], clock_interruption);
+	SET_IDT_ENTRY(idt[33], keyboard_handler);
+	SET_IDT_ENTRY(idt[40], clock_handler);
 }
+
