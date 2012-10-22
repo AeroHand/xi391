@@ -1,3 +1,5 @@
+
+#include "lib.h"
 #include "paging.h"
 
 void init_paging
@@ -7,6 +9,7 @@ void init_paging
 {
 	int i;
 	int asdf;
+	printf("AAAA");
 
 	/* Initialize page table for initial space pages. */
 	for( i = 0; i < MAX_PAGE_TABLE_SIZE; i++ ) {
@@ -21,9 +24,6 @@ void init_paging
 		page_table[i].global = 0;
 		page_table[i].avail = 0;
 		page_table[i].page_addr = i;
-
-
-		//initial_space_ptes[i].val = (i << 12) | 0x1; // present bit
 	}
 
 	/* Initialize page directory. */

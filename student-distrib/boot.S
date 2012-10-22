@@ -46,6 +46,8 @@ continue:
 	orl $0x80000000, %eax  
 	movl %eax, %cr0
 
+	movl $0, %ecx
+
 	pop %ecx
 	pop %edx
 	pop %eax

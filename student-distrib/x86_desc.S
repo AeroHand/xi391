@@ -117,7 +117,7 @@ _idt:
 idt_bottom:
 
 ### The Page Directory ###
-.align 4
+.align 0x1000
 page_directory:
 _page_directory:
 
@@ -131,7 +131,7 @@ page_directory_bottom:
 
 
 ### The Page Table ###
-.align 4
+.align 0x1000
 page_table:
 _page_table:
 
