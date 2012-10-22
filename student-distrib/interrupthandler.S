@@ -9,6 +9,11 @@
 .global timer_chip_handler
 
 # Interrupt handler must have use an assembly wrapper because it's an interrupt!
+# The most important instruction that this code contains is the iret command
+# This iret command returns the instruction pointer back to the interrupted program
+# This couldn't be done in C code as inline assembly because the iret line would have to 
+# come before the C functions leave and ret command, thereby rendering it useless
+
 keyboard_handler:
 	pushl %ebp
 	pushl %eax
@@ -31,6 +36,11 @@ keyboard_handler:
 	iret
 
 # Interrupt handler must have use an assembly wrapper because it's an interrupt!
+# The most important instruction that this code contains is the iret command
+# This iret command returns the instruction pointer back to the interrupted program
+# This couldn't be done in C code as inline assembly because the iret line would have to 
+# come before the C functions leave and ret command, thereby rendering it useless
+
 clock_handler:
 	pushl %ebp
 	pushl %eax

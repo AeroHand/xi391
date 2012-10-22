@@ -25,15 +25,13 @@ keyboard_interruption() {
 	int nowcode;
 	int newcode;
 	
-	/* TODO write explanation */
+
 	do {
-		newcode= inb(KEYBOARD_STATUS_PORT);
+		nowcode= inb(KEYBOARD_PORT);			//Deque the typed character from the keyboard buffer
+		printf("We got tyeped character=  %x                                                    \n",nowcode);
+		newcode= inb(KEYBOARD_STATUS_PORT);		//Check to see if the keyboard buffer is full
 		printf("Buff Status=       %x                                                           \n",newcode);
-		nowcode= inb(KEYBOARD_PORT);
-		printf("We got something=  %x                                                           \n",nowcode);
-		newcode= inb(KEYBOARD_STATUS_PORT);
-		printf("Buff Status=       %x                                                           \n",newcode);
-	} while ((newcode & 0x01) != 0x00);
+	} while ((newcode & 0x01) != 0x00);			//If the buffer is still full repeat the process unitl the buffer is empty
 		printf("                                                                                \n");
 
 	/* Send End-of-Interrupt */
