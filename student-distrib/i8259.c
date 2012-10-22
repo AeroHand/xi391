@@ -146,6 +146,7 @@ send_eoi(uint32_t irq_num)
 
 }
 
+/*** These two functions are not needed! They were used once for testing: ***/
 /* Mask all interrupts */
 void
 mask_all(void)
@@ -157,7 +158,6 @@ mask_all(void)
 	outb( master_mask, MASTER_8259_PORT + 1 );
 	outb( slave_mask , SLAVE_8259_PORT  + 1 );
 }
-
 /* Re-nable all interrupts */
 void
 undo_mask_all(void)

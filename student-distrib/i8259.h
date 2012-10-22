@@ -15,7 +15,7 @@
 /* Initialization control words to init each PIC.
  * See the Intel manuals for details on the meaning
  * of each word */
-#define ICW1    0x11
+#define ICW1          0x11
 #define ICW2_MASTER   0x20
 #define ICW2_SLAVE    0x28
 #define ICW3_MASTER   0x04
@@ -26,7 +26,7 @@
 /* End-of-interrupt byte.  This gets OR'd with
  * the interrupt number and sent out to the PIC
  * to declare the interrupt finished */
-#define EOI             0x60
+#define EOI           0x60
 
 /* Externally-visible functions */
 
@@ -42,4 +42,6 @@ void send_eoi(uint32_t irq_num);
 void mask_all(void);
 /* Return mask to previous (unmasked) state. */
 void undo_mask_all(void);
+
 #endif /* _I8259_H */
+

@@ -1,10 +1,12 @@
+/* idt.c - the idt config part of the kernel
+ */
+
 #include "idt.h"
 #include "x86_desc.h"
 #include "lib.h"
 #include "i8259.h"
 #include "rtc.h"
 #include "keyboard.h"
-
 #include "interrupthandler.h"
 
 /* Divide Error Exception */

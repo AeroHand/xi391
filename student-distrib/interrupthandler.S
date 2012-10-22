@@ -1,5 +1,6 @@
-#define ASM	1
+# interrupthandler.S - Set up interrupt handler assembly wrappers
 
+#define ASM	1
 #include "x86_desc.h"
 
 
@@ -7,6 +8,7 @@
 .global clock_handler
 .global timer_chip_handler
 
+# Interrupt handler must have use an assembly wrapper because it's an interrupt!
 keyboard_handler:
 	pushl %ebp
 	pushl %eax
@@ -28,6 +30,7 @@ keyboard_handler:
 
 	iret
 
+# Interrupt handler must have use an assembly wrapper because it's an interrupt!
 clock_handler:
 	pushl %ebp
 	pushl %eax
@@ -48,3 +51,4 @@ clock_handler:
 	popl %ebp
 
 	iret
+
