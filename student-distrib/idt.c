@@ -129,17 +129,6 @@ general_interruption() {
 	sti();
 }
 
-/* RTC Interrupt */
-void
-clock_interruption() {
-	cli();
-	out(INDEX_REGISTER_C, RTC_PORT);
-	in(CMOS_PORT);
-	printf("Tic tok");
-	sti();
-	send_eoi(RTC_IRQ);
-}
-
 /* Initialize the IDT */
 void 
 init_idt () {

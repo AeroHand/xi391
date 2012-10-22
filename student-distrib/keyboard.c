@@ -21,16 +21,17 @@ keyboard_interruption() {
 	int nowcode;
 	int newcode;
 	
-	do{
+	do {
 		newcode= inb(0x64);
-		printf("Buff Status=  %x                           \n",newcode);
+		printf("Buff Status=       %x                      \n",newcode);
 		nowcode= inb(0x60);
 		printf("We got something=  %x                      \n",nowcode);
 		newcode= inb(0x64);
-		printf("Buff Status=  %x                           \n",newcode);
-	}while((newcode & 0x01) != 0x0);
+		printf("Buff Status=       %x                      \n",newcode);
+	} while ((newcode & 0x01) != 0x0);
 		printf("finish                                     \n");
-	send_eoi(1);
+
+	send_eoi(KEYBOARD_IRQ);
 	sti();
 	
 }

@@ -140,8 +140,8 @@ send_eoi(uint32_t irq_num)
 	/**** If irq_num is in slave bounds: ****/
 
 	if ((irq_num >= 8) && (irq_num <= 15)) {
-		outb( EOI | irq_num, SLAVE_8259_PORT );
-		outb( EOI | irq_num, MASTER_8259_PORT);
+		outb( EOI | (irq_num - 8), SLAVE_8259_PORT );
+		outb( EOI + 2, MASTER_8259_PORT);
 	}
 
 }

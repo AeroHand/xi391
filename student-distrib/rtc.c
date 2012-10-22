@@ -19,20 +19,21 @@ rtc_init(void) {
 	 * set B[1] to 1 - enable 24 hour mode
 	 */
 
-	/* Mask all interrupts? */
-
-	cli();
-
 	outb(INDEX_REGISTER_A, RTC_PORT);
-	uint32_t a_old = inb(CMOS_PORT);
+	unsigned char a_old = inb(CMOS_PORT);
 	outb(INDEX_REGISTER_B, RTC_PORT);
-	uint32_t b_old = inb(CMOS_PORT);
+	unsigned char b_old = inb(CMOS_PORT);
 
 	outb(INDEX_REGISTER_A, RTC_PORT);
-	outb((0x80 & a_old) | 0x26, CMOS_PORT);
+	outb((0x80 & a_old) | 0x2F, CMOS_PORT);
 
 	outb(INDEX_REGISTER_B, RTC_PORT);
 	outb((0x8F & b_old) | 0x40, CMOS_PORT);
+
+	/* Unmask RTC */
+	enable_irq(RTC_IRQ);
+
+	/* Here Initialze the time and calendar and stuff? */
 
 	/* select rtc register B and disable NMI by setting the 7th bit */
 	// outb(INDEX_REGISTER_B, RTC_PORT);
@@ -43,14 +44,19 @@ rtc_init(void) {
 	/* Set RS[3:0]=0110 and stuff (0x26 = 00100110) */
 	// outb(SET_FREQ_1028_HZ, CMOS_PORT);
 
-	/* Here Initialze the time and calendar and stuff? */
-
-	sti();
-	
-	/* Unmask RTC */
-	enable_irq(RTC_IRQ);
-
-
 }
 
+/* RTC Interrupt */
+void
+clock_interruption() {
+	cli();
+
+	outb(INDEX_REGISTER_C, RTC_PORT);
+	inb(CMOS_PORT);
+	printf("Tik tok");
+
+	send_eoi(RTC_IRQ);
+	
+	sti();
+}
 
