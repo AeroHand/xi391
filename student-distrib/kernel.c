@@ -9,6 +9,8 @@
 #include "debug.h"
 #include "rtc.h"
 #include "keyboard.h"
+#include "interrupthandler.h"
+
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
