@@ -2,21 +2,18 @@
 #include "lib.h"
 #include "paging.h"
 
-#define VIDEO 0xB8000
-
 void init_paging
 	(
 	void
 	)
 {
 	int i;
-	int asdf;
+	int page_table_holder;
 
 	/* Initialize page table for initial space pages. */
+	/* Set all to present except for the page at address 0. */
 	for( i = 0; i < MAX_PAGE_TABLE_SIZE; i++ ) {
-		page_table[i].present = 1;
-		if( i == 0 )
-			page_table[i].present = 0;
+		page_table[i].present = (i == 0) ? 0 : 1;
 		page_table[i].read_write = 0;
 		page_table[i].user_supervisor = 0;
 		page_table[i].write_through = 0;
@@ -30,7 +27,7 @@ void init_paging
 	}
 
 	/* Initialize first page directory entry. */
-	asdf = (int)page_table;
+	page_table_holder = (int)page_table;
 	initial_space_pde.present = 1;
 	initial_space_pde.read_write = 0;
 	initial_space_pde.user_supervisor = 0;
@@ -40,7 +37,7 @@ void init_paging
 	initial_space_pde.page_size = 0;
 	initial_space_pde.global = 0;
 	initial_space_pde.avail = 0;
-	initial_space_pde.table_addr = asdf >> 12;
+	initial_space_pde.table_addr = page_table_holder >> 12;
 
 	/* Initialize the kernel page directory entry. */
 	kernel_page_pde.present = 1;
@@ -72,6 +69,7 @@ void init_paging
 	remaining_pdes[i].page_addr = 2+i;
 	}
 
+	/* Set control registers to enable paging correctly. */
 	asm (
 	"movl $initial_space_pde, %%eax   ;"
 	"andl $0xFFFFFFE7, %%eax          ;"

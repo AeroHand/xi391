@@ -170,6 +170,7 @@ entry (unsigned long magic, unsigned long addr)
 
 	/* Execute the first program (`shell') ... */
 
+	/* NULL test: dereferencing a NULL pointer. */
 	int * ptr = NULL;
 	int deref_null_ptr = *ptr;
 
