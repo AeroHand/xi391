@@ -9,8 +9,6 @@
 #define RTC_MINUTES_ALARM       3
 #define RTC_HOURS               4
 #define RTC_HOURS_ALARM         5
-
-#define RTC_ALARM_DONT_CARE    0xC0
  
 #define RTC_DAY_OF_WEEK         6
 #define RTC_DAY_OF_MONTH        7
@@ -22,6 +20,14 @@
 #define RTC_REG_C               12
 #define RTC_REG_D               13
 
+#define RTC_PORT		0x70
+#define CMOS_PORT		0x71
+#define INDEX_REGISTER_A	0x8A
+#define	INDEX_REGISTER_B	0x8B
+#define ENABLE_PIE		0xDE
+#define SET_FREQ_1028_HZ	0x26
+
+#define RTC_IRQ			8
 
 /* Called to initialize RTC before using it. */
 void rtc_init(void);

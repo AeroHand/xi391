@@ -22,17 +22,17 @@ rtc_init(void) {
 	/* Mask all interrupts? */
 
 	/* select rtc register B and disable NMI by setting the 7th bit */
-	outb(0x8B, 0x70);
-	/* Set PIE=1 and stuff */
-	outb(0xDE, 0x71);
+	outb(INDEX_REGISTER_B, RTC_PORT);
+	/* Set PIE=1 and stuff (0xDE = 11011110) */
+	outb(ENABLE_PIE, CMOS_PORT);
 	/* select rtc register A and disable NMI by setting the 7th bit */
-	outb(0x8A, 0x70);
-	/* Set RS[3:0]=0110 and stuff */
-	outb(0x26, 0x71);
+	outb(INDEX_REGISTER_A, RTC_PORT);
+	/* Set RS[3:0]=0110 and stuff (0x26 = 00100110) */
+	outb(SET_FREQ_1028_HZ, CMOS_PORT);
 
 	/* Here Initialze the time and calendar and stuff? */
 	/* Here set B[7] (SET) back to 0? */
 
 	/* Unmask RTC */
-	enable_irq(8);
+	enable_irq(RTC_IRQ);
 }
