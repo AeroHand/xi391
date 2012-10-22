@@ -21,6 +21,7 @@ rtc_init(void) {
 
 	/* Mask all interrupts? */
 
+	cli();
 	/* select rtc register B and disable NMI by setting the 7th bit */
 	outb(INDEX_REGISTER_B, RTC_PORT);
 	/* Set PIE=1 and stuff (0xDE = 11011110) */
@@ -31,8 +32,10 @@ rtc_init(void) {
 	outb(SET_FREQ_1028_HZ, CMOS_PORT);
 
 	/* Here Initialze the time and calendar and stuff? */
-	/* Here set B[7] (SET) back to 0? */
+	outb(INDEX_REGISTER_B, RTC_PORT);
 
+	sti();
+	
 	/* Unmask RTC */
 	enable_irq(RTC_IRQ);
 }
