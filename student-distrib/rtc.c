@@ -48,7 +48,7 @@ clock_interruption() {
 	/* Print a ticker to the screen */
 	//printf("Tick tock                                                                       \n");
 	/* As specified in the MP3 spec, we call test_interrupts() */
-	test_interrupts();
+	//test_interrupts();
 
 	/* Send End-of-Interrupt */
 	send_eoi(RTC_IRQ);
