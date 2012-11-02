@@ -11,6 +11,7 @@
 #include "keyboard.h"
 #include "interrupthandler.h"
 #include "paging.h"
+#include "files.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -153,6 +154,9 @@ entry (unsigned long magic, unsigned long addr)
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 	init_paging();
+	
+	module_t* module = (module_t*)mbi->mods_addr;
+	filesystem_init( module->mod_start, module->mod_end );
 
 	/* Init the RTC */
 	rtc_init();

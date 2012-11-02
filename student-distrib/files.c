@@ -6,35 +6,51 @@
 
 
 
-/* 
- * The format of the file system statistics provided at the beginning of
- * the boot block.
- */
-typedef struct 
-{
-	uint32_t num_dentries;
-	uint32_t num_inodes;
-	uint32_t num_datablocks;
-	uint8_t  reserved[52];
-} fs_stats_t;
+/* The array of directory entries for the file system. */
+//dentry_t fs_dentries[MAX_NUM_FS_DENTRIES];
+dentry_t * fs_dentries;
+
+/* The statistics for the file system provided by the boot block. */
+fs_stats_t fs_stats;
+
+/* The address of the boot block. */
+uint32_t bb_start;
+
+/* The array of inodes. */
+inode_t * inodes;
+
+/* The address of the first data block. */
+uint32_t data_start;
+
+
 
 /*
- * The format of a file system directory entry.
+ * filesystem_init()
+ * Initializes global variables associated with the file system.
  */
-typedef struct 
+void filesystem_init
+	(
+	uint32_t fs_start,
+	uint32_t fs_end
+	)
 {
-	uint8_t  filename[32];
-	uint32_t filetype;
-	uint32_t inode;
-	uint8_t  reserved[24];
-} dentry_t;
+/* Set the location of the boot block. */
+bb_start = fs_start;
+
+/* Set the location of the array of inodes. */
+inodes = (inode_t *)(bb_start + FS_PAGE_SIZE);
+
+/* Set the location of the first data block. */
+data_start = bb_start + (fs_stats.num_inodes+1)*FS_PAGE_SIZE;
+
+/* Populate the fs_stats variable with the filesystem statistics. */
+memcpy( &fs_stats, (void *)bb_start, 64 );
+
+/* Set the location of the directory entries array. */
+fs_dentries = (dentry_t *)(bb_start + 64);
 
 
-
-/* The array of directory entries for the file system. */
-dentry_t fs_dentries[MAX_NUM_FS_DENTRIES];
-
-
+}
 
 /*
  * read_dentry_by_name()
@@ -52,14 +68,19 @@ int32_t read_dentry_by_name
 	      dentry_t * dentry 
 	)
 {
+/* Local variables. */
 int i;
+int8_t * new_fname;
+
+/* Convert the file name to a type compatible with lib functions. */
+new_fname = (int8_t *)fname;
 
 /* Find the entry in the array. */
 for( i = 0; i < MAX_NUM_FS_DENTRIES; i++ ) 
 	{
-	if( strlen( fs_dentries[i].filename ) == strlen( fname ) ) 
+	if( strlen( fs_dentries[i].filename ) == strlen( new_fname ) ) 
 		{
-		if( 0 == strncmp(fs_dentries[i].filename, fname, strlen( fname ) ) ) 
+		if( 0 == strncmp( fs_dentries[i].filename, new_fname, strlen( new_fname ) ) ) 
 			{
 			/* Found it! Copy the data into 'dentry'. */
 			strcpy( dentry->filename, fs_dentries[i].filename );
@@ -127,5 +148,72 @@ int32_t read_data
 	uint32_t  length 
 	)
 {
+/* Local variables. */
+uint32_t  total_successful_reads;
+uint32_t  successful_reads_within_block;
+uint32_t  cur_data_block;
+uint32_t  valid_data_blocks;
+uint32_t  i;
+uint32_t  j;
+uint8_t * read_addr;
+
+/* Initializations. */
+total_successful_reads = 0;
+successful_reads_within_block = 0;
+cur_data_block = 0;
+i = 0;
+j = 0;
+
+/* Check for an invalid inode number. */
+if( inode < 0 || inode >= fs_stats.num_inodes )
+	{
+	return -1;
+	}
+
+/* [Check for a "bad data block number" somehow?] */
+/* This may need to happen elsewhere. */
+
+/* 
+ * read_addr and valid_data_blocks need to be initialized here
+ * once we know that 'inode' is a valid inode number.
+ */
+ 
+/* Calculate the address to start reading from. */
+read_addr = (uint8_t *)(data_start + (inodes[inode].data_blocks[cur_data_block])*FS_PAGE_SIZE + offset);
+
+/* Calculate the number of valid data blocks. */
+if( inodes[inode].size % FS_PAGE_SIZE == 0 )
+	{
+	valid_data_blocks = inodes[inode].size/FS_PAGE_SIZE;
+	}
+else
+	{
+	valid_data_blocks = inodes[inode].size/FS_PAGE_SIZE + 1;
+	}
+
+/* Read all the data. */
+while( total_successful_reads < length )
+	{
+	if( successful_reads_within_block == FS_PAGE_SIZE )
+		{
+		/* Move to the next data block. */
+		cur_data_block++;
+		if( cur_data_block >= valid_data_blocks )
+			{
+			return -1;
+			}
+		read_addr = (uint8_t *)(data_start + (inodes[inode].data_blocks[cur_data_block])*FS_PAGE_SIZE);
+		j = 0;
+		}
+	/* Read a byte. */
+	buf[i] = read_addr[j];
+	i++;
+	j++;
+	successful_reads_within_block++;
+	total_successful_reads++;
+	read_addr++;
+	}
+
+return total_successful_reads;
 }
 
