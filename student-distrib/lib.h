@@ -6,6 +6,10 @@
 #define _LIB_H
 
 #include "types.h"
+#define VIDEO 0xB8000
+#define NUM_COLS 80
+#define NUM_ROWS 25
+#define ATTRIB 0x7
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
@@ -28,7 +32,7 @@ void test_interrupts(void);
 /* Extra functions */
 void delc(void);
 void swap(void* item1, void* item2);
-void jump_to_start(void);
+void jump_to_start(int y);
 void placec(uint8_t c);
 
 /* Userspace address-check functions */
