@@ -12,6 +12,7 @@
 #include "interrupthandler.h"
 #include "paging.h"
 #include "files.h"
+#include "tests.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -172,15 +173,14 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
+	int test_result = test();
+	if(test_result == 1) {
+		printf("tests successful\n");
+	} else {
+		printf("tests failed\n");
+	}
+	
 	/* Execute the first program (`shell') ... */
-
-	/* NULL test: dereferencing a NULL pointer. */
-	//int * ptr1 = 0x0000000;
-	//int * ptr2 = 0x8000000;
-	//int deref_ptr = *ptr;
-
-	/* DIVDE test: dividing by 0. */
-	//int a = 1/0;
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
