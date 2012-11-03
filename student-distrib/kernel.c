@@ -173,7 +173,8 @@ entry (unsigned long magic, unsigned long addr)
 	sti();
 
 	/* Execute the first program (`shell') ... */
-
+	files_test();
+	
 	/* NULL test: dereferencing a NULL pointer. */
 	//int * ptr = NULL;
 	//int deref_null_ptr = *ptr;
