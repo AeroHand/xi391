@@ -11,6 +11,8 @@
 #include "keyboard.h"
 #include "interrupthandler.h"
 #include "paging.h"
+#include "files.h"
+#include "tests.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -153,9 +155,12 @@ entry (unsigned long magic, unsigned long addr)
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 	init_paging();
+	
+	module_t* module = (module_t*)mbi->mods_addr;
+	filesystem_init( module->mod_start, module->mod_end );
 
 	/* Init the RTC */
-	rtc_init();
+	rtc_open();
 
 	/** Initialize keyboard **/
 	keyboard_init();
@@ -168,11 +173,14 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
+	int test_result = test();
+	if(test_result == 1) {
+		printf("tests successful\n");
+	} else {
+		printf("tests failed\n");
+	}
+	
 	/* Execute the first program (`shell') ... */
-
-	/* NULL test: dereferencing a NULL pointer. */
-	//int * ptr = NULL;
-	//int deref_null_ptr = *ptr;
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
