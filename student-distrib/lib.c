@@ -3,10 +3,7 @@
  */
 
 #include "lib.h"
-#define VIDEO 0xB8000
-#define NUM_COLS 80
-#define NUM_ROWS 25
-#define ATTRIB 0x7
+
 
 static int screen_x;
 static int screen_y;
@@ -23,10 +20,10 @@ clear(void)
 }
 
 void
-jump_to_start(void)
+jump_to_start(int y)
 {
 	screen_x = 0;
-	screen_y = 0;
+	screen_y = y;
 }
 
 /* Standard printf().
