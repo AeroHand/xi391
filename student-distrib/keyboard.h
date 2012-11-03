@@ -10,10 +10,14 @@
 /*** irq constant ***/
 #define KEYBOARD_IRQ		1
 
+#define TERMINAL_BUFFER_MAX_SIZE   1024
+
 /* Called to initialize keyboard before using it. */
 void keyboard_init(void);
 /* Keyboard Interrupt */
 void keyboard_interruption(void);
+
+
 
 #endif
 

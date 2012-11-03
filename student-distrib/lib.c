@@ -22,6 +22,13 @@ clear(void)
     }
 }
 
+void
+jump_to_start(void)
+{
+	screen_x = 0;
+	screen_y = 0;
+}
+
 /* Standard printf().
  * Only supports the following format strings:
  * %%  - print a literal '%' character
@@ -176,6 +183,41 @@ putc(uint8_t c)
         screen_x++;
         screen_x %= NUM_COLS;
         screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+    }
+}
+
+/*
+ * delc()
+ * Deletes the character on the screen at location (screen_x,screen_y) and
+ * adjusts (screen_x,screen_y) to point to the previous location.
+ */
+void
+delc(void)
+{
+    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = ' ';
+    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
+	if( screen_x == 0 ) {
+		if( screen_y == 0 ) {
+			return;
+		}
+		screen_x = NUM_COLS - 1;
+		screen_y--;
+	}
+	else {
+		screen_x--;
+	}
+}
+
+void
+placec(uint8_t c)
+{
+    if(c == '\n' || c == '\r') {
+        screen_y++;
+        screen_x=0;
+    } else {
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
+		/* No screen_x or screen_y adjustment. */
     }
 }
 
@@ -450,3 +492,18 @@ test_interrupts(void)
 	}
 }
 
+void 
+swap(void* item1, void* item2)
+{
+	/* Currently supports character swapping. */
+	unsigned char * a;
+	unsigned char * b;
+	unsigned char temp;
+	
+	a = (unsigned char *)item1;
+	b = (unsigned char *)item2;
+	
+	temp = *a;
+	*a = *b;
+	*b = temp;
+}

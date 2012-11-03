@@ -44,7 +44,7 @@ clock_interruption(void) {
 	inb(CMOS_PORT);
 
 	/* As specified in the MP3 spec, we call test_interrupts() */
-	test_interrupts();
+	//test_interrupts();
 
 	/* Send End-of-Interrupt */
 	send_eoi(RTC_IRQ);
