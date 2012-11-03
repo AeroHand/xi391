@@ -46,11 +46,12 @@ test_rtc_open() {
 }
 
 int
-test_rtc_read_spam() {
+test_rtc_read_spam(int n) {
 	int number_of_successes = 0;
-	while(number_of_successes < 3) {
+	while(number_of_successes < n) {
 		rtc_read();
-		printf("rtc_read success.\n");
+		// printf("rtc_read success.\n");
+		test_interrupts();
 		number_of_successes++;
 	}
 	return 1;
@@ -77,7 +78,8 @@ test() {
 	// score &= test_dereference_nonnull_ptr();
 	// score &= test_divide_by_zero();
 
-	/* MP3.2 Test rtc */
+	/* MP3.2 Test RTC */
+	/** RTC Open/close **/
 	printf("closing rtc (should pass)... ");
 	score &= !test_rtc_close();
 	printf("closing rtc again (should fail)... ");
@@ -86,19 +88,51 @@ test() {
 	score &= !test_rtc_open();
 	printf("opening rtc again (should fail)... ");
 	score &= (test_rtc_open() < 0);
+	/** RTC Read **/
 	printf("testing read on interrupts thrice (should pass):\n");
-	score &= test_rtc_read_spam();
-	printf("testing set freq 8hz (should pass)... ");
+	score &= test_rtc_read_spam(10);
+	/** RTC Write **/
+	printf("testing set freq 4hz (should pass)... ");
+	score &= !test_rtc_write_freq(4);
+	score &= test_rtc_read_spam(20);
+	printf("testing set freq 8hz (should fail)... ");
 	score &= !test_rtc_write_freq(8);
+	score &= test_rtc_read_spam(40);
+	printf("testing set freq 16hz (should pass)... ");
+	score &= !test_rtc_write_freq(16);
+	score &= test_rtc_read_spam(80);
+	printf("testing set freq 32hz (should fail)... ");
+	score &= !test_rtc_write_freq(32);
+	score &= test_rtc_read_spam(160);
+	printf("testing set freq 64hz (should pass)... ");
+	score &= !test_rtc_write_freq(64);
+	score &= test_rtc_read_spam(320);
+	printf("testing set freq 128hz (should fail)... ");
+	score &= !test_rtc_write_freq(128);
+	score &= test_rtc_read_spam(640);
+	printf("testing set freq 256hz (should pass)... ");
+	score &= !test_rtc_write_freq(256);
+	score &= test_rtc_read_spam(1280);
+	printf("testing set freq 512hz (should fail)... ");
+	score &= !test_rtc_write_freq(512);
+	score &= test_rtc_read_spam(2560);
+	printf("testing set freq 1024hz (should pass)... ");
+	score &= !test_rtc_write_freq(1024);
+	score &= test_rtc_read_spam(5120);
 	printf("testing set freq 2048hz (should fail)... ");
 	score &= (test_rtc_write_freq(2048) < 0);
 	printf("testing set freq 1023hz (should fail)... ");
 	score &= (test_rtc_write_freq(1023) < 0);
-	printf("testing read on interrupts thrice faster (should pass):\n");
-	score &= test_rtc_read_spam();
-	printf("testing set freq 2hz (should pass)... ");
+	printf("testing set freq 1025hz (should fail)... ");
+	score &= (test_rtc_write_freq(1025) < 0);
+	printf("testing set freq back to 2hz (should pass)... ");
 	score &= !test_rtc_write_freq(2);
 
+	printf("testing read on interrupts thrice faster (should pass):\n");
+	score &= test_rtc_read_spam(10);
+
+
+	
 	return score;
 }
 
