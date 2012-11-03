@@ -155,7 +155,7 @@ entry (unsigned long magic, unsigned long addr)
 	init_paging();
 
 	/* Init the RTC */
-	rtc_init();
+	rtc_open();
 
 	/** Initialize keyboard **/
 	keyboard_init();
@@ -171,8 +171,12 @@ entry (unsigned long magic, unsigned long addr)
 	/* Execute the first program (`shell') ... */
 
 	/* NULL test: dereferencing a NULL pointer. */
-	int * ptr = NULL;
-	int deref_null_ptr = *ptr;
+	//int * ptr1 = 0x0000000;
+	//int * ptr2 = 0x8000000;
+	//int deref_ptr = *ptr;
+
+	/* DIVDE test: dividing by 0. */
+	//int a = 1/0;
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
