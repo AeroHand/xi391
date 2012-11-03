@@ -133,8 +133,8 @@ dosomethingwiththis(unsigned char scancode)
 	unsigned char nextcode;
 	int i;
 	int cursor_index;
+	int shiftptr;
 	/* Store the datum received from the keyboard port. */
-	printf("\n\n%x", scancode );
 
 	if((scancode >= 0x10 && scancode<=0x19) || (scancode >= 0x1E && scancode<=0x26) || (scancode >= 0x2C && scancode<=0x32) )
 	{
@@ -142,16 +142,26 @@ dosomethingwiththis(unsigned char scancode)
 			/* Store the datum received from the keyboard port as shifted data. */
 			if(command_length < 1024){
 				datum = shift_kbd_chars[scancode];
-				//strncpy(command_buffer+cursor_x-terminalsize, command_buffer+cursor_x-terminalsize+1, command_length-cursor_x);
-				command_buffer[cursor_x-terminalsize] = datum;
+				cursor_index = cursor_x - terminalsize;
+				shiftptr = command_length;
+				while( cursor_index < shiftptr){
+					command_buffer[shiftptr+1] = command_buffer[shiftptr];
+					shiftptr--;
+				}
+				command_buffer[cursor_index] = datum;
 				command_length++;
 				cursor_x++;
 			}
 		}else{
 			if(command_length < 1024){
 				datum = kbd_chars[scancode];
-				//strncpy(command_buffer+cursor_x-terminalsize, command_buffer+cursor_x-terminalsize+1, command_length-cursor_x);
-				command_buffer[cursor_x-terminalsize] = datum;
+				cursor_index = cursor_x - terminalsize;
+				shiftptr = command_length;
+				while( cursor_index < shiftptr){
+					command_buffer[shiftptr+1] = command_buffer[shiftptr];
+					shiftptr--;
+				}
+				command_buffer[cursor_index] = datum;
 				command_length++;
 				cursor_x++;
 			}
@@ -163,16 +173,26 @@ dosomethingwiththis(unsigned char scancode)
 			/* Store the datum received from the keyboard port as shifted data. */
 			if(command_length < 1024){
 				datum = shift_kbd_chars[scancode];
-				//strncpy(command_buffer+cursor_x-terminalsize, command_buffer+cursor_x-terminalsize+1, command_length-cursor_x);
-				command_buffer[cursor_x-terminalsize] = datum;
+				cursor_index = cursor_x - terminalsize;
+				shiftptr = command_length;
+				while( cursor_index < shiftptr){
+					command_buffer[shiftptr+1] = command_buffer[shiftptr];
+					shiftptr--;
+				}
+				command_buffer[cursor_index] = datum;
 				command_length++;
 				cursor_x++;
 			}
 		}else{
 			if(command_length < 1024){
 				datum = kbd_chars[scancode];
-				//strncpy(command_buffer+cursor_x-terminalsize, command_buffer+cursor_x-terminalsize+1, command_length-cursor_x);
-				command_buffer[cursor_x-terminalsize] = datum;
+				cursor_index = cursor_x - terminalsize;
+				shiftptr = command_length;
+				while( cursor_index < shiftptr){
+					command_buffer[shiftptr+1] = command_buffer[shiftptr];
+					shiftptr--;
+				}
+				command_buffer[cursor_index] = datum;
 				command_length++;
 				cursor_x++;
 			}
@@ -180,7 +200,11 @@ dosomethingwiththis(unsigned char scancode)
 	}
 	else if(scancode == 0x1C) //Enter
 	{
-
+		for( i = 0; i < command_length; i++ ) {
+			command_buffer[i] = NULL;
+		}
+		cursor_y += (cursor_x-1-((cursor_x-1)%80))/NUM_COLS + 1;
+		cursor_x = terminalsize;
 	}
 	else if(scancode == 0x0E) //Backspace
 	{
@@ -272,11 +296,6 @@ keyboard_interruption() {
 
 		printthebuffer();
 
-		printf("\n");
-		printf("\n");
-		printf("\n");
-		printf("\n");
-		printf("\n %i %i", cursor_x, command_length);
 		/*
 		if( nowcode & 0x80 ) {
 			//Key release. Do nothing? 
