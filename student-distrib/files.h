@@ -17,8 +17,7 @@
  * File system statistics format provided at the beginning of
  * the boot block.
  */
-typedef struct 
-{
+typedef struct {
 	uint32_t num_dentries;
 	uint32_t num_inodes;
 	uint32_t num_datablocks;
@@ -28,8 +27,7 @@ typedef struct
 /*
  * File system directory entry format.
  */
-typedef struct 
-{
+typedef struct {
 	int8_t   filename[32];
 	uint32_t filetype;
 	uint32_t inode;
@@ -39,8 +37,7 @@ typedef struct
 /*
  * Inode block format.
  */
-typedef struct
-{
+typedef struct{
 	uint32_t size;
 	uint32_t data_blocks[1023];
 } inode_t;
@@ -48,31 +45,11 @@ typedef struct
 
 
 /* Functions. */
-void filesystem_init
-	(
-	uint32_t fs_start,
-	uint32_t fs_end
-	);
-	
-int32_t read_dentry_by_name
-	( 
-	const uint8_t *  fname, 
-	      dentry_t * dentry 
-	);
-	
-int32_t read_dentry_by_index
-	( 
-	uint32_t   index, 
-	dentry_t * dentry 
-	);
-	
-int32_t read_data
-	( 
-	uint32_t  inode, 
-	uint32_t  offset, 
-	uint8_t * buf, 
-	uint32_t  length 
-	);
+void filesystem_init(uint32_t fs_start, uint32_t fs_end);
+int32_t read_dentry_by_name(const uint8_t * fname, dentry_t * dentry);
+int32_t read_dentry_by_index(uint32_t index, dentry_t * dentry);
+int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length);
+void files_test(void);
 
 
 
