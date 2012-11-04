@@ -267,7 +267,6 @@ dosomethingwiththis(unsigned char scancode)
 	else if(scancode == 0xE0) //Directional and RCTRL
 	{
 		nextcode = inb(KEYBOARD_PORT);
-		printf("\n%x",nextcode );
 		if(nextcode == 0x4B && cursor_x > 0){
 			cursor_x--;
 		}else if(nextcode == 0x4D && cursor_x < command_length ){

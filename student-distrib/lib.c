@@ -57,7 +57,26 @@ void update_cursor(int x) {
     outb((unsigned char )((position>>8)&0xFF), 0x3D5);
  }
 
+void scrolling(){
+	int x, y;
 
+	if(screen_y < NUM_ROWS-1){
+		screen_y++;
+		return;
+	}
+
+	command_y--;
+	for(y=0; y<NUM_ROWS; y++){
+		for(x=0; x<NUM_COLS; x++){
+			*(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS*(y+1) + x) << 1));
+        	*(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1) + 1) = *(uint8_t *)(video_mem + ((NUM_COLS*(y+1) + x) << 1) + 1);
+        }
+    }
+
+    for(x=0; x<NUM_COLS; x++){
+			*(uint8_t *)(video_mem + ((NUM_COLS*NUM_ROWS + x) << 1)) = ' ';
+    }
+}
 
 /* Standard printf().
  * Only supports the following format strings:
@@ -205,7 +224,7 @@ void
 putc(uint8_t c)
 {
     if(c == '\n' || c == '\r') {
-        screen_y++;
+        scrolling();
         screen_x=0;
     } else if(c =='\0'){
     	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
@@ -216,7 +235,7 @@ putc(uint8_t c)
         screen_x++;
         if(screen_x > 79){
         	screen_x = 0;
-        	screen_y++;
+        	scrolling();
         }
     }
 }
