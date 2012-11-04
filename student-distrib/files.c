@@ -226,7 +226,7 @@ void files_test(void)
 	uint8_t buf[6000];
 	
 	clear();
-	jump_to_start();
+	jump_to_point(0,0);
 	/*
 	for( i = 0; i < 10; i++ )
 	{

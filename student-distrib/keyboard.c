@@ -151,6 +151,7 @@ void place_character_at_index(unsigned char scancode, int index) {
 	unsigned char datum;
 
 	datum = kbd_chars[keyboardflag & 0x03][scancode];
+
 	while( index <= end_of_line){
 		command_buffer[end_of_line+1] = command_buffer[end_of_line];
 		end_of_line--;
@@ -204,19 +205,25 @@ dosomethingwiththis(unsigned char scancode)
 	int cursor_index = cursor_x;
 	int i;
 	/* Store the datum received from the keyboard port. */
-	if((keyboardflag & 0x04)==0 && ((scancode >= 0x02 && scancode<=0x0D) || (scancode >= 0x10 && scancode<=0x1B) || (scancode >= 0x1E && scancode<=0x29) || (scancode >= 0x2b && scancode<=0x35) || scancode == 0x39 ) )
+	if( (keyboardflag & 0x04) == 0 &&
+			((scancode >= MAKE_1 && scancode <= MAKE_EQUALS) ||
+			 (scancode >= MAKE_Q && scancode <= MAKE_R_SQUARE_BRACKET) ||
+			 (scancode >= MAKE_A && scancode <= MAKE_ACCENT) ||
+			 (scancode >= MAKE_BACKSLASH && scancode <= MAKE_SLASH) ||
+			  scancode == MAKE_SPACE)
+			)
 	{
-		if(command_length < 1024)
+		if(command_length < TERMINAL_BUFFER_MAX_SIZE)
 			place_character_at_index(scancode, cursor_x);
 	}
-	else if(scancode == 0x1C) //Enter
+	else if(scancode == MAKE_ENTER) //Enter
 	{
 		allow_terminal_read = 1;
 		//printf("\n\n\n\nWe are on line %d, it was incremented by %d, printbufferlength = %d", cursor_y, (printbufferlength-(printbufferlength % NUM_COLS))/NUM_COLS + 1, printbufferlength);
 	}
-	else if(scancode == 0x0E) //Backspace
+	else if(scancode == MAKE_BKSP) //Backspace
 	{
-		if(cursor_index >0 ){
+		if(cursor_index > 0 ){
 			cursor_index--;
 			while( cursor_index < command_length){
 				command_buffer[cursor_index] = command_buffer[cursor_index+1];
@@ -226,7 +233,7 @@ dosomethingwiththis(unsigned char scancode)
 			cursor_x--;
 		}
 	}
-	else if(scancode == 0x53) //Delete
+	else if(scancode == MAKE_DELETE) //Delete
 	{
 		if(cursor_index >= 0 && cursor_index < command_length){
 			while( cursor_index < command_length){
@@ -236,50 +243,50 @@ dosomethingwiththis(unsigned char scancode)
 			command_length--;
 		}
 	}
-	else if(scancode == 0x0F) //TAB????
+	else if(scancode == MAKE_TAB) //TAB????
 	{
 
 	}
-	else if(scancode == 0x3A) //Caps Lock
+	else if(scancode == MAKE_CAPS) //Caps Lock
 	{
-		keyboardflag^=0x02;
+		keyboardflag ^= 0x02;
 	}
-	else if(scancode == 0x2A || scancode == 0x36) //ShiftDown
+	else if(scancode == MAKE_L_SHFT || scancode == MAKE_R_SHFT) //ShiftDown
 	{
 		keyboardflag |= 0x01;
 	}
-	else if(scancode == 0xAA || scancode == 0xB6) //ShiftUp
+	else if(scancode == BREAK_L_SHFT || scancode == BREAK_R_SHFT) //ShiftUp
 	{
 		keyboardflag &= ~0x01;
 	}
-	else if(scancode == 0x1D) //CtrlDown
+	else if(scancode == MAKE_L_CTRL) //CtrlDown
 	{
-		keyboardflag |= 0x4;
+		keyboardflag |= 0x04;
 	}
-	else if(scancode == 0x9D) //CtrlUp
+	else if(scancode == BREAK_L_CTRL) //CtrlUp
 	{
 		keyboardflag &= ~0x4;
 	}
-	else if(scancode == 0x38) //Alt?
+	else if(scancode == MAKE_L_ALT) //Alt?
 	{
 
 	}
-	else if(scancode == 0xE0) //Directional and RCTRL
+	else if(scancode == EXTRAS) //Directional and RCTRL
 	{
 		nextcode = inb(KEYBOARD_PORT);
 		printf("\n%x",nextcode );
-		if(nextcode == 0x4B && cursor_x > 0){
+		if(nextcode == MAKE_L_ARROW && cursor_x > 0){
 			cursor_x--;
-		}else if(nextcode == 0x4D && cursor_x < command_length ){
+		}else if(nextcode == MAKE_R_ARROW && cursor_x < command_length ){
 			cursor_x++;
-		}else if(nextcode == 0x1D){
-			keyboardflag |= 0x4;
-		}else if(nextcode == 0x9D){
-			keyboardflag &= ~0x4;
+		}else if(nextcode == MAKE_L_CTRL){
+			keyboardflag |=  0x04;
+		}else if(nextcode == BREAK_L_CTRL){
+			keyboardflag &= ~0x04;
 		}	
 	}
-	else if(keyboardflag & 0x4){   //CTRL + L
-		if(scancode == 0x26){
+	else if(keyboardflag & 0x04){   //CTRL + L
+		if(scancode == MAKE_L){
 			for(i=0; i<command_length; i++){
 				command_buffer[i] = NULL;
 			}
