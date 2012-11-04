@@ -17,6 +17,7 @@
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
+#define TERMINAL_BUFFER_MAX_SIZE   1024
 
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
@@ -24,6 +25,7 @@ void
 entry (unsigned long magic, unsigned long addr)
 {
 	multiboot_info_t *mbi;
+	unsigned char command_buffer[TERMINAL_BUFFER_MAX_SIZE];
 
 	/* Clear the screen. */
 	clear();
@@ -173,12 +175,21 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
+    //make buffer
+    while (1){ 
+    	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
+    		printf("\nYou just typed %s\n", command_buffer);
+    		set_command_y();
+    	}
+    }
+	/*
 	int test_result = test();
 	if(test_result == 1) {
 		printf("tests successful\n");
 	} else {
 		printf("tests failed\n");
 	}
+	*/
 	
 	/* Execute the first program (`shell') ... */
 

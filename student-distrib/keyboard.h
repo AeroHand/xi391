@@ -12,6 +12,12 @@
 
 #define TERMINAL_BUFFER_MAX_SIZE   1024
 
+/* Called to read from command buffer */
+int terminal_read(unsigned char * buf, int cnt);
+
+/* Called to read from command buffer */
+void printthebuffer();
+
 /* Called to initialize keyboard before using it. */
 void keyboard_init(void);
 /* Keyboard Interrupt */

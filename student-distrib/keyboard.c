@@ -5,66 +5,118 @@
 #include "keyboard.h"
 #include "i8259.h"
 
-
-unsigned char kbd_chars[128] =
-{
-    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
- 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0, 'a', 's',	
- 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0,'\\', 'z', 'x', 'c', 'v', 
- 	'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',	 0,
-    0,	/* 59 - F1 key ... > */
-    0,   0,   0,   0,   0,   0,   0,   0,
-    0,	/* < ... F10 */
-    0,	/* 69 - Num lock*/
-    0,	/* Scroll Lock */
-    0,	/* Home key */
-    0,	/* Up Arrow */
-    0,	/* Page Up */
-  '-',
-    0,	/* Left Arrow */
-    0,
-    0,	/* Right Arrow */
-  '+',
-    0,	/* 79 - End key*/
-    0,	/* Down Arrow */
-    0,	/* Page Down */
-    0,	/* Insert Key */
-    0,	/* Delete Key */
-    0,   0,   0,
-    0,	/* F11 Key */
-    0,	/* F12 Key */
-    0,	/* All other keys are undefined */
-};
-
-
-unsigned char shift_kbd_chars[128] =
-{
-    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
- 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0,0, 'A', 'S',	
- 	'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0,'|', 'Z', 'X', 'C', 'V', 
- 	'B', 'N', 'M', '<', '>', '?', 0, '*', 0, 0,	 0,
-    0,	/* 59 - F1 key ... > */
-    0,   0,   0,   0,   0,   0,   0,   0,
-    0,	/* < ... F10 */
-    0,	/* 69 - Num lock*/
-    0,	/* Scroll Lock */
-    0,	/* Home key */
-    0,	/* Up Arrow */
-    0,	/* Page Up */
-  '-',
-    0,	/* Left Arrow */
-    0,
-    0,	/* Right Arrow */
-  '+',
-    0,	/* 79 - End key*/
-    0,	/* Down Arrow */
-    0,	/* Page Down */
-    0,	/* Insert Key */
-    0,	/* Delete Key */
-    0,   0,   0,
-    0,	/* F11 Key */
-    0,	/* F12 Key */
-    0,	/* All other keys are undefined */
+// There are three char scan arrays, 0 = nothing, 1 = SHIFT, 2 = Caps, 3=Shift+Caps;
+unsigned char kbd_chars[4][128] = {
+	{
+	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
+	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0, 'a', 's',	
+	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0,'\\', 'z', 'x', 'c', 'v', 
+	 	'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',	 0,
+	    0,	/* 59 - F1 key ... > */
+	    0,   0,   0,   0,   0,   0,   0,   0,
+	    0,	/* < ... F10 */
+	    0,	/* 69 - Num lock*/
+	    0,	/* Scroll Lock */
+	    0,	/* Home key */
+	    0,	/* Up Arrow */
+	    0,	/* Page Up */
+	  '-',
+	    0,	/* Left Arrow */
+	    0,
+	    0,	/* Right Arrow */
+	  '+',
+	    0,	/* 79 - End key*/
+	    0,	/* Down Arrow */
+	    0,	/* Page Down */
+	    0,	/* Insert Key */
+	    0,	/* Delete Key */
+	    0,   0,   0,
+	    0,	/* F11 Key */
+	    0,	/* F12 Key */
+	    0,	/* All other keys are undefined */
+	},{
+	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
+	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0,0, 'A', 'S',	
+	 	'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0,'|', 'Z', 'X', 'C', 'V', 
+	 	'B', 'N', 'M', '<', '>', '?', 0, '*', 0, 0,	 0,
+	    0,	/* 59 - F1 key ... > */
+	    0,   0,   0,   0,   0,   0,   0,   0,
+	    0,	/* < ... F10 */
+	    0,	/* 69 - Num lock*/
+	    0,	/* Scroll Lock */
+	    0,	/* Home key */
+	    0,	/* Up Arrow */
+	    0,	/* Page Up */
+	  '-',
+	    0,	/* Left Arrow */
+	    0,
+	    0,	/* Right Arrow */
+	  '+',
+	    0,	/* 79 - End key*/
+	    0,	/* Down Arrow */
+	    0,	/* Page Down */
+	    0,	/* Insert Key */
+	    0,	/* Delete Key */
+	    0,   0,   0,
+	    0,	/* F11 Key */
+	    0,	/* F12 Key */
+	    0,	/* All other keys are undefined */
+	},{
+		0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
+	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0, 0, 'A', 'S',	
+	 	'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0,'\\', 'Z', 'X', 'C', 'V', 
+	 	'B', 'N', 'M', ',', '.', '/', 0, '*', 0, 0,	 0,
+	    0,	/* 59 - F1 key ... > */
+	    0,   0,   0,   0,   0,   0,   0,   0,
+	    0,	/* < ... F10 */
+	    0,	/* 69 - Num lock*/
+	    0,	/* Scroll Lock */
+	    0,	/* Home key */
+	    0,	/* Up Arrow */
+	    0,	/* Page Up */
+	  '-',
+	    0,	/* Left Arrow */
+	    0,
+	    0,	/* Right Arrow */
+	  '+',
+	    0,	/* 79 - End key*/
+	    0,	/* Down Arrow */
+	    0,	/* Page Down */
+	    0,	/* Insert Key */
+	    0,	/* Delete Key */
+	    0,   0,   0,
+	    0,	/* F11 Key */
+	    0,	/* F12 Key */
+	    0,	/* All other keys are undefined */
+	},{
+	    
+	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
+	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '{', '}', 0,0, 'a', 's',	
+	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0,'|', 'z', 'x', 'c', 'v', 
+	 	'b', 'n', 'm', '<', '>', '?', 0, '*', 0, 0,	 0,
+	    0,	/* 59 - F1 key ... > */
+	    0,   0,   0,   0,   0,   0,   0,   0,
+	    0,	/* < ... F10 */
+	    0,	/* 69 - Num lock*/
+	    0,	/* Scroll Lock */
+	    0,	/* Home key */
+	    0,	/* Up Arrow */
+	    0,	/* Page Up */
+	  '-',
+	    0,	/* Left Arrow */
+	    0,
+	    0,	/* Right Arrow */
+	  '+',
+	    0,	/* 79 - End key*/
+	    0,	/* Down Arrow */
+	    0,	/* Page Down */
+	    0,	/* Insert Key */
+	    0,	/* Delete Key */
+	    0,   0,   0,
+	    0,	/* F11 Key */
+	    0,	/* F12 Key */
+	    0,	/* All other keys are undefined */
+	}	
 };
 
 unsigned int terminalsize;
@@ -72,20 +124,40 @@ unsigned char command_buffer[TERMINAL_BUFFER_MAX_SIZE];
 unsigned char print_buffer[TERMINAL_BUFFER_MAX_SIZE+20] = {'[', 't', 'e', 'r', 'm', 'i', 'n', 'a', 'l', ']', '$', ' ', };
 unsigned int command_length;
 unsigned int cursor_x;
-unsigned int cursor_y;
-unsigned char keyboardflag; // 0x0000 'alt''caps''shift'
-unsigned int typing_started;
+unsigned char keyboardflag; // 0x0000 'ctrl''caps''shift'
+unsigned int allow_terminal_read;
+
+int terminal_read(unsigned char * buf, int cnt){
+	int i;
+	if(allow_terminal_read){
+		//int printbufferlength = terminalsize + command_length -1 ;
+		for(i=0; i<cnt; i++){
+			buf[i] = command_buffer[i];
+			command_buffer[i] = NULL;
+		}
+		command_length = 0;
+		cursor_x = 0;
+		allow_terminal_read = 0;
+		return 1;
+	}else{
+		return 0;
+	}
+}
 
 
-void update_cursor(int col, int row) {
-    unsigned short position=(row*80) + col;
- 
-    // cursor LOW port to vga INDEX register
-    outb(0x0F, 0x3D4);
-    outb((unsigned char)(position&0xFF), 0x3D5);
-    // cursor HIGH port to vga INDEX register
-    outb(0x0E, 0x3D4);
-    outb((unsigned char )((position>>8)&0xFF), 0x3D5);
+
+void place_character_at_index(unsigned char scancode, int index) {
+	int end_of_line = command_length;
+	unsigned char datum;
+
+	datum = kbd_chars[keyboardflag & 0x03][scancode];
+	while( index <= end_of_line){
+		command_buffer[end_of_line+1] = command_buffer[end_of_line];
+		end_of_line--;
+	}
+	command_buffer[index] = datum;
+	command_length++;
+	cursor_x++;
  }
 
 /* Initialize the keyboard */
@@ -99,116 +171,51 @@ keyboard_init(void) {
 	}
 	
 	keyboardflag = 0x00;
-	typing_started = 0;
+	allow_terminal_read = 0;
 	command_length = 0;
 	terminalsize = 12;
-	cursor_x = terminalsize;
-	cursor_y = 0;
-
-	update_cursor(cursor_x, cursor_y);
+	cursor_x = 0;
+	clear();
+	jump_to_point(0,0);
 	
 	/* Unmask IRQ1 */
 	enable_irq(KEYBOARD_IRQ);
 
 }
 
-void
-printthebuffer(){
+void printthebuffer(){
 	int i;
-	jump_to_start(cursor_y);
+	int delta_y = (terminalsize+command_length)/NUM_COLS;
+	carriage_return(delta_y);
+	for(i=0; i<=command_length; i++){
+		print_buffer[i+terminalsize] =  command_buffer[i];
+	}
 	for(i=0; i<=terminalsize+command_length; i++){
-		if((i)%NUM_COLS == 0 && i!=0){
-			putc('\n');
-		}
 		putc(print_buffer[i]);
 	}
-}
 
+}
 
 
 void
 dosomethingwiththis(unsigned char scancode)
 {
-	unsigned char datum;
 	unsigned char nextcode;
+	int cursor_index = cursor_x;
 	int i;
-	int cursor_index;
-	int shiftptr;
 	/* Store the datum received from the keyboard port. */
-
-	if((scancode >= 0x10 && scancode<=0x19) || (scancode >= 0x1E && scancode<=0x26) || (scancode >= 0x2C && scancode<=0x32) )
+	if((keyboardflag & 0x04)==0 && ((scancode >= 0x02 && scancode<=0x0D) || (scancode >= 0x10 && scancode<=0x1B) || (scancode >= 0x1E && scancode<=0x29) || (scancode >= 0x2b && scancode<=0x35) || scancode == 0x39 ) )
 	{
-		if( (keyboardflag & 0x03) != 0x0) {
-			/* Store the datum received from the keyboard port as shifted data. */
-			if(command_length < 1024){
-				datum = shift_kbd_chars[scancode];
-				cursor_index = cursor_x - terminalsize;
-				shiftptr = command_length;
-				while( cursor_index < shiftptr){
-					command_buffer[shiftptr+1] = command_buffer[shiftptr];
-					shiftptr--;
-				}
-				command_buffer[cursor_index] = datum;
-				command_length++;
-				cursor_x++;
-			}
-		}else{
-			if(command_length < 1024){
-				datum = kbd_chars[scancode];
-				cursor_index = cursor_x - terminalsize;
-				shiftptr = command_length;
-				while( cursor_index < shiftptr){
-					command_buffer[shiftptr+1] = command_buffer[shiftptr];
-					shiftptr--;
-				}
-				command_buffer[cursor_index] = datum;
-				command_length++;
-				cursor_x++;
-			}
-		}
-	}
-	else if((scancode >= 0x02 && scancode<=0x0D) || (scancode >= 0x33 && scancode<=0x35) || (scancode>=0x1A && scancode<=0x1B) || scancode == 0x2B || scancode == 0x27 || scancode == 0x29 ||scancode == 0x28 || scancode == 0x39)
-	{
-		if( (keyboardflag & 0x01)) {
-			/* Store the datum received from the keyboard port as shifted data. */
-			if(command_length < 1024){
-				datum = shift_kbd_chars[scancode];
-				cursor_index = cursor_x - terminalsize;
-				shiftptr = command_length;
-				while( cursor_index < shiftptr){
-					command_buffer[shiftptr+1] = command_buffer[shiftptr];
-					shiftptr--;
-				}
-				command_buffer[cursor_index] = datum;
-				command_length++;
-				cursor_x++;
-			}
-		}else{
-			if(command_length < 1024){
-				datum = kbd_chars[scancode];
-				cursor_index = cursor_x - terminalsize;
-				shiftptr = command_length;
-				while( cursor_index < shiftptr){
-					command_buffer[shiftptr+1] = command_buffer[shiftptr];
-					shiftptr--;
-				}
-				command_buffer[cursor_index] = datum;
-				command_length++;
-				cursor_x++;
-			}
-		}
+		if(command_length < 1024)
+			place_character_at_index(scancode, cursor_x);
 	}
 	else if(scancode == 0x1C) //Enter
 	{
-		for( i = 0; i < command_length; i++ ) {
-			command_buffer[i] = NULL;
-		}
-		cursor_y += (cursor_x-1-((cursor_x-1)%80))/NUM_COLS + 1;
-		cursor_x = terminalsize;
+		allow_terminal_read = 1;
+		//printf("\n\n\n\nWe are on line %d, it was incremented by %d, printbufferlength = %d", cursor_y, (printbufferlength-(printbufferlength % NUM_COLS))/NUM_COLS + 1, printbufferlength);
 	}
 	else if(scancode == 0x0E) //Backspace
 	{
-		cursor_index = cursor_x - terminalsize;
 		if(cursor_index >0 ){
 			cursor_index--;
 			while( cursor_index < command_length){
@@ -221,7 +228,6 @@ dosomethingwiththis(unsigned char scancode)
 	}
 	else if(scancode == 0x53) //Delete
 	{
-		cursor_index = cursor_x - terminalsize;
 		if(cursor_index >= 0 && cursor_index < command_length){
 			while( cursor_index < command_length){
 				command_buffer[cursor_index] = command_buffer[cursor_index+1];
@@ -246,29 +252,45 @@ dosomethingwiththis(unsigned char scancode)
 	{
 		keyboardflag &= ~0x01;
 	}
-	else if(scancode == 0x1D) //Ctrl
+	else if(scancode == 0x1D) //CtrlDown
 	{
-
+		keyboardflag |= 0x4;
+	}
+	else if(scancode == 0x9D) //CtrlUp
+	{
+		keyboardflag &= ~0x4;
 	}
 	else if(scancode == 0x38) //Alt?
 	{
 
 	}
-	else if(scancode == 0xE0) //Directional?
+	else if(scancode == 0xE0) //Directional and RCTRL
 	{
 		nextcode = inb(KEYBOARD_PORT);
-		if(nextcode == 0x4B && cursor_x > terminalsize && cursor_x){
+		printf("\n%x",nextcode );
+		if(nextcode == 0x4B && cursor_x > 0){
 			cursor_x--;
-		}else if(nextcode == 0x4D && cursor_x < terminalsize+command_length ){
+		}else if(nextcode == 0x4D && cursor_x < command_length ){
 			cursor_x++;
+		}else if(nextcode == 0x1D){
+			keyboardflag |= 0x4;
+		}else if(nextcode == 0x9D){
+			keyboardflag &= ~0x4;
 		}	
 	}
-	
-	command_buffer[command_length] = '\0';
-	for(i=0; i<=command_length; i++){
-		print_buffer[i+terminalsize] =  command_buffer[i];
+	else if(keyboardflag & 0x4){   //CTRL + L
+		if(scancode == 0x26){
+			for(i=0; i<command_length; i++){
+				command_buffer[i] = NULL;
+			}
+			command_length = 0;
+			cursor_x = 0;
+			clear_the_screen();
+			keyboardflag &= ~0x4;
+		}
 	}
-	update_cursor(cursor_x, cursor_y);
+
+	update_cursor(terminalsize + cursor_x);
 }
 
 /* Keyboard Interrupt */
@@ -280,13 +302,6 @@ keyboard_interruption() {
 	
 	unsigned char keyboardscancode;
 	unsigned char keyboardstatus;
-	
-	if( typing_started == 0 ) {
-		typing_started = 1;
-		clear();
-		jump_to_start(cursor_x);
-	}
-	
 
 	do {
 		/* Dequeue the typed character from the keyboard buffer. */

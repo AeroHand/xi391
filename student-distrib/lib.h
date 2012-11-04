@@ -32,8 +32,14 @@ void test_interrupts(void);
 /* Extra functions */
 void delc(void);
 void swap(void* item1, void* item2);
-void jump_to_start(int y);
+void jump_to_point(int x, int y);
+void move_x(int x);
 void placec(uint8_t c);
+void update_cursor();
+void move_cursor(int x);
+void carriage_return();
+void set_command_y();
+void clear_the_screen();
 
 /* Userspace address-check functions */
 int32_t bad_userspace_addr(const void* addr, int32_t len);

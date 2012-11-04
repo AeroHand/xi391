@@ -7,7 +7,9 @@
 
 static int screen_x;
 static int screen_y;
+static int command_y;
 static char* video_mem = (char *)VIDEO;
+
 
 void
 clear(void)
@@ -19,12 +21,43 @@ clear(void)
     }
 }
 
-void
-jump_to_start(int y)
-{
-	screen_x = 0;
+void jump_to_point(int x, int y) {
+	screen_x = x;
 	screen_y = y;
+	update_cursor();
 }
+
+void carriage_return() {
+	screen_x = 0;
+	screen_y = command_y;
+	update_cursor();
+}
+
+void clear_the_screen() {
+	clear();
+	screen_x = 0;
+	screen_y = 0;
+	command_y = 0;
+	update_cursor(0); 
+}
+
+void set_command_y(){
+	command_y = screen_y; 
+}
+
+void update_cursor(int x) {
+
+    unsigned short position=(command_y*NUM_COLS) + x;
+ 
+    // cursor LOW port to vga INDEX register
+    outb(0x0F, 0x3D4);
+    outb((unsigned char)(position&0xFF), 0x3D5);
+    // cursor HIGH port to vga INDEX register
+    outb(0x0E, 0x3D4);
+    outb((unsigned char )((position>>8)&0xFF), 0x3D5);
+ }
+
+
 
 /* Standard printf().
  * Only supports the following format strings:
@@ -174,12 +207,17 @@ putc(uint8_t c)
     if(c == '\n' || c == '\r') {
         screen_y++;
         screen_x=0;
-    } else {
+    } else if(c =='\0'){
+    	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
+    }else {
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+        if(screen_x > 79){
+        	screen_x = 0;
+        	screen_y++;
+        }
     }
 }
 
