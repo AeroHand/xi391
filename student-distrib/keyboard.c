@@ -274,7 +274,6 @@ dosomethingwiththis(unsigned char scancode)
 	else if(scancode == EXTRAS) //Directional and RCTRL
 	{
 		nextcode = inb(KEYBOARD_PORT);
-		printf("\n%x",nextcode );
 		if(nextcode == MAKE_L_ARROW && cursor_x > 0){
 			cursor_x--;
 		}else if(nextcode == MAKE_R_ARROW && cursor_x < command_length ){
