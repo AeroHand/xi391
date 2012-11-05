@@ -130,14 +130,14 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 {
 	/* Local variables. */
 	uint32_t  total_successful_reads;
-	uint32_t  successful_reads_within_block;
+	uint32_t  location_in_block;
 	uint32_t  cur_data_block;
 	uint32_t  valid_data_blocks;
 	uint8_t * read_addr;
+	
 
 	/* Initializations. */
 	total_successful_reads = 0;
-	successful_reads_within_block = 0;
 
 	/* Check for an invalid inode number. */
 	if( inode >= fs_stats.num_inodes )
@@ -166,6 +166,8 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 	{
 		return -1;
 	}
+	
+	location_in_block = offset % FS_PAGE_SIZE;
  
 	/* Calculate the address to start reading from. */
 	read_addr = (uint8_t *)(data_start + 
@@ -185,9 +187,10 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 	/* Read all the data. */
 	while( total_successful_reads < length )
 	{
-		if( successful_reads_within_block >= FS_PAGE_SIZE )
+		if( location_in_block >= FS_PAGE_SIZE )
 		{
-			successful_reads_within_block = 0;
+			printf("incrementing block\n");
+			location_in_block = 0;
 		
 			/* Move to the next data block. */
 			cur_data_block++;
@@ -195,6 +198,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 			/* Check for an invalid data block. */
 			if( inodes[inode].data_blocks[cur_data_block] >= fs_stats.num_datablocks )
 			{
+				printf("invalid data block\n");
 				return -1;
 			}
 
@@ -203,14 +207,15 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 		}
 	
 		/* See if we've reached the end of the file. */
-		if( total_successful_reads >= inodes[inode].size )
+		if( total_successful_reads + offset >= inodes[inode].size )
 		{
+			printf("end of file\n");
 			return total_successful_reads;
 		}
 		
 		/* Read a byte. */
-		buf[total_successful_reads] = *read_addr;
-		successful_reads_within_block++;
+		buf[total_successful_reads] = *read_addr;	
+		location_in_block++;
 		total_successful_reads++;
 		read_addr++;
 	}
@@ -220,9 +225,9 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 
 void files_test(void)
 {
-	//dentry_t dentry;
+	dentry_t dentry;
 	int i;
-	//int8_t * asdf = "frame1.txt";
+	int8_t * asdf = "hello";
 	uint8_t buf[6000];
 	
 	clear();
@@ -236,16 +241,16 @@ void files_test(void)
 		printf("%d", dentry.inode);
 		putc('\n');
 	}
-	
-	read_dentry_by_name((uint8_t *)asdf, &dentry); 
-	printf("%d\n", dentry.inode);
 	*/
-	read_data(1, 0, buf, 6000);
+	read_dentry_by_name((uint8_t *)asdf, &dentry); 
+	//printf("%d\n", dentry.inode);
 	
-	for( i = 0; i < 200; i++ )
+	int a = read_data(dentry.inode, 0x046C, buf, 160);
+	
+	for( i = 0; i < a; i++ )
 	{
-		printf("%x ", buf[i]);
-		if( i % 16 == 0 )
+		printf("%c", buf[i]);
+		if( (i+1) % 16 == 0 )
 		{
 			putc('\n');
 		}

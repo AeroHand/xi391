@@ -176,12 +176,14 @@ entry (unsigned long magic, unsigned long addr)
 	sti();
 
     //make buffer
+	/*
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
     		printf("\nYou just typed %s\n", command_buffer);
     		set_command_y();
     	}
     }
+	*/
 	/*
 	int test_result = test();
 	if(test_result == 1) {
