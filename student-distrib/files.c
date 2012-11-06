@@ -189,7 +189,6 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 	{
 		if( location_in_block >= FS_PAGE_SIZE )
 		{
-			printf("incrementing block\n");
 			location_in_block = 0;
 		
 			/* Move to the next data block. */
@@ -198,7 +197,6 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 			/* Check for an invalid data block. */
 			if( inodes[inode].data_blocks[cur_data_block] >= fs_stats.num_datablocks )
 			{
-				printf("invalid data block\n");
 				return -1;
 			}
 
@@ -209,7 +207,6 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 		/* See if we've reached the end of the file. */
 		if( total_successful_reads + offset >= inodes[inode].size )
 		{
-			printf("end of file\n");
 			return total_successful_reads;
 		}
 		
@@ -227,7 +224,7 @@ void files_test(void)
 {
 	dentry_t dentry;
 	int i;
-	int8_t * asdf = "hello";
+	int8_t * asdf = "frame0.txt";
 	uint8_t buf[6000];
 	
 	clear();
@@ -245,15 +242,17 @@ void files_test(void)
 	read_dentry_by_name((uint8_t *)asdf, &dentry); 
 	//printf("%d\n", dentry.inode);
 	
-	int a = read_data(dentry.inode, 0x046C, buf, 160);
+	int a = read_data(dentry.inode, 0, buf, 200);
 	
 	for( i = 0; i < a; i++ )
 	{
 		printf("%c", buf[i]);
+		/*
 		if( (i+1) % 16 == 0 )
 		{
 			putc('\n');
 		}
+		*/
 	}
 	//puts((int8_t *)buf);
 	/*
