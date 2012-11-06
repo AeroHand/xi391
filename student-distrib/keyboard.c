@@ -150,22 +150,6 @@ void terminal_write(unsigned char * buf){
     set_command_y(1);
 }
 
-void place_character_at_index(unsigned char scancode, int index) {
-	int end_of_line = command_length;
-	unsigned char datum;
-
-	datum = kbd_chars[keyboardflag & 0x03][scancode];
-
-	while( index <= end_of_line){
-		command_buffer[end_of_line+1] = command_buffer[end_of_line];
-		end_of_line--;
-	}
-	command_buffer[index] = datum;
-	command_length++;
-	cursor_x++;
- }
-
-
 /* Initialize the keyboard */
 void
 keyboard_open(void) {
