@@ -176,11 +176,13 @@ entry (unsigned long magic, unsigned long addr)
 	sti();
 
     //make buffer
+	/*
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
     		terminal_write(command_buffer);
     	}
     }
+	*/
 	/*
 	int test_result = test();
 	if(test_result == 1) {

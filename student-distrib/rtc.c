@@ -83,6 +83,9 @@ rtc_read (void) {
 /* The call returns the number of bytes written, or -1 on failure. */
 int32_t
 rtc_write (int32_t nbytes) {
+	
+	/* TODO mask NMIs? */
+
 	outb(INDEX_REGISTER_A, RTC_PORT);
 	unsigned char a_old = inb(CMOS_PORT);
 
@@ -114,6 +117,8 @@ rtc_write (int32_t nbytes) {
 	/* return number of bytes on success (always 0) */
 	// TODO ask if i should return 0, 1, 2, 3 on success
 	return 0;
+
+	/* TODO unmask NMIs? */
 }
 
 /* System Call: open */
