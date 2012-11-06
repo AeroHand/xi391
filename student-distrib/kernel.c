@@ -165,7 +165,7 @@ entry (unsigned long magic, unsigned long addr)
 	rtc_open();
 
 	/** Initialize keyboard **/
-	keyboard_init();
+	keyboard_open();
 
 
 	/* Enable interrupts */
@@ -178,8 +178,7 @@ entry (unsigned long magic, unsigned long addr)
     //make buffer
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
-    		printf("\nYou just typed %s\n", command_buffer);
-    		set_command_y();
+    		terminal_write(command_buffer);
     	}
     }
 	/*

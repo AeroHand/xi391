@@ -38,7 +38,8 @@ void placec(uint8_t c);
 void update_cursor();
 void move_cursor(int x);
 void carriage_return();
-void set_command_y();
+void new_line();
+void set_command_y(int y);
 void clear_the_screen();
 
 /* Userspace address-check functions */

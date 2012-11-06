@@ -33,30 +33,6 @@ void carriage_return() {
 	update_cursor();
 }
 
-void clear_the_screen() {
-	clear();
-	screen_x = 0;
-	screen_y = 0;
-	command_y = 0;
-	update_cursor(0); 
-}
-
-void set_command_y(){
-	command_y = screen_y; 
-}
-
-void update_cursor(int x) {
-
-    unsigned short position=(command_y*NUM_COLS) + x;
- 
-    // cursor LOW port to vga INDEX register
-    outb(0x0F, 0x3D4);
-    outb((unsigned char)(position&0xFF), 0x3D5);
-    // cursor HIGH port to vga INDEX register
-    outb(0x0E, 0x3D4);
-    outb((unsigned char )((position>>8)&0xFF), 0x3D5);
- }
-
 void scrolling(){
 	int x, y;
 
@@ -77,6 +53,39 @@ void scrolling(){
 			*(uint8_t *)(video_mem + ((NUM_COLS*NUM_ROWS + x) << 1)) = ' ';
     }
 }
+
+void clear_the_screen() {
+	clear();
+	screen_x = 0;
+	screen_y = 0;
+	command_y = 0;
+	update_cursor(0); 
+}
+
+void new_line(){
+	screen_x =0;
+	scrolling();
+}
+
+void set_command_y(int y){
+	if( y != 0)
+		scrolling();
+	command_y = screen_y; 
+}
+
+void update_cursor(int x) {
+
+    unsigned short position=(command_y*NUM_COLS) + x;
+ 
+    // cursor LOW port to vga INDEX register
+    outb(0x0F, 0x3D4);
+    outb((unsigned char)(position&0xFF), 0x3D5);
+    // cursor HIGH port to vga INDEX register
+    outb(0x0E, 0x3D4);
+    outb((unsigned char )((position>>8)&0xFF), 0x3D5);
+ }
+
+
 
 /* Standard printf().
  * Only supports the following format strings:

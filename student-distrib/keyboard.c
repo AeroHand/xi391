@@ -144,25 +144,15 @@ int terminal_read(unsigned char * buf, int cnt){
 	}
 }
 
-
-
-void place_character_at_index(unsigned char scancode, int index) {
-	int end_of_line = command_length;
-	unsigned char datum;
-
-	datum = kbd_chars[keyboardflag & 0x03][scancode];
-	while( index <= end_of_line){
-		command_buffer[end_of_line+1] = command_buffer[end_of_line];
-		end_of_line--;
-	}
-	command_buffer[index] = datum;
-	command_length++;
-	cursor_x++;
- }
+void terminal_write(unsigned char * buf){
+	new_line();
+	printf("%s", buf);
+    set_command_y(1);
+}
 
 /* Initialize the keyboard */
 void
-keyboard_init(void) {
+keyboard_open(void) {
 
 	/* Initially zero the buffer. [is this necessary?] */
 	int i;
@@ -182,6 +172,20 @@ keyboard_init(void) {
 	enable_irq(KEYBOARD_IRQ);
 
 }
+
+void place_character_at_index(unsigned char scancode, int index) {
+	int end_of_line = command_length;
+	unsigned char datum;
+
+	datum = kbd_chars[keyboardflag & 0x03][scancode];
+	while( index <= end_of_line){
+		command_buffer[end_of_line+1] = command_buffer[end_of_line];
+		end_of_line--;
+	}
+	command_buffer[index] = datum;
+	command_length++;
+	cursor_x++;
+ }
 
 void printthebuffer(){
 	int i;
@@ -206,7 +210,7 @@ dosomethingwiththis(unsigned char scancode)
 	/* Store the datum received from the keyboard port. */
 	if((keyboardflag & 0x04)==0 && ((scancode >= 0x02 && scancode<=0x0D) || (scancode >= 0x10 && scancode<=0x1B) || (scancode >= 0x1E && scancode<=0x29) || (scancode >= 0x2b && scancode<=0x35) || scancode == 0x39 ) )
 	{
-		if(command_length < 1024)
+		if(command_length < 100)
 			place_character_at_index(scancode, cursor_x);
 	}
 	else if(scancode == 0x1C) //Enter
@@ -309,32 +313,6 @@ keyboard_interruption() {
 		dosomethingwiththis(keyboardscancode);
 
 		printthebuffer();
-
-		/*
-		if( nowcode & 0x80 ) {
-			//Key release. Do nothing? 
-		}
-		else if( datum == '\n' ) {
-			// Issue the typed command or something... 
-			// For now, print the newline. 
-			putc('\n');
-			placec('_');
-		}
-		else if( datum == '\b' ) {
-			// Backspace. 
-			command_buffer[TERMINAL_BUFFER_CURRENT_SIZE--] = 0;
-			delc();
-			placec('_');
-		}
-		else {
-			// Add char to terminal buffer.
-			command_buffer[TERMINAL_BUFFER_CURRENT_SIZE++] = datum;
-			//delc();
-			putc(datum);
-			placec('_');
-		}
-		*/
-		
 		
 		keyboardstatus = inb(KEYBOARD_STATUS_PORT);    //Check to see if the keyboard buffer is full
 		
