@@ -45,10 +45,20 @@ typedef struct{
 
 
 /* Functions. */
-void filesystem_init(uint32_t fs_start, uint32_t fs_end);
+int32_t fs_open(uint32_t fs_start, uint32_t fs_end);
+int32_t fs_close(void);
+int32_t fs_read(const int8_t * fname, uint32_t offset, uint8_t * buf, 
+                uint32_t length);
+int32_t fs_write(void);
+int32_t fs_load(const int8_t * fname, uint32_t address);
+
+void fs_init(uint32_t fs_start, uint32_t fs_end);
+
 int32_t read_dentry_by_name(const uint8_t * fname, dentry_t * dentry);
 int32_t read_dentry_by_index(uint32_t index, dentry_t * dentry);
-int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length);
+int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, 
+                  uint32_t length);
+				  
 void files_test(void);
 
 

@@ -159,7 +159,7 @@ entry (unsigned long magic, unsigned long addr)
 	init_paging();
 	
 	module_t* module = (module_t*)mbi->mods_addr;
-	filesystem_init( module->mod_start, module->mod_end );
+	fs_open( module->mod_start, module->mod_end );
 
 	/* Init the RTC */
 	rtc_open();
@@ -176,12 +176,32 @@ entry (unsigned long magic, unsigned long addr)
 	sti();
 
     //make buffer
+	/*
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
     		terminal_write(command_buffer);
     	}
     }
+	*/
 
+	/*
+	int bob;
+	for (bob=0; bob < 20; ++bob) {
+		rtc_read();
+		printf("bob yay");
+	}
+	rtc_write(4);
+	for (bob=0; bob < 20; ++bob) {
+		rtc_read();
+		printf("bob yay");
+	}
+	rtc_write(5);
+	for (bob=0; bob < 20; ++bob) {
+		rtc_read();
+		printf("bob yay");
+	}
+	*/
+	
 	/*
 	int test_result = test();
 	if(test_result == 1) {

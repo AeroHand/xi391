@@ -5,9 +5,10 @@
 #include "files.h"
 
 
+/* Variable to ensure only one 'open' of the file system. */
+uint32_t fs_is_open;
 
 /* The array of directory entries for the file system. */
-//dentry_t fs_dentries[MAX_NUM_FS_DENTRIES];
 dentry_t * fs_dentries;
 
 /* The statistics for the file system provided by the boot block. */
@@ -25,10 +26,125 @@ uint32_t data_start;
 
 
 /*
+ * fs_open()
+ *
+ * Opens the file system by calling fs_init.
+ *
+ * Retvals
+ * -1: failure (file sytem already open)
+ * 0: success
+ */
+int32_t fs_open(uint32_t fs_start, uint32_t fs_end)
+{
+	if( 1 == fs_is_open )
+	{
+		return -1;
+	}
+	
+	fs_init(fs_start, fs_end);
+	fs_is_open = 1;
+	return 0;
+}
+
+/*
+ * fs_close()
+ *
+ * Close the file system.
+ *
+ * Retvals
+ * -1: failure (file system already closed)
+ * 0: success
+ */
+int32_t fs_close(void)
+{
+	if( 0 == fs_is_open )
+	{
+		return -1;
+	}
+	
+	fs_is_open = 0;
+	return 0;
+}
+
+/*
+ * fs_read()
+ *
+ * Performs a read on the file with name 'fname' by calling read_data
+ * for the specified number of bytes and starting at the specified offset
+ * in the file.
+ *
+ * Retvals
+ * -1: failure (invalid parameters, nonexistent file)
+ * 0: success
+ */
+int32_t fs_read(const int8_t * fname, uint32_t offset, uint8_t * buf, 
+                uint32_t length)
+{
+	/* Local variables. */
+	dentry_t dentry;
+	
+	/* Check for invalid file name or buffer. */
+	if( fname == NULL || buf == NULL )
+	{
+		return -1;
+	}
+	
+	if( -1 == read_dentry_by_name((uint8_t *)fname, &dentry) )
+	{
+		return -1;
+	}
+	
+	return read_data(dentry.inode, offset, buf, length);
+}
+
+/*
+ * fs_write()
+ *
+ * Does nothing as our file system is read only.
+ *
+ * Retvals
+ * 0: default
+ */
+int32_t fs_write(void)
+{
+	return 0;
+}
+
+/*
+ * fs_load()
+ *
+ * Loads an executable file into memory and prepares to begin
+ * the new process.
+ *
+ * Retvals
+ * -1: failure
+ * 0: success
+ */
+int32_t fs_load(const int8_t * fname, uint32_t address)
+{
+	/* Local variables. */
+	dentry_t dentry;
+	
+	/* Check for invalid file name. */
+	if( fname == NULL )
+	{
+		return -1;
+	}
+	
+	if( -1 == read_dentry_by_name((uint8_t *)fname, &dentry) )
+	{
+		return -1;
+	}
+	
+	return read_data(dentry.inode, 0, (uint8_t *)address, 
+	                 inodes[dentry.inode].size);
+}	
+ 
+/*
  * filesystem_init()
  * Initializes global variables associated with the file system.
  */
-void filesystem_init(uint32_t fs_start, uint32_t fs_end)
+void fs_init(uint32_t fs_start, uint32_t fs_end)
 {
 	/* Set the location of the boot block. */
 	bb_start = fs_start;
@@ -126,7 +242,8 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t * dentry)
  * 0: end of file has been reached
  * n: number of bytes read and placed in the buffer
  */
-int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length)
+int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, 
+                  uint32_t length)
 {
 	/* Local variables. */
 	uint32_t  total_successful_reads;
@@ -152,12 +269,6 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 	}
 
 	/* [Check for a "bad data block number" somehow?] */
-	/* This may need to happen elsewhere. */
-
-	/* 
-	 * read_addr and valid_data_blocks need to be initialized here
-	 * once we know that 'inode' is a valid inode number.
-	 */
  
 	cur_data_block = offset/FS_PAGE_SIZE;
 
@@ -220,15 +331,31 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t lengt
 	return total_successful_reads;
 }
 
+/*
+ * files_test()
+ * 
+ * Test function for the file system driver. 
+ *
+ * Retvals: none
+ */
 void files_test(void)
 {
+	/* Local variables. */
 	dentry_t dentry;
 	int i;
-	int8_t * asdf = "frame0.txt";
-	uint8_t buf[6000];
+	int a;
+	uint8_t buf[40000];
+	uint32_t offset;
+	uint32_t bytes_to_read;
+	
+	/* Initializations. */
+	int8_t * test_string = "frame0.txt";
+	offset = 0;
+	bytes_to_read = 40000;
 	
 	clear();
 	jump_to_point(0,0);
+	
 	/*
 	for( i = 0; i < 10; i++ )
 	{
@@ -239,10 +366,8 @@ void files_test(void)
 		putc('\n');
 	}
 	*/
-	read_dentry_by_name((uint8_t *)asdf, &dentry); 
-	//printf("%d\n", dentry.inode);
 	
-	int a = read_data(dentry.inode, 0, buf, 200);
+	a = fs_read(test_string, offset, buf, bytes_to_read);	
 	
 	for( i = 0; i < a; i++ )
 	{
@@ -254,6 +379,10 @@ void files_test(void)
 		}
 		*/
 	}
+	
+	putc('\n');
+	printf("%d", a);
+	
 	//puts((int8_t *)buf);
 	/*
 	. 0
