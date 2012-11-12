@@ -341,7 +341,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 void files_test(void)
 {
 	/* Local variables. */
-	dentry_t dentry;
+	//dentry_t dentry;
 	int i;
 	int a;
 	uint8_t buf[40000];

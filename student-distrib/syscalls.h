@@ -2,6 +2,7 @@
 #define SYSCALLS_H
 
 #include "files.h"
+#include "paging.h"
 
 /* System calls. */
 int32_t halt(uint8_t status);
