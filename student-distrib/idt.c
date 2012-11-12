@@ -208,6 +208,9 @@ init_idt () {
 	SET_IDT_ENTRY(idt[33], keyboard_handler);	
 	// Clock interrupt routed to asm wrapper
 	SET_IDT_ENTRY(idt[40], clock_handler);
+	// System Call interrupt routed to asm wrapper
+	SET_IDT_ENTRY(idt[0x80], syscall_handler);
+
 
 }
 

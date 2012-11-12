@@ -14,6 +14,7 @@
 #include "files.h"
 #include "tests.h"
 
+
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -175,12 +176,16 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
+	test_syscall(1,5);
+
     //make buffer
+ 	/*
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
     		terminal_write(command_buffer);
     	}
     }
+	*/
 
 	/*
 	int test_result = test();
@@ -192,7 +197,7 @@ entry (unsigned long magic, unsigned long addr)
 	*/
 	
 	/* Execute the first program (`shell') ... */
-	files_test();
+	// files_test();
 	
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

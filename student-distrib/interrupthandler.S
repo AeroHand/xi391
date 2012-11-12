@@ -6,7 +6,8 @@
 
 .global keyboard_handler
 .global clock_handler
-.global timer_chip_handler
+.global syscall_handler
+.global test_syscall
 
 # Interrupt handler must have use an assembly wrapper because it's an interrupt!
 # The most important instruction that this code contains is the iret command
@@ -61,4 +62,74 @@ clock_handler:
 	popl %ebp
 
 	iret
+
+syscall_jumptable:
+	.long halt
+	.long execute
+	.long read
+	.long write
+	.long open
+	.long close
+	.long getargs
+	.long vidmap
+	.long set_handler
+	.long sigreturn
+
+
+syscall_handler:
+	pushl %ebp
+	pushl %eax
+	pushl %ebx
+	pushl %ecx
+	pushl %edx
+	pushl %edi
+	pushl %esi
+
+	pushl %edx 			#Argument 3
+	pushl %ecx			#Argument 2
+	pushl %ebx			#Argument 1
+
+	addl $-1, %eax
+
+	call *syscall_jumptable(,%eax,0x4)
+
+	popl %esi
+	popl %edi
+	popl %edx
+	popl %ecx
+	popl %ebx
+	popl %eax
+	popl %ebp
+
+	iret
+
+
+
+test_syscall:
+	pushl %ebp
+	pushl %eax
+	pushl %ebx
+	pushl %ecx
+	pushl %edx
+	pushl %edi
+	pushl %esi
+
+	MOVL	4(%EBP),%EAX
+
+	MOVL	8(%EBP),%EBX  	
+	MOVL	12(%EBP),%ECX 
+	MOVL	16(%EBP),%EDX 
+	
+	INT	$0x80         
+
+	popl %esi
+	popl %edi
+	popl %edx
+	popl %ecx
+	popl %ebx
+	popl %eax
+	popl %ebp
+
+	ret
+
 
