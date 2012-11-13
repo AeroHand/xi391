@@ -184,6 +184,11 @@ init_idt () {
 			idt[index].reserved3 = 0x0;
 			SET_IDT_ENTRY(idt[index], general_interruption);
 		}
+		
+		if(index == 0x80) {
+			/* We are declaring that the syscall is coming from pvl 3? */
+			idt[index].dpl = 0x3;
+		}
 	}
 
 	SET_IDT_ENTRY(idt[0], exception_DE);	//Exception 0 handler is defined

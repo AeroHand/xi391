@@ -3,6 +3,7 @@
 /*************************************************/
 
 #include "syscalls.h"
+#include "interrupthandler.h"
 
 typedef struct file_descriptor {
 	file_op_table* jumptable;
@@ -97,16 +98,17 @@ int32_t execute(const uint8_t* command)
 	
 	/* Load the program to the appropriate starting address. */
 	fs_load((const int8_t *)fname, 0x08048000);
+	printf("About to jump to user space...\n");
 	
 	/* Jump to the entry point and begin execution. */
-	
+	to_the_user_space((int32_t)entry_point);
 	
 	return 0;
 }
 
 void execute_test(void)
 {
-	const uint8_t * test_string = "hello hi ";
+	const uint8_t * test_string = "shell hi ";
 	execute(test_string);
 }
 

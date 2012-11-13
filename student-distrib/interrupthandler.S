@@ -7,6 +7,7 @@
 .global clock_handler
 .global syscall_handler
 .global test_syscall
+.global to_the_user_space
 
 # Interrupt handler must have use an assembly wrapper because it's an interrupt!
 # The most important instruction that this code contains is the iret command
@@ -148,7 +149,7 @@ to_the_user_space:
 	
 	movl 8(%ebp),%ebx 	#This is getting the first argument aka EIP
 
-	movw USER_DS, %ax 	#load segement selectors
+	movw $USER_DS, %ax 	#load segement selectors
 	movw %ax, %gs 
 	movw %ax, %fs  
 	movw %ax, %ds 
@@ -156,13 +157,13 @@ to_the_user_space:
 
 	push %ax 			
 
-	pushl 0x083FFFF0
+	pushl $0x083FFFF0
 
 	pushf
 	popl %eax
 	or $0x4000, %eax 
 	pushl %eax
-	pushl USER_CS
+	pushl $USER_CS
 	pushl %ebx
 
 	iret
