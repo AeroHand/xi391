@@ -177,7 +177,7 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
-	//test_syscall(1,5);
+	test_syscall(SYS_HALT,0x00000011,0x00000009,0x00000003);
 
 
 	//asm volatile('movl	%1,%EAX;');

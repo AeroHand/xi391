@@ -1,14 +1,12 @@
 # interrupthandler.S - Set up interrupt handler assembly wrappers
 
-#define ASM	1
+#define ASM     1
 #include "x86_desc.h"
-
 
 .global keyboard_handler
 .global clock_handler
 .global syscall_handler
 .global test_syscall
-.global to_the_user_space
 
 # Interrupt handler must have use an assembly wrapper because it's an interrupt!
 # The most important instruction that this code contains is the iret command
@@ -64,7 +62,10 @@ clock_handler:
 
 	iret
 
+
+# A jump table to C functions that implement the system calls themselves.
 syscall_jumptable:
+	.long 0x0
 	.long halt
 	.long execute
 	.long read
@@ -76,7 +77,7 @@ syscall_jumptable:
 	.long set_handler
 	.long sigreturn
 
-
+# Saves registers and jumps to respective C-implemented system call function.
 syscall_handler:
 	pushl %ebp
 	pushl %eax
@@ -90,14 +91,11 @@ syscall_handler:
 	pushl %ecx			#Argument 2
 	pushl %ebx			#Argument 1
 
-	addl $-1, %eax
+	movl syscall_jumptable(,%eax,4),%eax
+	call *%eax
 
-	call *syscall_jumptable(,%eax,4)
-
-	popl %edx 			#Argument 3
-	popl %ecx			#Argument 2
-	popl %ebx	
-
+	addl $12,%esp		# pop the args
+	
 	popl %esi
 	popl %edi
 	popl %edx
@@ -109,9 +107,11 @@ syscall_handler:
 	iret
 
 
-
+# Test wrapper: preps for an soft interrupt and does an "int $0x80".
 test_syscall:
 	pushl %ebp
+	movl	%esp, %ebp
+
 	pushl %eax
 	pushl %ebx
 	pushl %ecx
@@ -119,13 +119,12 @@ test_syscall:
 	pushl %edi
 	pushl %esi
 
-	movl	4(%EBP),%EAX
-
-	movl	8(%EBP),%EBX  	
-	movl	12(%EBP),%ECX 
-	movl	16(%EBP),%EDX 
+	MOVL	8(%EBP),%EAX	# put syscallnum into eax
+	MOVL	12(%EBP),%EBX  	# put param1 into ebx
+	MOVL	16(%EBP),%ECX 	# put param2 into ecx
+	MOVL	20(%EBP),%EDX 	# put param3 into edx
 	
-	int	$0x80    
+	INT	$0x80         
 
 	popl %esi
 	popl %edi
@@ -133,21 +132,8 @@ test_syscall:
 	popl %ecx
 	popl %ebx
 	popl %eax
-	popl %ebp
 
+	leave
 	ret
 
 
-##############################################################################
-
-#to_the_user_space:
-
-#	movw USER_DS, %ax
-#	movw %ax, %ds
-#	movw %ax, %es
-#	movw %ax, %fs
-#	movw %ax, %gs
-	
-#	movl 4(%ebp), %eax
-#	pushl EIP
-#	pushl 
