@@ -140,5 +140,4 @@ int32_t set_handler(int32_t signum, void* handler_address)
 int32_t sigreturn(void)
 {
 	return 0;
->>>>>>> aa60d2298a433602b7d166662aee355ba9e55278
 }
