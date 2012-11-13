@@ -164,10 +164,10 @@ entry (unsigned long magic, unsigned long addr)
 	fs_open( module->mod_start, module->mod_end );
 
 	/* Init the RTC */
-	//rtc_open();
+	rtc_open();
 
 	/** Initialize keyboard **/
-	//keyboard_open();
+	keyboard_open();
 
 
 	/* Enable interrupts */
@@ -177,7 +177,7 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
-	test_syscall(SYS_HALT,0x00000011,0x00000009,0x00000003);
+	//test_syscall(SYS_HALT,0x00000011,0x00000009,0x00000003);
 
 
 	//asm volatile('movl	%1,%EAX;');

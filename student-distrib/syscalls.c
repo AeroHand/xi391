@@ -120,7 +120,8 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
-	return 0;
+	terminal_write(buf);
+	return nbytes;
 }
 
 int32_t open(const uint8_t* filename)
