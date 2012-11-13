@@ -4,8 +4,6 @@
 
 #include "syscalls.h"
 
-
-
 typedef struct file_descriptor {
 	file_op_table* jumptable;
 	dentry_t* inodepointer;
@@ -24,6 +22,7 @@ typedef struct file_descriptor {
  */
 int32_t halt(uint8_t status)
 {
+	printf("You syscalled a \"halt\". The status is: %d\n",status);
 	return 0;
 }
 
