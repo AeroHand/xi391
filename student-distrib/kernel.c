@@ -187,11 +187,13 @@ entry (unsigned long magic, unsigned long addr)
 	//asm volatile('int	$0x80 ');
 
     //make buffer
+	/*
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
     		terminal_write(command_buffer);
     	}
     }
+	*/
     
 	/*
 	int bob;
@@ -220,6 +222,7 @@ entry (unsigned long magic, unsigned long addr)
 	}
 	*/
 	
+	printf("hello\n");
 	/* Execute the first program (`shell') ... */
 	//files_test();
 	execute_test();
