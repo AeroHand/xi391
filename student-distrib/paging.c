@@ -3,11 +3,10 @@
 
 #include "lib.h"
 #include "paging.h"
+#include "files.h"
+#include "syscalls.h"
 
-void init_paging
-	(
-	void
-	)
+void init_paging ( void )
 {
 	int i;
 	int page_table_holder;
@@ -83,5 +82,12 @@ void init_paging
 	"orl $0x80000000, %%eax 	      ;"
 	"movl %%eax, %%cr0                 "
 	: : : "eax", "cc" );
+}
+
+void setup_shell_memory(){
+
+	concurrent_programs =0;
+	fs_load("shell", (0x800000>>12)+4096*concurrent_programs);
+
 }
 

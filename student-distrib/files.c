@@ -3,6 +3,9 @@
 /****************************************************/
 
 #include "files.h"
+#include "syscalls.h"
+#include "x86_desc.h"
+#include "lib.h"
 
 
 /* Variable to ensure only one 'open' of the file system. */
@@ -122,22 +125,14 @@ int32_t fs_write(void)
  */
 int32_t fs_load(const int8_t * fname, uint32_t address)
 {
-	/* Local variables. */
 	dentry_t dentry;
-	
-	/* Check for invalid file name. */
-	if( fname == NULL )
-	{
+
+	if( read_data(dentry.inode, 0x48000, (uint8_t *)address, 
+	                 inodes[dentry.inode].size - 0x48000 ) ){
 		return -1;
 	}
-	
-	if( -1 == read_dentry_by_name((uint8_t *)fname, &dentry) )
-	{
-		return -1;
-	}
-	
-	return read_data(dentry.inode, 0, (uint8_t *)address, 
-	                 inodes[dentry.inode].size);
+
+	return 0;
 }	
  
 /*
@@ -341,7 +336,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 void files_test(void)
 {
 	/* Local variables. */
-	dentry_t dentry;
+	//dentry_t dentry;
 	int i;
 	int a;
 	uint8_t buf[40000];

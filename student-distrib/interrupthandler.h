@@ -14,5 +14,7 @@ extern void syscall_handler();
 //System Call interrupt asm wrapper
 extern void test_syscall(int syscallnum, int status);
 
+extern void to_the_user_space(int32_t newEIP);
+
 #endif /* INTERRUPT_HANDLER_H*/
 
