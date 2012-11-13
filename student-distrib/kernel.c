@@ -13,6 +13,7 @@
 #include "paging.h"
 #include "files.h"
 #include "tests.h"
+#include "syscalls.h"
 
 
 /* Macros. */
@@ -176,7 +177,7 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
-	test_syscall(1,5);
+	//test_syscall(1,5);
 
     //make buffer
  	/*
@@ -215,7 +216,9 @@ entry (unsigned long magic, unsigned long addr)
 	*/
 	
 	/* Execute the first program (`shell') ... */
-	// files_test();
+	//files_test();
+	execute_test();
+	//printf("hello");
 	
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

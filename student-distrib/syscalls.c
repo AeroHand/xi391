@@ -33,6 +33,7 @@ int32_t execute(const uint8_t* command)
 	uint8_t buf[4];
 	uint32_t i;
 	uint32_t entry_point;
+	uint8_t magic_nums[4] = {0x7f, 0x45, 0x4c, 0x46};
 	
 	/* Initializations. */
 	entry_point = 0;
@@ -46,20 +47,26 @@ int32_t execute(const uint8_t* command)
 	/* Get the file name of the program to be executed. */
 	for( i = 0; command[i] != ' '; i++ )
 	{
+		if( i >= 32 )
+		{
+			return -1;
+		}
 		fname[i] = command[i];
 	}
 
 	fname[i] = '\0';
 	
 	/* Read the identifying 3 bytes from the file into buf. */
-	if( -1 == fs_read((const int8_t *)fname, 1, buf, 3) )
+	if( -1 == fs_read((const int8_t *)fname, 0, buf, 4) )
 	{
+		printf("invalid file or somethin");
 		return -1;
 	}
 	
 	/* Ensure an executable program image. */
-	if( 0 != strncmp((const int8_t*)buf, "ELF", 3) )
+	if( 0 != strncmp((const int8_t*)buf, (const int8_t*)magic_nums, 4) )
 	{
+		printf("not an executable ya dummy");
 		return -1;
 	}
 	
@@ -76,17 +83,17 @@ int32_t execute(const uint8_t* command)
 	}
 	
 	/* Load the program to the appropriate starting address. */
-	fs_load((const int8_t *)fname, 0x08048000);
+	//fs_load((const int8_t *)fname, 0x08048000);
 	
 	/* Jump to the entry point and begin execution. */
-	
+	printf("an executable!");
 	
 	return 0;
 }
 
 void execute_test(void)
 {
-	const uint8_t * test_string = "asdf hi ";
+	const uint8_t * test_string = "hello hi ";
 	execute(test_string);
 }
 
