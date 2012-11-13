@@ -210,6 +210,8 @@ page_directory_t page_directories[6] __attribute__((aligned (0x1000)));
 //extern pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE];
 pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE] __attribute__((aligned (0x1000)));
 
+pte_4KB_t new_page_table[MAX_PAGE_TABLE_SIZE] __attribute__((aligned (0x1000)));
+
 
 
 /* Sets runtime-settable parameters in the GDT entry for the LDT */

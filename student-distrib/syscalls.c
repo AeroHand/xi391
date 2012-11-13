@@ -49,7 +49,6 @@ int32_t execute(const uint8_t* command)
 	entry_point = 0;
 	
 	/* Check for an invalid command. */
-
 	if( command == NULL )
 	{
 		return -1;
@@ -67,17 +66,15 @@ int32_t execute(const uint8_t* command)
 
 	fname[i] = '\0';
 	
-	/* Read the identifying 3 bytes from the file into buf. */
+	/* Read the identifying 4 bytes from the file into buf. */
 	if( -1 == fs_read((const int8_t *)fname, 0, buf, 4) )
 	{
-		printf("invalid file or somethin");
 		return -1;
 	}
 	
 	/* Ensure an executable program image. */
 	if( 0 != strncmp((const int8_t*)buf, (const int8_t*)magic_nums, 4) )
 	{
-		printf("not an executable ya dummy");
 		return -1;
 	}
 	
@@ -93,11 +90,17 @@ int32_t execute(const uint8_t* command)
 		entry_point |= (buf[i] << 8*i);
 	}
 	
+	/* Set up the new page directory for the new task. */
+	if( -1 == setup_new_task() )
+	{
+		return -1;
+	}
+	
 	/* Load the program to the appropriate starting address. */
-	//fs_load((const int8_t *)fname, 0x08048000);
+	fs_load((const int8_t *)fname, 0x08048000);
 	
 	/* Jump to the entry point and begin execution. */
-	printf("an executable!");
+	
 	
 	return 0;
 }

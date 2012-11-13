@@ -7,7 +7,16 @@
 #include "syscalls.h"
 
 int newest_task;
+uint32_t new_page_dir_addr;
 
+/*
+ * init_paging()
+ *
+ * Called from kernel.c to initialize paging.
+ *
+ * Retvals
+ * 
+ */
 int32_t init_paging(void)
 {
 	int i;
@@ -80,7 +89,7 @@ int32_t init_paging(void)
 	"andl $0xFFFFFFE7, %%eax          ;"
 	"movl %%eax, %%cr3                ;"
 	"movl %%cr4, %%eax                ;"
-	"orl $0x00000090, %%eax           ;"
+	"orl $0x00000010, %%eax           ;"
 	"movl %%eax, %%cr4                ;"
 	"movl %%cr0, %%eax                ;"
 	"orl $0x80000000, %%eax 	      ;"
@@ -90,8 +99,19 @@ int32_t init_paging(void)
 	return 0;
 }
 
+/*
+ * setup_new_task()
+ *
+ * Called from 'execute' to set up a new page directory.
+ *
+ * Retvals
+ * 
+ */
 int32_t setup_new_task(void)
 {
+	uint32_t i;
+	int new_page_table_holder;
+	
 	/* Reject the request if we already have 6 tasks running. */
 	if( newest_task >= 5 )
 	{
@@ -99,33 +119,77 @@ int32_t setup_new_task(void)
 	}
 	
 	newest_task++;
+	new_page_dir_addr = (uint32_t)(&page_directories[newest_task]);
+	
+	/* Initialize page table for initial space pages. */
+	/* Set all to present except for the page at address 0. */
+	for( i = 0; i < MAX_PAGE_TABLE_SIZE; i++ ) {
+		new_page_table[i].present = (i == 0) ? 0 : 1;
+		new_page_table[i].read_write = 0;
+		new_page_table[i].user_supervisor = 0;
+		new_page_table[i].write_through = 0;
+		new_page_table[i].cache_disabled = 0;
+		new_page_table[i].accessed = 0;
+		new_page_table[i].dirty = 0;
+		new_page_table[i].pat = 0;
+		new_page_table[i].global = 1;
+		new_page_table[i].avail = 0;
+		new_page_table[i].page_addr = i;
+	}
+
+	/* Initialize first page directory entry. */
+	new_page_table_holder = (int)new_page_table;
+	page_directories[newest_task].dentries[0].KB.present = 1;
+	page_directories[newest_task].dentries[0].KB.read_write = 0;
+	page_directories[newest_task].dentries[0].KB.user_supervisor = 0;
+	page_directories[newest_task].dentries[0].KB.write_through = 0;
+	page_directories[newest_task].dentries[0].KB.cache_disabled = 0;
+	page_directories[newest_task].dentries[0].KB.accessed = 0;
+	page_directories[newest_task].dentries[0].KB.page_size = 0;
+	page_directories[newest_task].dentries[0].KB.global = 0;
+	page_directories[newest_task].dentries[0].KB.avail = 0;
+	page_directories[newest_task].dentries[0].KB.table_addr = new_page_table_holder >> 12;
 	
 	/* Initialize the kernel page directory entry. */
-	page_directories[newest_task].dentries[0].MB.present = 1;
-	page_directories[newest_task].dentries[0].MB.read_write = 1;
-	page_directories[newest_task].dentries[0].MB.user_supervisor = 0;
-	page_directories[newest_task].dentries[0].MB.write_through = 0;
-	page_directories[newest_task].dentries[0].MB.cache_disabled = 0;
-	page_directories[newest_task].dentries[0].MB.accessed = 0;
-	page_directories[newest_task].dentries[0].MB.dirty = 0;
-	page_directories[newest_task].dentries[0].MB.page_size = 1;
-	page_directories[newest_task].dentries[0].MB.global = 1;
-	page_directories[newest_task].dentries[0].MB.avail = 0;
-	page_directories[newest_task].dentries[0].MB.pat = 0;
-	page_directories[newest_task].dentries[0].MB.page_addr = 1;
+	page_directories[newest_task].dentries[1].MB.present = 1;
+	page_directories[newest_task].dentries[1].MB.read_write = 1;
+	page_directories[newest_task].dentries[1].MB.user_supervisor = 1;
+	page_directories[newest_task].dentries[1].MB.write_through = 0;
+	page_directories[newest_task].dentries[1].MB.cache_disabled = 0;
+	page_directories[newest_task].dentries[1].MB.accessed = 0;
+	page_directories[newest_task].dentries[1].MB.dirty = 0;
+	page_directories[newest_task].dentries[1].MB.page_size = 1;
+	page_directories[newest_task].dentries[1].MB.global = 1;
+	page_directories[newest_task].dentries[1].MB.avail = 0;
+	page_directories[newest_task].dentries[1].MB.pat = 0;
+	page_directories[newest_task].dentries[1].MB.page_addr = 1;
 	
 	/* Set up a directory entry for the program image. */
 	page_directories[newest_task].dentries[0x20].MB.present = 1;
 	page_directories[newest_task].dentries[0x20].MB.read_write = 1;
-	page_directories[newest_task].dentries[0x20].MB.user_supervisor = 0;
+	page_directories[newest_task].dentries[0x20].MB.user_supervisor = 1;
 	page_directories[newest_task].dentries[0x20].MB.write_through = 0;
 	page_directories[newest_task].dentries[0x20].MB.cache_disabled = 0;
 	page_directories[newest_task].dentries[0x20].MB.accessed = 0;
 	page_directories[newest_task].dentries[0x20].MB.dirty = 0;
 	page_directories[newest_task].dentries[0x20].MB.page_size = 1;
-	page_directories[newest_task].dentries[0x20].MB.global = 1;
+	page_directories[newest_task].dentries[0x20].MB.global = 0;
 	page_directories[newest_task].dentries[0x20].MB.avail = 0;
 	page_directories[newest_task].dentries[0x20].MB.pat = 0;
 	page_directories[newest_task].dentries[0x20].MB.page_addr = newest_task+1;
+	
+	/* Set control registers to enable paging correctly. */
+	asm (
+	"movl new_page_dir_addr, %%eax    ;"
+	"andl $0xFFFFFFE7, %%eax          ;"
+	"movl %%eax, %%cr3                ;"
+	"movl %%cr4, %%eax                ;"
+	"orl $0x00000090, %%eax           ;"
+	"movl %%eax, %%cr4                ;"
+	"movl %%cr0, %%eax                ;"
+	"orl $0x80000000, %%eax 	      ;"
+	"movl %%eax, %%cr0                 "
+	: : : "eax", "cc" );
+	
+	return 0;
 }
-
