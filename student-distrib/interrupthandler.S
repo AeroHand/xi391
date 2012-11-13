@@ -137,3 +137,32 @@ test_syscall:
 	ret
 
 
+####################################
+
+to_the_user_space:
+
+	cli
+
+	pushl %ebp		  	#save old frame pointer
+	movl %esp,%ebp 		#point to new frame
+	
+	movl 8(%ebp),%ebx 	#This is getting the first argument aka EIP
+
+	movw USER_DS, %ax 	#load segement selectors
+	movw %ax, %gs 
+	movw %ax, %fs  
+	movw %ax, %ds 
+	movw %ax, %es
+
+	push %ax 			
+
+	pushl 0x083FFFF0
+
+	pushf
+	popl %eax
+	or $0x4000, %eax 
+	pushl %eax
+	pushl USER_CS
+	pushl %ebx
+
+	iret
