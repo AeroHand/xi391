@@ -154,6 +154,17 @@ typedef union pde_4MB_t {
 	} __attribute__((packed));
 } pde_4MB_t;
 
+/* Generic page directory entry format. */
+typedef union pde_t {
+	pde_4KB_t KB;
+	pde_4MB_t MB;
+} pde_t;
+
+/* Page directory format. */
+typedef struct {
+	pde_t dentries[1024];
+} page_directory_t;
+
 /* Page table entry format for a 4KB page. */
 typedef union pte_4KB_t {
 	uint32_t val;
@@ -188,12 +199,17 @@ extern seg_desc_t tss_desc_ptr;
 extern tss_t tss;
 
 /* Page directory entries (declared in x86_desc.S) */
-extern pde_4KB_t initial_space_pde;
-extern pde_4MB_t kernel_page_pde;
-extern pde_4MB_t remaining_pdes[MAX_PAGE_DIRECTORY_SIZE-2];
+//extern pde_4KB_t initial_space_pde;
+//extern pde_4MB_t kernel_page_pde;
+//extern pde_4MB_t remaining_pdes[MAX_PAGE_DIRECTORY_SIZE-2];
+
+/* An array of page directories, one for each process. */
+page_directory_t page_directories[6] __attribute__((aligned (0x1000)));
 
 /* Page table entries (declared in x86_desc.S) */
-extern pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE];
+//extern pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE];
+pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE] __attribute__((aligned (0x1000)));
+
 
 
 /* Sets runtime-settable parameters in the GDT entry for the LDT */

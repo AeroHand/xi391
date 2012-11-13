@@ -6,10 +6,9 @@
 #include "types.h"
 
 
-void init_paging
-	(
-	void
-	);
+int32_t init_paging(void);
+int32_t setup_new_task(void);
+
 
 #endif
 

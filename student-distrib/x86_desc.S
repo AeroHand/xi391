@@ -11,7 +11,7 @@
 .globl  tss, tss_desc_ptr, ldt, ldt_desc_ptr
 .globl  gdt_desc_ptr, gdt_ptr
 .globl  idt_desc_ptr, idt
-.globl  initial_space_pde, kernel_page_pde, page_table, remaining_pdes
+#.globl  initial_space_pde, kernel_page_pde, page_table, remaining_pdes
 
 .align 4
 
@@ -117,31 +117,31 @@ _idt:
 idt_bottom:
 
 ### The Page Directory ###
-.align 0x1000
-page_directory:
-_page_directory:
+#.align 0x1000
+#page_directory:
+#_page_directory:
 
-initial_space_pde:
-	.long 0x0
+#initial_space_pde:
+#	.long 0x0
 
-kernel_page_pde:
-	.long 0x0
+#kernel_page_pde:
+#	.long 0x0
 
-remaining_pdes:
-	.rept 1022
-	.long 0x0
-	.endr
+#remaining_pdes:
+#	.rept 1022
+#	.long 0x0
+#	.endr
 
-page_directory_bottom:
+#page_directory_bottom:
 
 
 ### The Page Table ###
-.align 0x1000
-page_table:
-_page_table:
+#.align 0x1000
+#page_table:
+#_page_table:
 
-	.rept MAX_PAGE_TABLE_SIZE
-	.long 0x0
-	.endr
+#	.rept MAX_PAGE_TABLE_SIZE
+#	.long 0x0
+#	.endr
 
-page_table_bottom:
+#page_table_bottom:
