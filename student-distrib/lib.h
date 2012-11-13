@@ -37,7 +37,7 @@ void move_x(int x);
 void placec(uint8_t c);
 void update_cursor();
 void move_cursor(int x);
-void carriage_return();
+void carriage_return(int terminallength);
 void new_line();
 void set_command_y(int y);
 void clear_the_screen();

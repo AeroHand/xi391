@@ -7,6 +7,7 @@
 
 static int screen_x;
 static int screen_y;
+static int command_x;
 static int command_y;
 static char* video_mem = (char *)VIDEO;
 
@@ -27,8 +28,8 @@ void jump_to_point(int x, int y) {
 	update_cursor();
 }
 
-void carriage_return() {
-	screen_x = 0;
+void carriage_return(int terminallength) {
+	screen_x = command_x;
 	screen_y = command_y;
 	update_cursor();
 }
@@ -38,10 +39,10 @@ void scrolling(){
 
 	if(screen_y < NUM_ROWS-1){
 		screen_y++;
+		command_y = screen_y;
 		return;
 	}
 
-	command_y--;
 	for(y=0; y<NUM_ROWS; y++){
 		for(x=0; x<NUM_COLS; x++){
 			*(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS*(y+1) + x) << 1));
@@ -58,6 +59,7 @@ void clear_the_screen() {
 	clear();
 	screen_x = 0;
 	screen_y = 0;
+	command_x = 0;
 	command_y = 0;
 	update_cursor(0); 
 }
@@ -70,12 +72,13 @@ void new_line(){
 void set_command_y(int y){
 	if( y != 0)
 		scrolling();
+	command_x = screen_x;
 	command_y = screen_y; 
 }
 
 void update_cursor(int x) {
 
-    unsigned short position=(command_y*NUM_COLS) + x;
+    unsigned short position=(command_y*NUM_COLS) + command_x + x;
  
     // cursor LOW port to vga INDEX register
     outb(0x0F, 0x3D4);
