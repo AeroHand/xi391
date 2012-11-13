@@ -3,6 +3,8 @@
 
 #include "lib.h"
 #include "paging.h"
+#include "files.h"
+#include "syscalls.h"
 
 int newest_task;
 

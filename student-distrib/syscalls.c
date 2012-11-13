@@ -4,6 +4,16 @@
 
 #include "syscalls.h"
 
+
+
+typedef struct file_descriptor {
+	file_op_table* jumptable;
+	dentry_t* inodepointer;
+	int32_t fileposition;
+	int32_t flags;
+} file_descriptor;
+
+
 /*
  * halt()
  *
@@ -39,6 +49,7 @@ int32_t execute(const uint8_t* command)
 	entry_point = 0;
 	
 	/* Check for an invalid command. */
+
 	if( command == NULL )
 	{
 		return -1;

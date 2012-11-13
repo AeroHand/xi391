@@ -8,6 +8,7 @@
 .global clock_handler
 .global syscall_handler
 .global test_syscall
+.global to_the_user_space
 
 # Interrupt handler must have use an assembly wrapper because it's an interrupt!
 # The most important instruction that this code contains is the iret command
@@ -91,7 +92,11 @@ syscall_handler:
 
 	addl $-1, %eax
 
-	call *syscall_jumptable(,%eax,0x4)
+	call *syscall_jumptable(,%eax,4)
+
+	popl %edx 			#Argument 3
+	popl %ecx			#Argument 2
+	popl %ebx	
 
 	popl %esi
 	popl %edi
@@ -114,13 +119,13 @@ test_syscall:
 	pushl %edi
 	pushl %esi
 
-	MOVL	4(%EBP),%EAX
+	movl	4(%EBP),%EAX
 
-	MOVL	8(%EBP),%EBX  	
-	MOVL	12(%EBP),%ECX 
-	MOVL	16(%EBP),%EDX 
+	movl	8(%EBP),%EBX  	
+	movl	12(%EBP),%ECX 
+	movl	16(%EBP),%EDX 
 	
-	INT	$0x80         
+	int	$0x80    
 
 	popl %esi
 	popl %edi
@@ -133,3 +138,16 @@ test_syscall:
 	ret
 
 
+##############################################################################
+
+#to_the_user_space:
+
+#	movw USER_DS, %ax
+#	movw %ax, %ds
+#	movw %ax, %es
+#	movw %ax, %fs
+#	movw %ax, %gs
+	
+#	movl 4(%ebp), %eax
+#	pushl EIP
+#	pushl 

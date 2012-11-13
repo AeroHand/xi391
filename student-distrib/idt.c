@@ -110,6 +110,8 @@ exception_GP(){
 /* Page Fault Exception */
 void
 exception_PF(){
+	asm volatile(" movl %cr3, %eax ");
+
 	printf("Page Fault Exception!\n");
 	while(1){}
 }

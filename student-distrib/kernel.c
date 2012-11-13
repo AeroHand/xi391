@@ -179,15 +179,20 @@ entry (unsigned long magic, unsigned long addr)
 
 	//test_syscall(1,5);
 
+
+	//asm volatile('movl	%1,%EAX;');
+	//asm volatile('movl	%5,%EBX;');  	
+	//asm volatile('movl	%0,%ECX;'); 
+	//asm volatile('movl	%0,%EDX;'); 
+	//asm volatile('int	$0x80 ');
+
     //make buffer
- 	/*
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
     		terminal_write(command_buffer);
     	}
     }
-	*/
-
+    
 	/*
 	int bob;
 	for (bob=0; bob < 20; ++bob) {
