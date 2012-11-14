@@ -274,17 +274,17 @@ int32_t open(const uint8_t* filename)
 			}
 			else if(tempdentry.filetype == 1) //Directory
 			{ 
-					process_control_block->fds[i].jumptable[0] = (uint32_t)(no_function);
-					process_control_block->fds[i].jumptable[1] = (uint32_t)(no_function);
-					process_control_block->fds[i].jumptable[2] = (uint32_t)(no_function);
-					process_control_block->fds[i].jumptable[3] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[0] = (uint32_t)(dir_open);
+					process_control_block->fds[i].jumptable[1] = (uint32_t)(dir_read);
+					process_control_block->fds[i].jumptable[2] = (uint32_t)(dir_write);
+					process_control_block->fds[i].jumptable[3] = (uint32_t)(dir_close);
 			}
 			else if(tempdentry.filetype == 2) //Regular File
 			{ 
-					process_control_block->fds[i].jumptable[0] = (uint32_t)(no_function);
-					process_control_block->fds[i].jumptable[1] = (uint32_t)(no_function);
-					process_control_block->fds[i].jumptable[2] = (uint32_t)(no_function);
-					process_control_block->fds[i].jumptable[3] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[0] = (uint32_t)(file_open);
+					process_control_block->fds[i].jumptable[1] = (uint32_t)(file_read);
+					process_control_block->fds[i].jumptable[2] = (uint32_t)(file_write);
+					process_control_block->fds[i].jumptable[3] = (uint32_t)(file_close);
 			}
 
 			process_control_block->fds[i].flags = 1;
