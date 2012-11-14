@@ -81,7 +81,6 @@ syscall_jumptable:
 # Saves registers and jumps to respective C-implemented system call function.
 syscall_handler:
 	pushl %ebp
-	pushl %eax
 	pushl %ebx
 	pushl %ecx
 	pushl %edx
@@ -102,7 +101,6 @@ syscall_handler:
 	popl %edx
 	popl %ecx
 	popl %ebx
-	popl %eax
 	popl %ebp
 
 	iret
@@ -161,7 +159,7 @@ to_the_user_space:
 
 	pushf
 	popl %eax
-	or $0x4000, %eax 
+	orl $0x4200, %eax 
 	pushl %eax
 	pushl $USER_CS
 	pushl %ebx

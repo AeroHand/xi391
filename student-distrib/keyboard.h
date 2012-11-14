@@ -176,7 +176,7 @@ void keyboard_open(void);
 int terminal_read(unsigned char * buf, int cnt);
 
 /* Called to read from command buffer */
-void terminal_write(unsigned char * buf);
+int terminal_write(const unsigned char * buf, int numbytes);
 
 /* Called to read from command buffer */
 void printthebuffer();

@@ -4,6 +4,7 @@
 
 #include "syscalls.h"
 #include "interrupthandler.h"
+#include "keyboard.h"
 
 typedef struct file_descriptor {
 	file_op_table* jumptable;
@@ -23,7 +24,7 @@ typedef struct file_descriptor {
  */
 int32_t halt(uint8_t status)
 {
-	printf("You syscalled a \"halt\". The status is: %d\n",status);
+	printf("\nYou syscalled a \"halt\". The status is: %d\n",status);
 	return 0;
 }
 
@@ -55,7 +56,7 @@ int32_t execute(const uint8_t* command)
 	}
 	
 	/* Get the file name of the program to be executed. */
-	for( i = 0; command[i] != ' '; i++ )
+	for( i = 0; command[i] != '\0' ; i++ )
 	{
 		if( i >= 32 )
 		{
@@ -98,7 +99,7 @@ int32_t execute(const uint8_t* command)
 	
 	/* Load the program to the appropriate starting address. */
 	fs_load((const int8_t *)fname, 0x08048000);
-	printf("About to jump to user space...\n");
+	//printf("About to jump to user space...\n");
 	
 	/* Jump to the entry point and begin execution. */
 	to_the_user_space((int32_t)entry_point);
@@ -108,20 +109,21 @@ int32_t execute(const uint8_t* command)
 
 void execute_test(void)
 {
-	const uint8_t * test_string = "shell hi ";
+	const uint8_t * test_string = "shell";
 	execute(test_string);
 }
 
 
 int32_t read(int32_t fd, void* buf, int32_t nbytes)
 {
-	return 0;
+	terminal_read(buf,nbytes);
+	return nbytes;
 }
 
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
-	terminal_write(buf);
-	return nbytes;
+	int byteswritten = terminal_write(buf,nbytes);
+	return byteswritten;
 }
 
 int32_t open(const uint8_t* filename)

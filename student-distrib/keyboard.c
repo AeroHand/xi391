@@ -129,25 +129,37 @@ unsigned int allow_terminal_read;
 
 int terminal_read(unsigned char * buf, int cnt){
 	int i;
-	if(allow_terminal_read){
-		//int printbufferlength = terminalsize + command_length -1 ;
-		for(i=0; i<cnt; i++){
-			buf[i] = command_buffer[i];
-			command_buffer[i] = NULL;
+	int countread;
+
+	sti();
+	
+	set_command_y(0);
+
+	while (1){ 
+		if(allow_terminal_read){
+			new_line();
+			for(i=0; i<cnt; i++){
+				buf[i] = command_buffer[i];
+				command_buffer[i] = NULL;
+				countread++;
+			}
+			command_length = 0;
+			cursor_x = 0;
+			allow_terminal_read = 0;
+			return countread;
+		}else{
 		}
-		command_length = 0;
-		cursor_x = 0;
-		allow_terminal_read = 0;
-		return 1;
-	}else{
-		return 0;
 	}
 }
 
-void terminal_write(unsigned char * buf){
-	new_line();
-	printf("%s", buf);
-    set_command_y(1);
+int terminal_write(const unsigned char * buf, int nbytes){
+	int successputs;
+	int i;
+	for(i=0; i<nbytes; i++){
+		putc(buf[i]);
+		successputs;
+	}
+	return successputs;
 }
 
 /* Initialize the keyboard */
@@ -163,10 +175,10 @@ keyboard_open(void) {
 	keyboardflag = 0x00;
 	allow_terminal_read = 0;
 	command_length = 0;
-	terminalsize = 12;
+	terminalsize = 7;
 	cursor_x = 0;
-	clear();
-	jump_to_point(0,0);
+	//clear();
+	//jump_to_point(0,0);
 	
 	/* Unmask IRQ1 */
 	enable_irq(KEYBOARD_IRQ);
@@ -189,13 +201,9 @@ void place_character_at_index(unsigned char scancode, int index) {
 
 void printthebuffer(){
 	int i;
-	int delta_y = (terminalsize+command_length)/NUM_COLS;
-	carriage_return(delta_y);
+	carriage_return(terminalsize);
 	for(i=0; i<=command_length; i++){
-		print_buffer[i+terminalsize] =  command_buffer[i];
-	}
-	for(i=0; i<=terminalsize+command_length; i++){
-		putc(print_buffer[i]);
+		putc(command_buffer[i]);
 	}
 
 }
@@ -299,7 +307,7 @@ dosomethingwiththis(unsigned char scancode)
 		}
 	}
 
-	update_cursor(terminalsize + cursor_x);
+	update_cursor(cursor_x);
 }
 
 /* Keyboard Interrupt */
