@@ -153,11 +153,11 @@ int terminal_read(unsigned char * buf, int cnt){
 }
 
 int terminal_write(const unsigned char * buf, int nbytes){
-	int successputs;
+	int successputs = 0;
 	int i;
 	for(i=0; i<nbytes; i++){
 		putc(buf[i]);
-		successputs;
+		successputs++;
 	}
 	return successputs;
 }

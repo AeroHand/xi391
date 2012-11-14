@@ -9,6 +9,7 @@
 uint8_t running_processes = 0x80;
 uint32_t kernel_stack_bottom;
 
+
 typedef struct file_descriptor_t {
 	uint32_t jumptable[4];
 	int32_t inode;
@@ -26,6 +27,36 @@ typedef struct pcb_t {
 } pcb_t;
 
 
+/* Initialize the file operations tables -- we will make the
+ * file descriptors' jumptable pointers point to these tables when
+ * we open a file.
+ */
+ /* stdin file operations table */
+uint32_t stdin_fops_table[4] = { (uint32_t)(no_function),
+								 (uint32_t)(terminal_read),
+								 (uint32_t)(no_function),
+								 (uint32_t)(no_function) };
+/* stdout file operations table */
+uint32_t stdout_fops_table[4] = { (uint32_t)(no_function),
+								  (uint32_t)(no_function),
+								  (uint32_t)(terminal_write),
+								  (uint32_t)(no_function) };
+/* rtc file operations table */
+uint32_t rtc_fops_table[4] = { (uint32_t)(no_function),
+							   (uint32_t)(no_function),
+							   (uint32_t)(no_function),
+							   (uint32_t)(no_function) };
+/* file file operations table */
+uint32_t file_fops_table[4] = { (uint32_t)(no_function),
+							    (uint32_t)(no_function),
+							    (uint32_t)(no_function),
+							    (uint32_t)(no_function) };
+/* directory file operations table */
+uint32_t dir_fops_table[4] = { (uint32_t)(no_function),
+							   (uint32_t)(no_function),
+							   (uint32_t)(no_function),
+							   (uint32_t)(no_function) };
+							   
 /*
  * halt()
  *
@@ -238,7 +269,18 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
-	int byteswritten = terminal_write(buf,nbytes);
+	int byteswritten;
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+
+	asm volatile("pushl %0		;"
+				 "pushl %1		;"
+				 "call  %2		;"
+				 :
+				 : "g" (nbytes), "g" ((int32_t)buf), "g" (process_control_block->fds[fd].jumptable[2]));
+				 
+	asm volatile("movl %%eax, %0":"=g"(byteswritten));
+	asm volatile("addl $8, %esp	;");
+	
 	return byteswritten;
 }
 
@@ -306,5 +348,5 @@ int32_t sigreturn(void)
 
 int32_t no_function(void)
 {
-	return -1;
+	return 0;
 }
