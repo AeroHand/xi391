@@ -80,28 +80,42 @@ syscall_jumptable:
 
 # Saves registers and jumps to respective C-implemented system call function.
 syscall_handler:
+#	pushl %xes
+#	pushl %xds
 	pushl %ebp
-	pushl %ebx
-	pushl %ecx
-	pushl %edx
 	pushl %edi
 	pushl %esi
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
 
 	pushl %edx 			#Argument 3
 	pushl %ecx			#Argument 2
 	pushl %ebx			#Argument 1
 
+	cmpl $1, %eax		#check that eax is greater than 1
+	jl bad_eax
+	cmpl $10, %eax		#check that eax is less than 10
+	jg bad_eax
+	
 	movl syscall_jumptable(,%eax,4),%eax
 	call *%eax
+	jmp end_syscall
+	
+bad_eax:
+	movl $-1, %eax
 
+end_syscall:
 	addl $12,%esp		# pop the args
 	
+	popl %ebx
+	popl %ecx
+	popl %edx
 	popl %esi
 	popl %edi
-	popl %edx
-	popl %ecx
-	popl %ebx
 	popl %ebp
+#	popl %xds
+#	popl %xes
 
 	iret
 
@@ -147,13 +161,13 @@ to_the_user_space:
 	
 	movl 8(%ebp),%ebx 	#This is getting the first argument aka EIP
 
-	movw $USER_DS, %ax 	#load segement selectors
+	movl $USER_DS, %eax 	#load segement selectors
 	movw %ax, %gs 
 	movw %ax, %fs  
 	movw %ax, %ds 
 	movw %ax, %es
 
-	push %ax 			
+	pushl %eax
 
 	pushl $0x083FFFF0
 
