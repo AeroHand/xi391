@@ -102,7 +102,7 @@ int32_t execute(const uint8_t* command)
 	//printf("About to jump to user space...\n");
 	
 	/* Jump to the entry point and begin execution. */
-	to_the_user_space((int32_t)entry_point);
+	to_the_user_space((int32_t)entry_point, 0x083FFFF1);
 	
 	return 0;
 }

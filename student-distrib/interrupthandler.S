@@ -142,10 +142,13 @@ to_the_user_space:
 
 	cli
 
-	pushl %ebp		  	#save old frame pointer
-	movl %esp,%ebp 		#point to new frame
+	#pushl %ebp		  	#save old frame pointer
+	#movl %esp,%ebp 		#point to new frame
 	
-	movl 8(%ebp),%ebx 	#This is getting the first argument aka EIP
+	movl 4(%esp),%ebx 	#Extended Instruction Pointer -> ebx
+	movl 8(%esp),%edx 	#User Stack Pointer -> edx
+	movl 12(%esp),%ecx 	#Address to store Kernel stack -> ecx
+
 
 	movw $USER_DS, %ax 	#load segement selectors
 	movw %ax, %gs 
@@ -155,7 +158,7 @@ to_the_user_space:
 
 	push %ax 			
 
-	pushl $0x083FFFF0
+	pushl %edx
 
 	pushf
 	popl %eax

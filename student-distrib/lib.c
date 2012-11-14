@@ -28,7 +28,7 @@ void jump_to_point(int x, int y) {
 	update_cursor();
 }
 
-void carriage_return(int terminallength) {
+void carriage_return() {
 	screen_x = command_x;
 	screen_y = command_y;
 	update_cursor();
@@ -39,9 +39,10 @@ void scrolling(){
 
 	if(screen_y < NUM_ROWS-1){
 		screen_y++;
-		command_y = screen_y;
 		return;
 	}
+
+	command_y--;
 
 	for(y=0; y<NUM_ROWS; y++){
 		for(x=0; x<NUM_COLS; x++){
