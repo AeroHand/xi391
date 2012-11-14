@@ -61,6 +61,16 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 				  
 void files_test(void);
 
+int32_t file_open(void);
+int32_t file_close(void);
+int32_t file_read(const int8_t * fname, uint8_t * buf, uint32_t length);
+int32_t file_write(void);
+
+int32_t dir_open(void);
+int32_t dir_close(void);
+int32_t dir_read(uint32_t file_index, uint8_t * buf);
+int32_t dir_write(void);
+
 
 
 #endif
