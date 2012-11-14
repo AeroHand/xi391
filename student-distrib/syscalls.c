@@ -5,6 +5,9 @@
 #include "syscalls.h"
 #include "interrupthandler.h"
 #include "keyboard.h"
+#include "rtc.h"
+#include "files.h"
+
 
 typedef struct file_descriptor {
 	file_op_table* jumptable;
@@ -12,6 +15,8 @@ typedef struct file_descriptor {
 	int32_t fileposition;
 	int32_t flags;
 } file_descriptor;
+
+int rtc_in_use;
 
 
 /*
@@ -102,7 +107,7 @@ int32_t execute(const uint8_t* command)
 	//printf("About to jump to user space...\n");
 	
 	/* Jump to the entry point and begin execution. */
-	to_the_user_space((int32_t)entry_point, 0x083FFFF1);
+	to_the_user_space((int32_t)entry_point, 0x083FFFF0);
 	
 	return 0;
 }
@@ -128,7 +133,52 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 
 int32_t open(const uint8_t* filename)
 {
-	return 0;
+	int i;
+
+	dentry_t tempdentry;
+
+	pcb_t * process_control_block = (pcb_t *) (kernel_stack_pointer & 0xFFFFE000);
+
+	if( -1 == read_dentry_by_name(filename, &tempdentry)) {
+		return -1;
+	}
+
+	for (i=2; i<8; i++) {
+		if (process_control_block->fds[i].flags == 0) {	
+			
+			if (tempdentry.filetype == 0) //RTC
+			{ 		
+				if (-1 == rtc_open()) {
+					return -1;
+				} else {
+					process_control_block->fds[i].jumptable[0] = (uint32_t)(rtc_open);
+					process_control_block->fds[i].jumptable[1] = (uint32_t)(rtc_read);
+					process_control_block->fds[i].jumptable[2] = (uint32_t)(rtc_write);
+					process_control_block->fds[i].jumptable[3] = (uint32_t)(rtc_close);
+				}
+			}
+			else if(tempdentry.filetype == 1) //Directory
+			{ 
+					process_control_block->fds[i].jumptable[0] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[1] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[2] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[3] = (uint32_t)(no_function);
+			}
+			else if(tempdentry.filetype == 2) //Regular File
+			{ 
+					process_control_block->fds[i].jumptable[0] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[1] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[2] = (uint32_t)(no_function);
+					process_control_block->fds[i].jumptable[3] = (uint32_t)(no_function);
+			}
+
+			process_control_block->fds[i].flags = 1;
+			return i;
+		}		
+	}
+
+	printf("The File Descriptor Array is Filled\n");
+	return -1;	
 }
 
 int32_t close(int32_t fd)
