@@ -22,6 +22,7 @@ typedef struct file_descriptor_t {
 
 typedef struct pcb_t {
 	file_descriptor_t fds[8];
+	uint8_t filenames[8][32]; 
 	uint32_t parent_ksp;
 	uint32_t parent_kbp;
 	uint8_t process_number;
@@ -233,19 +234,88 @@ void execute_test(void)
 	execute(test_string);
 }
 
-
+/*
+ * read()
+ *
+ * Reads 'nbytes' bytes into 'buf' from the file corresponding to the
+ * given 'fd'.
+ *
+ * Retvals
+ * 
+ */
 int32_t read(int32_t fd, void* buf, int32_t nbytes)
 {
-	terminal_read(buf,nbytes);
-	return nbytes;
+	dentry_t dentry;
+	
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	
+	/* Check for invalid fd or buf. */
+	if( fd < 0 || fd > 7 || buf == NULL )
+	{
+		return -1;
+	}
+	
+	if( -1 == read_dentry_by_name(process_control_block->filenames[fd], &dentry)) {
+		return -1;
+	}
+	
+	/* Stdin. */
+	if( fd == 0 )
+	{
+		terminal_read(buf,nbytes);
+		return nbytes;
+	}
+	
+	/* 'Read' on stdout does nothing. */
+	if( fd == 1 )
+	{
+		return -1;
+	}
+	
+	/* Call read for the file with the given fd. */
+	if( dentry.filetype == 0 ) // rtc
+	{
+		//( (void (*)(void))(process_control_block->fds[fd].jumptable[1]) )(void);
+		return 0;
+	}
+	else if( dentry.filetype == 1 ) // dir
+	{
+		//( (void (*)(uint8_t*))(process_control_block->fds[fd].jumptable[1]) )((uint8_t *)buf);
+		return 0;
+	}
+	else if( dentry.filetype == 2 ) // reg file
+	{
+		//( (void (*)(const int8_t*,uint8_t*,uint32_t))(process_control_block->fds[fd].jumptable[1]) )
+		//((const int8_t*)process_control_block->filenames[fd], (uint8_t*)buf, (uint32_t)nbytes);
+		return 0;
+	}
+
+	return -1;
 }
 
+/*
+ * write()
+ *
+ * Writes 'nbytes' bytes from 'buf' into the file associated with 'fd'.
+ *
+ * Retvals
+ * 
+ */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
 	int byteswritten = terminal_write(buf,nbytes);
 	return byteswritten;
 }
 
+/*
+ * open()
+ *
+ * Attempts to open the file with the given filename and give it a spot
+ * in the file array in the pcb associated with the current process.
+ *
+ * Retvals
+ * 
+ */
 int32_t open(const uint8_t* filename)
 {
 	int i;
@@ -254,12 +324,27 @@ int32_t open(const uint8_t* filename)
 
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 
+	/* Call appropriate function for opening stdin. */
+	if( 0 == strncmp((const int8_t*)filename, (const int8_t*)"stdin", 5) ) 
+	{
+		open_stdin( 0 );
+		return 0;
+	}
+	
+	/* Call appropriate function for opening stdout. */
+	if( 0 == strncmp((const int8_t*)filename, (const int8_t*)"stdout", 5) ) 
+	{
+		open_stdout( 1 );
+		return 0;
+	}
+	
+	/* Get dentry information associated with the filename. */
 	if( -1 == read_dentry_by_name(filename, &tempdentry)) {
 		return -1;
 	}
 
 	for (i=2; i<8; i++) {
-		if (process_control_block->fds[i].flags == 0) {	
+		if (process_control_block->fds[i].flags == NOT_IN_USE) {	
 			
 			if (tempdentry.filetype == 0) //RTC
 			{ 		
@@ -274,20 +359,22 @@ int32_t open(const uint8_t* filename)
 			}
 			else if(tempdentry.filetype == 1) //Directory
 			{ 
-					process_control_block->fds[i].jumptable[0] = (uint32_t)(dir_open);
-					process_control_block->fds[i].jumptable[1] = (uint32_t)(dir_read);
-					process_control_block->fds[i].jumptable[2] = (uint32_t)(dir_write);
-					process_control_block->fds[i].jumptable[3] = (uint32_t)(dir_close);
+				process_control_block->fds[i].jumptable[0] = (uint32_t)(dir_open);
+				process_control_block->fds[i].jumptable[1] = (uint32_t)(dir_read);
+				process_control_block->fds[i].jumptable[2] = (uint32_t)(dir_write);
+				process_control_block->fds[i].jumptable[3] = (uint32_t)(dir_close);
 			}
 			else if(tempdentry.filetype == 2) //Regular File
 			{ 
-					process_control_block->fds[i].jumptable[0] = (uint32_t)(file_open);
-					process_control_block->fds[i].jumptable[1] = (uint32_t)(file_read);
-					process_control_block->fds[i].jumptable[2] = (uint32_t)(file_write);
-					process_control_block->fds[i].jumptable[3] = (uint32_t)(file_close);
+				process_control_block->fds[i].jumptable[0] = (uint32_t)(file_open);
+				process_control_block->fds[i].jumptable[1] = (uint32_t)(file_read);
+				process_control_block->fds[i].jumptable[2] = (uint32_t)(file_write);
+				process_control_block->fds[i].jumptable[3] = (uint32_t)(file_close);
 			}
 
-			process_control_block->fds[i].flags = 1;
+			process_control_block->fds[i].flags = IN_USE;
+			process_control_block->fds[i].inode = tempdentry.inode;
+			strcpy((int8_t*)process_control_block->filenames[i], (const int8_t*)filename);
 			return i;
 		}		
 	}
