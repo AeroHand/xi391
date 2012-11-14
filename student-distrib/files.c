@@ -338,6 +338,57 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 	return total_successful_reads;
 }
 
+/* Regular file operations. */
+
+int32_t file_open(void)
+{
+	return 0;
+}
+
+int32_t file_close(void)
+{
+	return 0;
+}
+
+int32_t file_read(const int8_t * fname, uint8_t * buf, uint32_t length)
+{
+	return fs_read(fname, 0, buf, length);
+}
+
+int32_t file_write(void)
+{
+	return -1;
+}
+
+/* Directory operations. */
+
+int32_t dir_open(void)
+{
+	return 0;
+}
+
+int32_t dir_close(void)
+{
+	return 0;
+}
+
+int32_t dir_read(uint32_t file_index, uint8_t * buf)
+{
+	if( file_index >= fs_stats.num_dentries )
+	{
+		return 0;
+	}
+	
+	strcpy((int8_t *)buf, (const int8_t *)fs_dentries[file_index].filename);
+	
+	return 0;
+}
+
+int32_t dir_write(void)
+{
+	return 0;
+}
+
 /*
  * files_test()
  * 
@@ -356,7 +407,7 @@ void files_test(void)
 	uint32_t bytes_to_read;
 	
 	/* Initializations. */
-	int8_t * test_string = "frame0.txt";
+	int8_t * test_string = "shell";
 	offset = 0;
 	bytes_to_read = 40000;
 	
@@ -386,7 +437,7 @@ void files_test(void)
 		}
 		*/
 	}
-	
+
 	putc('\n');
 	printf("%d", a);
 	
@@ -404,4 +455,6 @@ void files_test(void)
 	shell 17
 	*/
 }
+
+ 
 

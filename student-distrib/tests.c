@@ -4,6 +4,7 @@
 #include "lib.h"
 #include "rtc.h"
 
+/*
 int
 test_dereference_null_ptr() {
 	int * ptr = 0x0000000;
@@ -67,12 +68,13 @@ test_rtc_write_freq(int32_t nbytes) {
 	}
 	return retval;
 }
-
+*/
+/*
 int
 test() {
 	printf("post-kernel-init tests:\n");
 	int score = 1;
-
+*/
 	/* MP3.1 Tests */
 	// score &= test_dereference_null_ptr();
 	// score &= test_dereference_nonnull_ptr();
@@ -80,6 +82,7 @@ test() {
 
 	/* MP3.2 Test RTC */
 	/** RTC Open/close **/
+/*
 	printf("closing rtc (should pass)... ");
 	score &= !test_rtc_close();
 	printf("closing rtc again (should fail)... ");
@@ -88,10 +91,14 @@ test() {
 	score &= !test_rtc_open();
 	printf("opening rtc again (should fail)... ");
 	score &= (test_rtc_open() < 0);
+*/
 	/** RTC Read **/
+/*
 	printf("testing read on interrupts thrice (should pass):\n");
 	score &= test_rtc_read_spam(10);
+*/
 	/** RTC Write **/
+/*
 	printf("testing set freq 4hz (should pass)... ");
 	score &= !test_rtc_write_freq(4);
 	score &= test_rtc_read_spam(20);
@@ -135,4 +142,4 @@ test() {
 	
 	return score;
 }
-
+*/

@@ -180,6 +180,9 @@ keyboard_open(void) {
 	//clear();
 	//jump_to_point(0,0);
 	
+	set_command_y(0);
+	update_cursor(7);
+
 	/* Unmask IRQ1 */
 	enable_irq(KEYBOARD_IRQ);
 
@@ -201,7 +204,7 @@ void place_character_at_index(unsigned char scancode, int index) {
 
 void printthebuffer(){
 	int i;
-	carriage_return(terminalsize);
+	carriage_return();
 	for(i=0; i<=command_length; i++){
 		putc(command_buffer[i]);
 	}

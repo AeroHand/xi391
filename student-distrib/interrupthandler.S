@@ -156,10 +156,10 @@ to_the_user_space:
 
 	cli
 
-	pushl %ebp		  	#save old frame pointer
-	movl %esp,%ebp 		#point to new frame
+	#pushl %ebp		  	#save old frame pointer
+	#movl %esp,%ebp 		#point to new frame
 	
-	movl 8(%ebp),%ebx 	#This is getting the first argument aka EIP
+	movl 4(%esp),%ebx 	#Extended Instruction Pointer -> ebx
 
 	movl $USER_DS, %eax 	#load segement selectors
 	movw %ax, %gs 
@@ -169,7 +169,7 @@ to_the_user_space:
 
 	pushl %eax
 
-	pushl $0x083FFFF0
+	pushl $0x83FFFF0
 
 	pushf
 	popl %eax

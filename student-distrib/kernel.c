@@ -27,7 +27,6 @@ void
 entry (unsigned long magic, unsigned long addr)
 {
 	multiboot_info_t *mbi;
-	unsigned char command_buffer[TERMINAL_BUFFER_MAX_SIZE];
 
 	/* Clear the screen. */
 	clear();
@@ -146,7 +145,6 @@ entry (unsigned long magic, unsigned long addr)
 		SET_TSS_PARAMS(the_tss_desc, &tss, tss_size);
 
 		tss_desc_ptr = the_tss_desc;
-
 		tss.ldt_segment_selector = KERNEL_LDT;
 		tss.ss0 = KERNEL_DS;
 		tss.esp0 = 0x800000;
@@ -158,17 +156,19 @@ entry (unsigned long magic, unsigned long addr)
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
+
+	/** Initialize virtual memory **/
 	init_paging();
 	
+	/** Initialize the filesystem **/
 	module_t* module = (module_t*)mbi->mods_addr;
 	fs_open( module->mod_start, module->mod_end );
 
-	/* Init the RTC */
+	/** Init the RTC **/
 	rtc_open();
 
 	/** Initialize keyboard **/
 	keyboard_open();
-
 
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
@@ -177,8 +177,8 @@ entry (unsigned long magic, unsigned long addr)
 	//printf("Enabling Interrupts\n");
 	sti();
 
-	//test_syscall(SYS_HALT,0x00000011,0x00000009,0x00000003);
 
+	//test_syscall(SYS_HALT,0x00000011,0x00000009,0x00000003);
 
 	//asm volatile('movl	%1,%EAX;');
 	//asm volatile('movl	%5,%EBX;');  	
@@ -186,7 +186,7 @@ entry (unsigned long magic, unsigned long addr)
 	//asm volatile('movl	%0,%EDX;'); 
 	//asm volatile('int	$0x80 ');
 
-    //make buffer
+    /* Make buffer */
 	/*
     while (1){ 
     	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
@@ -195,6 +195,8 @@ entry (unsigned long magic, unsigned long addr)
     }
 	*/
     
+
+	/* Running Handin RTC tests */
 	/*
 	int bob;
 	for (bob=0; bob < 20; ++bob) {
@@ -213,6 +215,7 @@ entry (unsigned long magic, unsigned long addr)
 	}
 	*/
 	
+	/* Running rob's rtc tests */
 	/*
 	int test_result = test();
 	if(test_result == 1) {
@@ -222,7 +225,7 @@ entry (unsigned long magic, unsigned long addr)
 	}
 	*/
 	
-	
+
 	/* Execute the first program (`shell') ... */
 	//files_test();
 	execute_test();
