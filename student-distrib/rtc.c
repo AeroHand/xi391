@@ -30,6 +30,8 @@ rtc_init(void) {
 	outb(INDEX_REGISTER_B, RTC_PORT);
 	outb((KILL_SET_PIE_AIE_UIE & b_old) | SET_PIE_AIE_UIE, CMOS_PORT);
 
+	enable_irq(RTC_IRQ);
+
 }
 
 /* RTC Interrupt */
@@ -132,8 +134,6 @@ int32_t rtc_open (void) {
 	if(rtc_is_open) {
 		return -1;
 	} else {
-		/* Initialize RTC */
-		rtc_init();
 		/* Unmask RTC */
 		enable_irq(RTC_IRQ);
 		/* Set rtc open flag */

@@ -68,7 +68,7 @@ int32_t file_write(void);
 
 int32_t dir_open(void);
 int32_t dir_close(void);
-int32_t dir_read(uint32_t file_index, uint8_t * buf);
+int32_t dir_read(uint8_t * buf);
 int32_t dir_write(void);
 
 

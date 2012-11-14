@@ -26,7 +26,7 @@ inode_t * inodes;
 /* The address of the first data block. */
 uint32_t data_start;
 
-
+uint32_t dir_reads;
 
 /*
  * fs_open()
@@ -167,6 +167,8 @@ void fs_init(uint32_t fs_start, uint32_t fs_end)
 
 	/* Set the location of the first data block. */
 	data_start = bb_start + (fs_stats.num_inodes+1)*FS_PAGE_SIZE;
+	
+	dir_reads = 0;
 }
 
 /*
@@ -372,14 +374,16 @@ int32_t dir_close(void)
 	return 0;
 }
 
-int32_t dir_read(uint32_t file_index, uint8_t * buf)
+int32_t dir_read(uint8_t * buf)
 {
-	if( file_index >= fs_stats.num_dentries )
+	if( dir_reads >= fs_stats.num_dentries )
 	{
 		return 0;
 	}
 	
-	strcpy((int8_t *)buf, (const int8_t *)fs_dentries[file_index].filename);
+	strcpy((int8_t *)buf, (const int8_t *)fs_dentries[dir_reads].filename);
+	
+	dir_reads++;
 	
 	return 0;
 }

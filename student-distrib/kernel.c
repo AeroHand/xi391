@@ -165,7 +165,7 @@ entry (unsigned long magic, unsigned long addr)
 	fs_open( module->mod_start, module->mod_end );
 
 	/** Init the RTC **/
-	rtc_open();
+	rtc_init();
 
 	/** Initialize keyboard **/
 	keyboard_open();
@@ -178,7 +178,7 @@ entry (unsigned long magic, unsigned long addr)
 	sti();
 
 
-	//test_syscall(SYS_HALT,0x00000011,0x00000009,0x00000003);
+	//test_syscall(SYS_OPEN,"test", 0 ,0);
 
 	//asm volatile('movl	%1,%EAX;');
 	//asm volatile('movl	%5,%EBX;');  	
