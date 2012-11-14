@@ -26,7 +26,7 @@ extern void syscall_handler();
 extern void test_syscall(uint32_t syscallnum, uint32_t param1, uint32_t param2, uint32_t param3);
 
 //TODO: is this function used/needed? @danmurray
-extern void to_the_user_space(int32_t newEIP, int32_t userstack);
+extern void to_the_user_space(int32_t newEIP);
 
 #endif /* INTERRUPT_HANDLER_H*/
 

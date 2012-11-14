@@ -80,28 +80,42 @@ syscall_jumptable:
 
 # Saves registers and jumps to respective C-implemented system call function.
 syscall_handler:
+#	pushl %xes
+#	pushl %xds
 	pushl %ebp
-	pushl %ebx
-	pushl %ecx
-	pushl %edx
 	pushl %edi
 	pushl %esi
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
 
 	pushl %edx 			#Argument 3
 	pushl %ecx			#Argument 2
 	pushl %ebx			#Argument 1
 
+	cmpl $1, %eax		#check that eax is greater than 1
+	jl bad_eax
+	cmpl $10, %eax		#check that eax is less than 10
+	jg bad_eax
+	
 	movl syscall_jumptable(,%eax,4),%eax
 	call *%eax
+	jmp end_syscall
+	
+bad_eax:
+	movl $-1, %eax
 
+end_syscall:
 	addl $12,%esp		# pop the args
 	
+	popl %ebx
+	popl %ecx
+	popl %edx
 	popl %esi
 	popl %edi
-	popl %edx
-	popl %ecx
-	popl %ebx
 	popl %ebp
+#	popl %xds
+#	popl %xes
 
 	iret
 
@@ -146,19 +160,16 @@ to_the_user_space:
 	#movl %esp,%ebp 		#point to new frame
 	
 	movl 4(%esp),%ebx 	#Extended Instruction Pointer -> ebx
-	movl 8(%esp),%edx 	#User Stack Pointer -> edx
-	movl 12(%esp),%ecx 	#Address to store Kernel stack -> ecx
 
-
-	movw $USER_DS, %ax 	#load segement selectors
+	movl $USER_DS, %eax 	#load segement selectors
 	movw %ax, %gs 
 	movw %ax, %fs  
 	movw %ax, %ds 
 	movw %ax, %es
 
-	push %ax 			
+	pushl %eax
 
-	pushl %edx
+	pushl $0x83FFFF0
 
 	pushf
 	popl %eax

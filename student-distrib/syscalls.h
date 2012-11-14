@@ -4,6 +4,7 @@
 #include "files.h"
 #include "paging.h"
 
+
 typedef struct file_op_table{
 	int32_t (*read)(void* buf, int32_t nbytes);
 	int32_t (*write)(const void* buf, int32_t nbytes);
@@ -33,8 +34,17 @@ int32_t set_handler(int32_t signum, void* handler_address);
 /* System Call: sigreturn */
 int32_t sigreturn(void);
 
+/* open_stdin */
+void open_stdin( int32_t fd );
+/* open_stdout */
+void open_stdout( int32_t fd );
 /* execute_test */
 void execute_test(void);
+/* no_function */
+int32_t no_function(void);
+
+#define		IN_USE			1
+#define		NOT_IN_USE		0
 
 #endif /* SYSCALLS_H*/
 

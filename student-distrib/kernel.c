@@ -178,7 +178,7 @@ entry (unsigned long magic, unsigned long addr)
 	sti();
 
 
-	test_syscall(SYS_OPEN,"test", 0 ,0);
+	//test_syscall(SYS_OPEN,"test", 0 ,0);
 
 	//asm volatile('movl	%1,%EAX;');
 	//asm volatile('movl	%5,%EBX;');  	
@@ -228,7 +228,7 @@ entry (unsigned long magic, unsigned long addr)
 
 	/* Execute the first program (`shell') ... */
 	//files_test();
-	//execute_test();
+	execute_test();
 	//printf("hello");
 	
 	/* Spin (nicely, so we don't chew up cycles) */
