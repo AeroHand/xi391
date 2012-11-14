@@ -27,7 +27,6 @@ void
 entry (unsigned long magic, unsigned long addr)
 {
 	multiboot_info_t *mbi;
-	unsigned char command_buffer[TERMINAL_BUFFER_MAX_SIZE];
 
 	/* Clear the screen. */
 	clear();
@@ -146,7 +145,6 @@ entry (unsigned long magic, unsigned long addr)
 		SET_TSS_PARAMS(the_tss_desc, &tss, tss_size);
 
 		tss_desc_ptr = the_tss_desc;
-4
 		tss.ldt_segment_selector = KERNEL_LDT;
 		tss.ss0 = KERNEL_DS;
 		tss.esp0 = 0x800000;
