@@ -48,21 +48,21 @@ uint32_t stdout_fops_table[4] = { (uint32_t)(no_function),
 								  (uint32_t)(terminal_write),
 								  (uint32_t)(no_function) };
 /* rtc file operations table */
-uint32_t rtc_fops_table[4] = { (uint32_t)(no_function),
-							   (uint32_t)(no_function),
-							   (uint32_t)(no_function),
-							   (uint32_t)(no_function) };
+uint32_t rtc_fops_table[4] = { (uint32_t)(rtc_open),
+							   (uint32_t)(rtc_read),
+							   (uint32_t)(rtc_write),
+							   (uint32_t)(rtc_close) };
 /* file file operations table */
-uint32_t file_fops_table[4] = { (uint32_t)(no_function),
-							    (uint32_t)(no_function),
-							    (uint32_t)(no_function),
-							    (uint32_t)(no_function) };
+uint32_t file_fops_table[4] = { (uint32_t)(file_open),
+							    (uint32_t)(file_read),
+							    (uint32_t)(file_write),
+							    (uint32_t)(file_close) };
 /* directory file operations table */
-uint32_t dir_fops_table[4] = { (uint32_t)(no_function),
-							   (uint32_t)(no_function),
-							   (uint32_t)(no_function),
-							   (uint32_t)(no_function) };
-							   
+uint32_t dir_fops_table[4] = { (uint32_t)(dir_open),
+							   (uint32_t)(dir_read),
+							   (uint32_t)(dir_write),
+							   (uint32_t)(dir_close) };
+			   
 /*
  * halt()
  *
@@ -276,11 +276,39 @@ void execute_test(void)
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes)
 {
-	dentry_t dentry;
+
+	int bytesread;
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	
+	//Check for invalid fd or buf. 
+	if( fd < 0 || fd > 7 || buf == NULL )
+	{
+		return -1;
+	}
+
+	uint8_t* filename = process_control_block->filenames[fd];
+
+	
+
+	asm volatile("pushl %0		;"
+				 "pushl %1		;"
+				 "pushl %2		;"
+				 "call  %3		;"
+				 :
+				 : "g" ((int32_t)filename), "g" (nbytes), "g" ((int32_t)buf), "g" (process_control_block->fds[fd].jumptable[1]));
+				 
+	asm volatile("movl %%eax, %0":"=g"(bytesread));
+	asm volatile("addl $12, %esp	;");
+	
+	return bytesread;
+
+
+
+/*	dentry_t dentry;
 	
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	/* Check for invalid fd or buf. */
+	//Check for invalid fd or buf. 
 	if( fd < 0 || fd > 7 || buf == NULL )
 	{
 		return -1;
@@ -290,20 +318,20 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 		return -1;
 	}
 	
-	/* Stdin. */
+	// Stdin. 
 	if( fd == 0 )
 	{
 		terminal_read(buf,nbytes);
 		return nbytes;
 	}
 	
-	/* 'Read' on stdout does nothing. */
+	// 'Read' on stdout does nothing.
 	if( fd == 1 )
 	{
 		return -1;
 	}
 	
-	/* Call read for the file with the given fd. */
+	// Call read for the file with the given fd.
 	if( dentry.filetype == 0 ) // rtc
 	{
 		//( (void (*)(void))(process_control_block->fds[fd].jumptable[1]) )(void);
@@ -322,6 +350,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 	}
 
 	return -1;
+	*/
 }
 
 /*

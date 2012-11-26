@@ -352,7 +352,7 @@ int32_t file_close(void)
 	return 0;
 }
 
-int32_t file_read(const int8_t * fname, uint8_t * buf, uint32_t length)
+int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname)
 {
 	return fs_read(fname, 0, buf, length);
 }
@@ -390,7 +390,7 @@ int32_t dir_read(uint8_t * buf)
 
 int32_t dir_write(void)
 {
-	return 0;
+	return -1;
 }
 
 /*
