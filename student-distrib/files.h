@@ -71,6 +71,7 @@ int32_t dir_close(void);
 int32_t dir_read(uint8_t * buf);
 int32_t dir_write(void);
 
+void reset_dir_reads(void);
 
 
 #endif

@@ -14,7 +14,7 @@ uint32_t kernel_stack_bottom;
 
 
 typedef struct file_descriptor_t {
-	uint32_t jumptable[4];
+	uint32_t * jumptable;
 	int32_t inode;
 	int32_t fileposition;
 	int32_t flags;
@@ -73,6 +73,12 @@ uint32_t dir_fops_table[4] = { (uint32_t)(dir_open),
  */
 int32_t halt(uint8_t status)
 {
+	/* Reset the directory reads counter
+	 *  -- if we are here, we know that if we had previously been reading from
+	 *     the fs directory, we are not reading from it anymore, so reset the counter
+	 */
+	reset_dir_reads();
+	
 	int i;
 	printf("\nYou syscalled a \"halt\". The status is: %d\n",status);
 	
@@ -129,6 +135,12 @@ int32_t halt(uint8_t status)
  */
 int32_t execute(const uint8_t* command)
 {
+	/* Reset the directory reads counter
+	 *  -- if we are here, we know that if we had previously been reading from
+	 *     the fs directory, we are not reading from it anymore, so reset the counter
+	 */
+	reset_dir_reads();
+	
 	/* Local variables. */
 	uint8_t fname[32];
 	uint8_t buf[4];
@@ -363,6 +375,12 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
+	/* Reset the directory reads counter
+	 *  -- if we are here, we know that if we had previously been reading from
+	 *     the fs directory, we are not reading from it anymore, so reset the counter
+	 */
+	//reset_dir_reads();
+
 	int byteswritten;
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 
@@ -389,6 +407,12 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
  */
 int32_t open(const uint8_t* filename)
 {
+	/* Reset the directory reads counter
+	 *  -- if we are here, we know that if we had previously been reading from
+	 *     the fs directory, we are not reading from it anymore, so reset the counter
+	 */
+	reset_dir_reads();
+	
 	int i;
 
 	dentry_t tempdentry;
@@ -422,25 +446,28 @@ int32_t open(const uint8_t* filename)
 				if (-1 == rtc_open()) {
 					return -1;
 				} else {
-					process_control_block->fds[i].jumptable[0] = (uint32_t)(rtc_open);
-					process_control_block->fds[i].jumptable[1] = (uint32_t)(rtc_read);
-					process_control_block->fds[i].jumptable[2] = (uint32_t)(rtc_write);
-					process_control_block->fds[i].jumptable[3] = (uint32_t)(rtc_close);
+					//process_control_block->fds[i].jumptable[0] = (uint32_t)(rtc_open);
+					//process_control_block->fds[i].jumptable[1] = (uint32_t)(rtc_read);
+					//process_control_block->fds[i].jumptable[2] = (uint32_t)(rtc_write);
+					//process_control_block->fds[i].jumptable[3] = (uint32_t)(rtc_close);
+					process_control_block->fds[i].jumptable = rtc_fops_table;
 				}
 			}
 			else if(tempdentry.filetype == 1) //Directory
 			{ 
-				process_control_block->fds[i].jumptable[0] = (uint32_t)(dir_open);
-				process_control_block->fds[i].jumptable[1] = (uint32_t)(dir_read);
-				process_control_block->fds[i].jumptable[2] = (uint32_t)(dir_write);
-				process_control_block->fds[i].jumptable[3] = (uint32_t)(dir_close);
+				//process_control_block->fds[i].jumptable[0] = (uint32_t)(dir_open);
+				//process_control_block->fds[i].jumptable[1] = (uint32_t)(dir_read);
+				//process_control_block->fds[i].jumptable[2] = (uint32_t)(dir_write);
+				//process_control_block->fds[i].jumptable[3] = (uint32_t)(dir_close);
+				process_control_block->fds[i].jumptable = dir_fops_table;
 			}
 			else if(tempdentry.filetype == 2) //Regular File
 			{ 
-				process_control_block->fds[i].jumptable[0] = (uint32_t)(file_open);
-				process_control_block->fds[i].jumptable[1] = (uint32_t)(file_read);
-				process_control_block->fds[i].jumptable[2] = (uint32_t)(file_write);
-				process_control_block->fds[i].jumptable[3] = (uint32_t)(file_close);
+				//process_control_block->fds[i].jumptable[0] = (uint32_t)(file_open);
+				//process_control_block->fds[i].jumptable[1] = (uint32_t)(file_read);
+				//process_control_block->fds[i].jumptable[2] = (uint32_t)(file_write);
+				//process_control_block->fds[i].jumptable[3] = (uint32_t)(file_close);
+				process_control_block->fds[i].jumptable = file_fops_table;
 			}
 
 			process_control_block->fds[i].flags = IN_USE;
@@ -460,10 +487,11 @@ void open_stdin( int32_t fd )
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
 	/* set the jumptable -- NOTE: for stdin, we only have a read function */
-	process_control_block->fds[fd].jumptable[0] = (uint32_t)(no_function);
-	process_control_block->fds[fd].jumptable[1] = (uint32_t)(terminal_read);
-	process_control_block->fds[fd].jumptable[2] = (uint32_t)(no_function);
-	process_control_block->fds[fd].jumptable[3] = (uint32_t)(no_function);
+	//process_control_block->fds[fd].jumptable[0] = (uint32_t)(no_function);
+	//process_control_block->fds[fd].jumptable[1] = (uint32_t)(terminal_read);
+	//process_control_block->fds[fd].jumptable[2] = (uint32_t)(no_function);
+	//process_control_block->fds[fd].jumptable[3] = (uint32_t)(no_function);
+	process_control_block->fds[fd].jumptable = stdin_fops_table;
 	
 	/* mark this fd as in use */
 	process_control_block->fds[fd].flags = IN_USE;
@@ -475,10 +503,11 @@ void open_stdout( int32_t fd )
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
 	/* set the jumptable -- NOTE: for stdout, we only have a write function */
-	process_control_block->fds[fd].jumptable[0] = (uint32_t)(no_function);
-	process_control_block->fds[fd].jumptable[1] = (uint32_t)(no_function);
-	process_control_block->fds[fd].jumptable[2] = (uint32_t)(terminal_write);
-	process_control_block->fds[fd].jumptable[3] = (uint32_t)(no_function);
+	//process_control_block->fds[fd].jumptable[0] = (uint32_t)(no_function);
+	//process_control_block->fds[fd].jumptable[1] = (uint32_t)(no_function);
+	//process_control_block->fds[fd].jumptable[2] = (uint32_t)(terminal_write);
+	//process_control_block->fds[fd].jumptable[3] = (uint32_t)(no_function);
+	process_control_block->fds[fd].jumptable = stdout_fops_table;
 	
 	/* mark this fd as in use */
 	process_control_block->fds[fd].flags = IN_USE;
@@ -488,16 +517,34 @@ void open_stdout( int32_t fd )
 
 int32_t close(int32_t fd)
 {
+	/* Reset the directory reads counter
+	 *  -- if we are here, we know that if we had previously been reading from
+	 *     the fs directory, we are not reading from it anymore, so reset the counter
+	 */
+	reset_dir_reads();
+	
 	return 0;
 }
 
 int32_t getargs(uint8_t* buf, int32_t nbytes)
 {
+	/* Reset the directory reads counter
+	 *  -- if we are here, we know that if we had previously been reading from
+	 *     the fs directory, we are not reading from it anymore, so reset the counter
+	 */
+	reset_dir_reads();
+	
 	return 0;
 }
 
 int32_t vidmap(uint8_t** screen_start)
 {
+	/* Reset the directory reads counter
+	 *  -- if we are here, we know that if we had previously been reading from
+	 *     the fs directory, we are not reading from it anymore, so reset the counter
+	 */
+	reset_dir_reads();
+	
 	return 0;
 }
 

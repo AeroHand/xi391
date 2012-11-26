@@ -378,6 +378,7 @@ int32_t dir_read(uint8_t * buf)
 {
 	if( dir_reads >= fs_stats.num_dentries )
 	{
+		dir_reads = 0;
 		return 0;
 	}
 	
@@ -385,7 +386,7 @@ int32_t dir_read(uint8_t * buf)
 	
 	dir_reads++;
 	
-	return 0;
+	return strlen(buf);
 }
 
 int32_t dir_write(void)
@@ -458,6 +459,11 @@ void files_test(void)
 	sigtest 16
 	shell 17
 	*/
+}
+
+void reset_dir_reads(void)
+{
+	dir_reads = 0;
 }
 
  
