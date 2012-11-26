@@ -12,6 +12,8 @@
 uint8_t running_processes = 0x80;
 uint32_t kernel_stack_bottom;
 
+/* used in halt for switching the page directory */
+uint32_t page_dir_addr;
 
 typedef struct file_descriptor_t {
 	uint32_t jumptable[4];
@@ -73,16 +75,17 @@ uint32_t dir_fops_table[4] = { (uint32_t)(no_function),
  */
 int32_t halt(uint8_t status)
 {
+	//printf("%d\n", status);
+	
+	/* Local variables */
 	int i;
-	printf("\nYou syscalled a \"halt\". The status is: %d\n",status);
 	
-	/* store the return value in EAX */
-	asm volatile("movl %0, %%eax"::"g"(status)); // Asm stuff put the "status" into the %EAX
-	
-	/* extract the PCB from the KSP */
+	/* Extract the PCB from the KSP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	/* unmark current process */
+	/* Mark the current process as 0, aka this process is done and its slot
+	 * is now available for new processes
+	 */
 	uint8_t bitmask = 0x7F;
 	for( i = 0; i < process_control_block->process_number; i++ )
 	{
@@ -90,10 +93,10 @@ int32_t halt(uint8_t status)
 	}
 	running_processes = running_processes & bitmask;
 	
-	/* load the page directory of the parent */
-	uint32_t page_dir_addr = (uint32_t)(&page_directories[process_control_block->parent_process_number]);
+	/* Load the page directory of the parent */
+	page_dir_addr = (uint32_t)(&page_directories[process_control_block->parent_process_number]);
 	asm (
-	"movl %0, %%eax                   ;"
+	"movl page_dir_addr, %%eax                   ;"
 	"andl $0xFFFFFFE7, %%eax          ;"
 	"movl %%eax, %%cr3                ;"
 	"movl %%cr4, %%eax                ;"
@@ -102,16 +105,31 @@ int32_t halt(uint8_t status)
 	"movl %%cr0, %%eax                ;"
 	"orl $0x80000000, %%eax 	      ;"
 	"movl %%eax, %%cr0                 "
-	: : "r" (page_dir_addr) : "eax", "cc" );
+	: : : "eax", "cc" );
 	
-	
+	/* Set the kernel_stack_bottom and the TSS to point back at the parent's kernel stack */
 	kernel_stack_bottom = tss.esp0 = 0x00800000 - (0x2000)*process_control_block->parent_process_number - 4;
 	
+	/* Switch the kernel stack back to the parent's kernel stack by
+	 * restoring ESP and EBP.
+	 * -- NOTE: We need to store "status" since we will be losing it when we
+	 *          switch the stack. To do this, move ESP to the new stack,
+	 *          push status (which is referenced by EBP), move EBP to the new
+	 *          stack, then pop status back into EAX for the return of halt.
+	 */
 	asm volatile("movl %0, %%esp	;"
 				 "pushl %1			;"::"g"(process_control_block->parent_ksp),"g"(status)); // Asm stuff put the "parent_ksp" into the %ESP
 	asm volatile("movl %0, %%ebp"::"g"(process_control_block->parent_kbp)); // Asm stuff put the "parent_kbp" into the %EBP
-	
 	asm volatile("popl %eax");
+	
+	/* We have now switched back to the stack of the parent. Remember that the parent
+	 * stack was where we originally called 'execute' for this process. Thus, the parent's
+	 * stack (now the current stack) contains the appropriate data that was pushed when 
+	 * we made the 'execute' syscall. If we now leave and ret, we will return back to the
+	 * syscall_handler for the original 'execute' syscall, which can then iret.
+	 * -- NOTE: We never iret from the 'halt' command... we just ditch its stack information
+	 *          when we switch back to the parent stack.
+	 */
 	asm volatile("leave");
 	asm volatile("ret");
 	
@@ -171,7 +189,6 @@ int32_t execute(const uint8_t* command)
 		}
 		fname[i] = command[i];
 	}
-
 	fname[i] = '\0';
 	
 	/* Read the identifying 4 bytes from the file into buf. */
