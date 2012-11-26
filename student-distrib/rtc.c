@@ -65,10 +65,10 @@ clock_interruption(void) {
  */
 int32_t
 rtc_read (void) {
-	
+
 	/* Spin until the interrupt has occurred */
 	while (!interrupt_occurred);
-	
+
 	/* Clear the flag back to zero. */
 	interrupt_occurred = 0;
 
@@ -84,15 +84,26 @@ rtc_read (void) {
  */
 /* The call returns the number of bytes written, or -1 on failure. */
 int32_t
-rtc_write (int32_t nbytes) {
+rtc_write (int32_t * buf, int32_t nbytes) {
+
+	/* If rtc_write doesn't receive 4 bytes, fail */	
+	if (4 != nbytes) {
+		return -1;
+	}
 	
-	/* TODO mask NMIs? */
+	/* If pointer to frequency is null, fail */
+	int32_t freq;
+	if (NULL == buf) {
+		return -1;
+	} else {
+		freq = *buf;
+	}
 
 	outb(INDEX_REGISTER_A, RTC_PORT);
 	unsigned char a_old = inb(CMOS_PORT);
 
 	int8_t rs;
-	switch(nbytes) {
+	switch(freq) {
 		case 8192:
 		case 4096:
 		case 2048:
@@ -117,10 +128,7 @@ rtc_write (int32_t nbytes) {
 	outb((KILL_RS & a_old) | rs, CMOS_PORT);
 
 	/* return number of bytes on success (always 0) */
-	// TODO ask if i should return 0, 1, 2, 3 on success
 	return 0;
-
-	/* TODO unmask NMIs? */
 }
 
 /* System Call: open */
@@ -134,8 +142,6 @@ int32_t rtc_open (void) {
 	if(rtc_is_open) {
 		return -1;
 	} else {
-		/* Unmask RTC */
-		enable_irq(RTC_IRQ);
 		/* Set rtc open flag */
 		rtc_is_open = 1;
 
@@ -152,8 +158,6 @@ int32_t rtc_open (void) {
  */
 int32_t rtc_close (void) {
 	if(rtc_is_open) {
-		/* Mask RTC */
-		disable_irq(RTC_IRQ);
 		/* Clear rtc open flag */
 		rtc_is_open = 0;
 

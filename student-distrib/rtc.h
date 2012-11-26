@@ -55,7 +55,7 @@ void clock_interruption(void);
 /* System Call: read */
 int32_t rtc_read (void);
 /* System Call: write */
-int32_t rtc_write (int32_t nbytes);
+int32_t rtc_write (int32_t * buf, int32_t nbytes);
 /* System Call: open */
 int32_t rtc_open (void);
 /* System Call: close */
