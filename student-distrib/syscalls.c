@@ -78,7 +78,6 @@ int32_t halt(uint8_t status)
 {
 	/* Local variables */
 	int i;
-	printf("\nYou syscalled a \"halt\". The status is: %d\n",status);
 	
 	/* Extract the PCB from the KSP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
@@ -117,8 +116,9 @@ int32_t halt(uint8_t status)
 	 *          push status (which is referenced by EBP), move EBP to the new
 	 *          stack, then pop status back into EAX for the return of halt.
 	 */
+	uint32_t motherfucking_status = status;
 	asm volatile("movl %0, %%esp	;"
-				 "pushl %1			;"::"g"(process_control_block->parent_ksp),"g"(status)); // Asm stuff put the "parent_ksp" into the %ESP
+				 "pushl %1			;"::"g"(process_control_block->parent_ksp),"g"(motherfucking_status)); // Asm stuff put the "parent_ksp" into the %ESP
 	asm volatile("movl %0, %%ebp"::"g"(process_control_block->parent_kbp)); // Asm stuff put the "parent_kbp" into the %EBP
 	asm volatile("popl %eax");
 	
@@ -280,8 +280,8 @@ int32_t execute(const uint8_t* command)
 	
 	kernel_stack_bottom = tss.esp0 = 0x00800000 - (0x2000)*open_process - 4;
 	
-	open_stdin( 0 );
-	open_stdout( 1 );
+	open("stdin");
+	open("stdout");
 	
 	asm volatile("movl %0, %%esp	;"
 				 "pushl %1			;"::"g"(kernel_stack_bottom), "g"(entry_point)); // Asm stuff put the "kernel_stack_bottom" into the %ESP
