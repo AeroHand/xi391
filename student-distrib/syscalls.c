@@ -313,6 +313,8 @@ void execute_test(void)
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes)
 {
+	
+	sti();
 
 	int bytesread;
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);

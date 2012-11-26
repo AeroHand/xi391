@@ -23,9 +23,11 @@ keyboard_handler:
 	pushl %edx
 	pushl %edi
 	pushl %esi
+	pushfl
 
 	call keyboard_interruption
 
+	popfl
 	popl %esi
 	popl %edi
 	popl %edx
@@ -50,9 +52,11 @@ clock_handler:
 	pushl %edx
 	pushl %edi
 	pushl %esi
+	pushfl
 
 	call clock_interruption
 
+	popfl
 	popl %esi
 	popl %edi
 	popl %edx
