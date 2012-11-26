@@ -197,24 +197,19 @@ entry (unsigned long magic, unsigned long addr)
     
 
 	/* Running Handin RTC tests */
-	/*
+	/*	
 	int bob;
-	for (bob=0; bob < 20; ++bob) {
+	for (bob=0; bob < 10; ++bob) {
 		rtc_read();
-		printf("bob yay");
+		test_interrupts();
 	}
-	rtc_write(4);
-	for (bob=0; bob < 20; ++bob) {
+	int a = 4;
+	rtc_write(&a,4);
+	for (bob=0; bob < 10; ++bob) {
 		rtc_read();
-		printf("bob yay");
+		test_interrupts();
 	}
-	rtc_write(5);
-	for (bob=0; bob < 20; ++bob) {
-		rtc_read();
-		printf("bob yay");
-	}
-	*/
-	
+	*/	
 	/* Running rob's rtc tests */
 	/*
 	int test_result = test();

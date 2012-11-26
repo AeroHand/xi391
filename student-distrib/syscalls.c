@@ -585,7 +585,12 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
 
 int32_t vidmap(uint8_t** screen_start)
 {
-	+
+	if( screen_start < 0x08000000 || screen_start > 0x08400000 )
+	{
+		return -1;
+	}
+
+	*screen_start = VIDEO;
 	return 0;
 }
 

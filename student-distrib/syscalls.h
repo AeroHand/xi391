@@ -4,6 +4,12 @@
 #include "files.h"
 #include "paging.h"
 
+#define		IN_USE			1
+#define		NOT_IN_USE		0
+
+#define		FILE_TYPE_RTC			0
+#define		FILE_TYPE_DIRECTORY		1
+#define		FILE_TYPE_REGULAR_FILE	2
 
 typedef struct file_op_table{
 	int32_t (*read)(void* buf, int32_t nbytes);
@@ -42,9 +48,6 @@ void open_stdout( int32_t fd );
 void execute_test(void);
 /* no_function */
 int32_t no_function(void);
-
-#define		IN_USE			1
-#define		NOT_IN_USE		0
 
 #endif /* SYSCALLS_H*/
 
