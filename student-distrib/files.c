@@ -274,7 +274,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 	/* Check for invalid offset. */
 	if( offset >= inodes[inode].size )
 	{
-		return -1;
+		return 0;
 	}
 
 	/* [Check for a "bad data block number" somehow?] */
@@ -352,9 +352,9 @@ int32_t file_close(void)
 	return 0;
 }
 
-int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname)
+int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset)
 {
-	return fs_read(fname, 0, buf, length);
+	return fs_read(fname, offset, buf, length);
 }
 
 int32_t file_write(void)

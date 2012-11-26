@@ -30,6 +30,7 @@ typedef struct pcb_t {
 	uint32_t parent_kbp;
 	uint8_t process_number;
 	uint8_t parent_process_number;
+	uint8_t argbuf[100];
 } pcb_t;
 
 int rtc_in_use;
@@ -75,12 +76,6 @@ uint32_t dir_fops_table[4] = { (uint32_t)(dir_open),
  */
 int32_t halt(uint8_t status)
 {
-	/* Reset the directory reads counter
-	 *  -- if we are here, we know that if we had previously been reading from
-	 *     the fs directory, we are not reading from it anymore, so reset the counter
-	 */
-	reset_dir_reads();
-	
 	/* Local variables */
 	int i;
 	printf("\nYou syscalled a \"halt\". The status is: %d\n",status);
@@ -152,12 +147,6 @@ int32_t halt(uint8_t status)
  */
 int32_t execute(const uint8_t* command)
 {
-	/* Reset the directory reads counter
-	 *  -- if we are here, we know that if we had previously been reading from
-	 *     the fs directory, we are not reading from it anymore, so reset the counter
-	 */
-	reset_dir_reads();
-	
 	/* Local variables. */
 	uint8_t fname[32];
 	uint8_t buf[4];
@@ -165,6 +154,9 @@ int32_t execute(const uint8_t* command)
 	uint32_t entry_point;
 	uint8_t magic_nums[4] = {0x7f, 0x45, 0x4c, 0x46};
 	uint8_t open_process;
+	uint32_t first_space_reached = 0;
+	uint32_t length_of_fname = 0;
+	uint8_t localargbuf[100];
 	
 	/* Initializations. */
 	entry_point = 0;
@@ -191,16 +183,31 @@ int32_t execute(const uint8_t* command)
 		}
 	}
 	
-	/* Get the file name of the program to be executed. */
+	/* Get the file name of the program to be executed and store */
+	/* the additional args into the argbuf.                      */
 	for( i = 0; command[i] != '\0' ; i++ )
 	{
-		if( i >= 32 )
+		if( command[i] == ' ' && first_space_reached == 0 )
 		{
-			return -1;
+			first_space_reached = 1;
+			length_of_fname = i;
+			fname[i] = '\0';
 		}
-		fname[i] = command[i];
+		else if( first_space_reached == 1 )
+		{
+			localargbuf[i-length_of_fname-1] = command[i];
+		}
+		else
+		{
+			fname[i] = command[i];
+		}
 	}
-	fname[i] = '\0';
+	localargbuf[i-length_of_fname-1] = '\0';
+	
+	if( first_space_reached == 0 )
+	{
+		fname[i] = '\0';
+	}
 	
 	/* Read the identifying 4 bytes from the file into buf. */
 	if( -1 == fs_read((const int8_t *)fname, 0, buf, 4) )
@@ -269,6 +276,8 @@ int32_t execute(const uint8_t* command)
 		process_control_block->fds[i].flags = NOT_IN_USE;
 	}
 	
+	strcpy((int8_t*)process_control_block->argbuf, (const int8_t*)localargbuf);
+	
 	kernel_stack_bottom = tss.esp0 = 0x00800000 - (0x2000)*open_process - 4;
 	
 	open_stdin( 0 );
@@ -309,24 +318,27 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
 	//Check for invalid fd or buf. 
-	if( fd < 0 || fd > 7 || buf == NULL )
+	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
 	{
 		return -1;
 	}
 
 	uint8_t* filename = process_control_block->filenames[fd];
-
-	
+	uint32_t fileposition = process_control_block->fds[fd].fileposition;
 
 	asm volatile("pushl %0		;"
 				 "pushl %1		;"
 				 "pushl %2		;"
-				 "call  %3		;"
+				 "pushl %3		;"
+				 "call  %4		;"
 				 :
-				 : "g" ((int32_t)filename), "g" (nbytes), "g" ((int32_t)buf), "g" (process_control_block->fds[fd].jumptable[1]));
+				 : "g" (fileposition), "g" ((int32_t)filename), "g" (nbytes), "g" ((int32_t)buf),
+				   "g" (process_control_block->fds[fd].jumptable[1]));
 				 
 	asm volatile("movl %%eax, %0":"=g"(bytesread));
-	asm volatile("addl $12, %esp	;");
+	asm volatile("addl $16, %esp	;");
+	
+	process_control_block->fds[fd].fileposition += bytesread;
 	
 	return bytesread;
 
@@ -391,14 +403,14 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
-	/* Reset the directory reads counter
-	 *  -- if we are here, we know that if we had previously been reading from
-	 *     the fs directory, we are not reading from it anymore, so reset the counter
-	 */
-	//reset_dir_reads();
-
 	int byteswritten;
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	
+	//Check for invalid fd or buf. 
+	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
+	{
+		return -1;
+	}
 
 	asm volatile("pushl %0		;"
 				 "pushl %1		;"
@@ -423,12 +435,6 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
  */
 int32_t open(const uint8_t* filename)
 {
-	/* Reset the directory reads counter
-	 *  -- if we are here, we know that if we had previously been reading from
-	 *     the fs directory, we are not reading from it anymore, so reset the counter
-	 */
-	reset_dir_reads();
-	
 	int i;
 
 	dentry_t tempdentry;
@@ -533,34 +539,58 @@ void open_stdout( int32_t fd )
 
 int32_t close(int32_t fd)
 {
-	/* Reset the directory reads counter
-	 *  -- if we are here, we know that if we had previously been reading from
-	 *     the fs directory, we are not reading from it anymore, so reset the counter
-	 */
-	reset_dir_reads();
+	uint32_t retval;
 	
-	return 0;
+	/* get the PCB by using the KSP */
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	
+	//Check for invalid fd. 
+	if( fd < 2 || fd > 7 || process_control_block->fds[fd].flags == NOT_IN_USE )
+	{
+		return -1;
+	}
+	
+	asm volatile("call  %0		;"
+				 :
+				 : "g" (process_control_block->fds[fd].jumptable[3]));
+	asm volatile("movl %%eax, %0":"=g"(retval));
+	
+	process_control_block->fds[fd].jumptable = NULL;
+	process_control_block->fds[fd].inode = 0;
+	process_control_block->fds[fd].fileposition = 0;
+	process_control_block->fds[fd].flags = NOT_IN_USE;
+	
+	return retval;
 }
 
 int32_t getargs(uint8_t* buf, int32_t nbytes)
 {
-	/* Reset the directory reads counter
-	 *  -- if we are here, we know that if we had previously been reading from
-	 *     the fs directory, we are not reading from it anymore, so reset the counter
-	 */
-	reset_dir_reads();
+	if( buf == NULL || nbytes == 0 )
+	{
+		return -1;
+	}
+	
+	/* get the PCB by using the KSP */
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	
+	if( strlen((const int8_t*)process_control_block->argbuf) > nbytes )
+	{
+		return -1;
+	}
+	
+	strcpy((int8_t*)buf, (const int8_t*)process_control_block->argbuf);
 	
 	return 0;
 }
 
 int32_t vidmap(uint8_t** screen_start)
 {
-	/* Reset the directory reads counter
-	 *  -- if we are here, we know that if we had previously been reading from
-	 *     the fs directory, we are not reading from it anymore, so reset the counter
-	 */
-	reset_dir_reads();
-	
+	if( screen_start < 0x08000000 || screen_start > 0x08400000 )
+	{
+		return -1;
+	}
+
+	*screen_start = VIDEO;
 	return 0;
 }
 
