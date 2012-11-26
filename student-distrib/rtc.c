@@ -37,6 +37,7 @@ rtc_init(void) {
 /* RTC Interrupt */
 void
 clock_interruption(void) {
+
 	/* Mask interrupts */
 	cli();
 
@@ -64,10 +65,13 @@ clock_interruption(void) {
  * clears it, then return 0).
  */
 int32_t
-rtc_read (void) {
+rtc_read (uint32_t a, int32_t b, int32_t c, int32_t d) {
 
 	/* Spin until the interrupt has occurred */
-	while (!interrupt_occurred);
+	while (!interrupt_occurred) {
+		/* AND FUCKING ENABLE INTERRUPTS!! */
+	   	sti();
+	}
 
 	/* Clear the flag back to zero. */
 	interrupt_occurred = 0;
@@ -139,14 +143,17 @@ rtc_write (int32_t * buf, int32_t nbytes) {
  * -1.
  */
 int32_t rtc_open (void) {
+	/*
 	if(rtc_is_open) {
 		return -1;
 	} else {
-		/* Set rtc open flag */
+		// Set rtc open flag
 		rtc_is_open = 1;
-
+	*/
 		return 0;
+	/*
 	}
+	*/
 }
 
 /* System Call: close */
@@ -157,13 +164,16 @@ int32_t rtc_open (void) {
  * closes should return 0.  
  */
 int32_t rtc_close (void) {
+	/*
 	if(rtc_is_open) {
-		/* Clear rtc open flag */
+		// Clear rtc open flag
 		rtc_is_open = 0;
-
+	*/
 		return 0;
+	/*
 	} else {
 		return -1;
 	}
+	*/
 }
 
