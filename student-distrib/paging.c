@@ -124,8 +124,8 @@ int32_t setup_new_task( uint8_t process_number )
 	/* Set all to present except for the page at address 0. */
 	for( i = 0; i < MAX_PAGE_TABLE_SIZE; i++ ) {
 		new_page_table[i].present = (i == 0) ? 0 : 1;
-		new_page_table[i].read_write = 0;
-		new_page_table[i].user_supervisor = 0;
+		new_page_table[i].read_write = 1;
+		new_page_table[i].user_supervisor = 1;
 		new_page_table[i].write_through = 0;
 		new_page_table[i].cache_disabled = 0;
 		new_page_table[i].accessed = 0;
@@ -139,8 +139,8 @@ int32_t setup_new_task( uint8_t process_number )
 	/* Initialize first page directory entry. */
 	new_page_table_holder = (int)new_page_table;
 	page_directories[process_number].dentries[0].KB.present = 1;
-	page_directories[process_number].dentries[0].KB.read_write = 0;
-	page_directories[process_number].dentries[0].KB.user_supervisor = 0;
+	page_directories[process_number].dentries[0].KB.read_write = 1;
+	page_directories[process_number].dentries[0].KB.user_supervisor = 1;
 	page_directories[process_number].dentries[0].KB.write_through = 0;
 	page_directories[process_number].dentries[0].KB.cache_disabled = 0;
 	page_directories[process_number].dentries[0].KB.accessed = 0;
@@ -152,7 +152,7 @@ int32_t setup_new_task( uint8_t process_number )
 	/* Initialize the kernel page directory entry. */
 	page_directories[process_number].dentries[1].MB.present = 1;
 	page_directories[process_number].dentries[1].MB.read_write = 1;
-	page_directories[process_number].dentries[1].MB.user_supervisor = 1;
+	page_directories[process_number].dentries[1].MB.user_supervisor = 0;
 	page_directories[process_number].dentries[1].MB.write_through = 0;
 	page_directories[process_number].dentries[1].MB.cache_disabled = 0;
 	page_directories[process_number].dentries[1].MB.accessed = 0;
