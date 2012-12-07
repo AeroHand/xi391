@@ -6,7 +6,6 @@
 #include "i8259.h"
 
 int interrupt_occurred = 0;
-int rtc_is_open = 0;
 
 /* Initialize the RTC */
 void
@@ -69,8 +68,6 @@ rtc_read (uint32_t a, int32_t b, int32_t c, int32_t d) {
 
 	/* Spin until the interrupt has occurred */
 	while (!interrupt_occurred) {
-		/* AND FUCKING ENABLE INTERRUPTS!! */
-	   	sti();
 	}
 
 	/* Clear the flag back to zero. */

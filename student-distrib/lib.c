@@ -35,6 +35,7 @@ void carriage_return() {
 }
 
 void scrolling(){
+
 	int x, y;
 
 	if(screen_y < NUM_ROWS-1){
@@ -51,9 +52,11 @@ void scrolling(){
         }
     }
 
+
     for(x=0; x<NUM_COLS; x++){
 			*(uint8_t *)(video_mem + ((NUM_COLS*NUM_ROWS + x) << 1)) = ' ';
-    }
+	}
+    
 }
 
 void clear_the_screen() {

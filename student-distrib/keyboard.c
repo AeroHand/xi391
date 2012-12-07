@@ -130,8 +130,6 @@ unsigned int allow_terminal_read;
 int terminal_read(unsigned char * buf, int cnt){
 	int i;
 	int countread =0;
-
-	sti();
 	
 	set_command_y(0);
 
