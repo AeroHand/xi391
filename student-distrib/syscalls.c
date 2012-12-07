@@ -9,11 +9,15 @@
 #include "files.h"
 
 
+/* The bitmask representing running processes. */
 uint8_t running_processes = 0x80;
+
+/* The address of the kernel stack bottom. */
 uint32_t kernel_stack_bottom;
 
-/* used in halt for switching the page directory */
+/* Used in halt for switching the page directory. */
 uint32_t page_dir_addr;
+
 
 typedef struct file_descriptor_t {
 	uint32_t * jumptable;
@@ -21,7 +25,6 @@ typedef struct file_descriptor_t {
 	int32_t fileposition;
 	int32_t flags;
 } file_descriptor_t;
-
 
 typedef struct pcb_t {
 	file_descriptor_t fds[8];
@@ -33,14 +36,15 @@ typedef struct pcb_t {
 	uint8_t argbuf[100];
 } pcb_t;
 
-int rtc_in_use;
 
 
-/* Initialize the file operations tables -- we will make the
+/*
+ * Initialize the file operations tables -- we will make the
  * file descriptors' jumptable pointers point to these tables when
  * we open a file.
  */
- /* stdin file operations table */
+ 
+/* stdin file operations table */
 uint32_t stdin_fops_table[4] = { (uint32_t)(no_function),
 								 (uint32_t)(terminal_read),
 								 (uint32_t)(no_function),
@@ -65,6 +69,7 @@ uint32_t dir_fops_table[4] = { (uint32_t)(dir_open),
 							   (uint32_t)(dir_read),
 							   (uint32_t)(dir_write),
 							   (uint32_t)(dir_close) };
+							   
 			   
 /*
  * halt()
@@ -82,20 +87,21 @@ int32_t halt(uint8_t status)
 	/* Extract the PCB from the KSP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	/* Mark the current process as 0, aka this process is done and its slot
-	 * is now available for new processes
+	/* 
+	 * Mark the current process as 0, aka this process is done and its slot
+	 * is now available for new processes.
 	 */
 	uint8_t bitmask = 0x7F;
 	for( i = 0; i < process_control_block->process_number; i++ )
 	{
 		bitmask = (bitmask >> 1) + 0x80;
 	}
-	running_processes = running_processes & bitmask;
+	running_processes &= bitmask;
 	
-	/* Load the page directory of the parent */
+	/* Load the page directory of the parent. */
 	page_dir_addr = (uint32_t)(&page_directories[process_control_block->parent_process_number]);
 	asm (
-	"movl page_dir_addr, %%eax                   ;"
+	"movl page_dir_addr, %%eax        ;"
 	"andl $0xFFFFFFE7, %%eax          ;"
 	"movl %%eax, %%cr3                ;"
 	"movl %%cr4, %%eax                ;"
@@ -106,23 +112,31 @@ int32_t halt(uint8_t status)
 	"movl %%eax, %%cr0                 "
 	: : : "eax", "cc" );
 	
-	/* Set the kernel_stack_bottom and the TSS to point back at the parent's kernel stack */
+	/* Set the kernel_stack_bottom and the TSS to point back at the parent's kernel stack. */
 	kernel_stack_bottom = tss.esp0 = 0x00800000 - (0x2000)*process_control_block->parent_process_number - 4;
 	
-	/* Switch the kernel stack back to the parent's kernel stack by
+	/* 
+	 * Switch the kernel stack back to the parent's kernel stack by
 	 * restoring ESP and EBP.
 	 * -- NOTE: We need to store "status" since we will be losing it when we
 	 *          switch the stack. To do this, move ESP to the new stack,
 	 *          push status (which is referenced by EBP), move EBP to the new
 	 *          stack, then pop status back into EAX for the return of halt.
 	 */
-	uint32_t motherfucking_status = status;
+	uint32_t the_status = status;
+	
+	/* Put the "parent_ksp" into the %ESP. */
 	asm volatile("movl %0, %%esp	;"
-				 "pushl %1			;"::"g"(process_control_block->parent_ksp),"g"(motherfucking_status)); // Asm stuff put the "parent_ksp" into the %ESP
-	asm volatile("movl %0, %%ebp"::"g"(process_control_block->parent_kbp)); // Asm stuff put the "parent_kbp" into the %EBP
+				 "pushl %1			;"
+				 ::"g"(process_control_block->parent_ksp),"g"(the_status));
+				 
+	/* Put the "parent_kbp" into the %EBP. */
+	asm volatile("movl %0, %%ebp"::"g"(process_control_block->parent_kbp));
+	
 	asm volatile("popl %eax");
 	
-	/* We have now switched back to the stack of the parent. Remember that the parent
+	/* 
+	 * We have now switched back to the stack of the parent. Remember that the parent
 	 * stack was where we originally called 'execute' for this process. Thus, the parent's
 	 * stack (now the current stack) contains the appropriate data that was pushed when 
 	 * we made the 'execute' syscall. If we now leave and ret, we will return back to the
@@ -143,7 +157,10 @@ int32_t halt(uint8_t status)
  * new program until it terminates.
  *
  * Retvals
- * 
+ * -1: command cannot be executed
+ * 256: program dies by an exception
+ * 0 to 255: program executes a halt system call, in which case the value returned 
+ * 			 is that given by the program’s call to halt
  */
 int32_t execute(const uint8_t* command)
 {
@@ -154,12 +171,14 @@ int32_t execute(const uint8_t* command)
 	uint32_t entry_point;
 	uint8_t magic_nums[4] = {0x7f, 0x45, 0x4c, 0x46};
 	uint8_t open_process;
-	uint32_t first_space_reached = 0;
-	uint32_t length_of_fname = 0;
+	uint32_t first_space_reached;
+	uint32_t length_of_fname;
 	uint8_t localargbuf[100];
 	
 	/* Initializations. */
 	entry_point = 0;
+	first_space_reached = 0;
+	length_of_fname = 0;
 	
 	/* Check for an invalid command. */
 	if( command == NULL )
@@ -167,24 +186,26 @@ int32_t execute(const uint8_t* command)
 		return -1;
 	}
 	
-	/* Look for an open slot for the process */
+	/* Look for an open slot for the process. */
 	uint8_t bitmask = 0x80;
 	for( i = 0; i < 8; i++ ) {
 		if( !(running_processes & bitmask) ) 
 		{
 			open_process = i;
-			running_processes = running_processes | bitmask;
+			running_processes |= bitmask;
 			break;
 		}
-		bitmask = (bitmask >> 1);
+		bitmask >>= 1;
 		if( bitmask == 0 )
 		{
 			return -1;
 		}
 	}
 	
-	/* Get the file name of the program to be executed and store */
-	/* the additional args into the argbuf.                      */
+	/* 
+	 * Get the file name of the program to be executed and store
+	 * the additional args into the argbuf.
+	 */
 	for( i = 0; command[i] != '\0' ; i++ )
 	{
 		if( command[i] == ' ' && first_space_reached == 0 )
@@ -209,7 +230,10 @@ int32_t execute(const uint8_t* command)
 		fname[i] = '\0';
 	}
 	
-	/* Read the identifying 4 bytes from the file into buf. */
+	/* 
+	 * Read the identifying 4 bytes from the file into buf which
+	 * identify an executable program image or not. 
+	 */
 	if( -1 == fs_read((const int8_t *)fname, 0, buf, 4) )
 	{
 		return -1;
@@ -242,33 +266,40 @@ int32_t execute(const uint8_t* command)
 	/* Load the program to the appropriate starting address. */
 	fs_load((const int8_t *)fname, 0x08048000);
 	
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)( 0x00800000 - (0x2000)*(open_process + 1) );
 	
+	/* Store the %ESP as "parent_ksp" in the PCB. */
 	uint32_t esp;
-	asm volatile("movl %%esp, %0":"=g"(esp)); // Asm stuff to get the %ESP into the C-variable "esp"
+	asm volatile("movl %%esp, %0":"=g"(esp));
 	process_control_block->parent_ksp = esp;
 	
+	/* Store the %EBP as "parent_kbp" in the PCB. */
 	uint32_t ebp;
-	asm volatile("movl %%ebp, %0":"=g"(ebp)); // Asm stuff to get the %ESP into the C-variable "ebp"
+	asm volatile("movl %%ebp, %0":"=g"(ebp));
 	process_control_block->parent_kbp = ebp;
 	
 	if( running_processes == 0xC0 )
 	{
-		/* if this process was the first process called (aka, it was called from "no processes running" process),
-		 * make the parent process number 0 -- NOTE: we must do it like this because the "no processes running"
-		 * process does not have a PCB
+		/* 
+		 * If this process was the first process called (aka, it was called from 
+		 * "no processes running" process), make the parent process number 0. 
+		 * -- NOTE: we must do it like this because the "no processes running" 
+		 * process does not have a PCB.
 		 */
 		process_control_block->parent_process_number = 0;
 	}
 	else
 	{
-		/* set the parent_process_number of the new process to be the process number of the current
-		 * process that called it (find this in the PCB)
+		/* 
+		 * Set the parent_process_number of the new process to be the process 
+		 * number of the current process that called it (find this in the PCB).
 		 */
 		process_control_block->parent_process_number = ( (pcb_t *)(esp & 0xFFFFE000) )->process_number;
 	}
 	process_control_block->process_number = open_process;
 	
+	/* Initialize fields in the PCB for each file descriptor. */
 	for( i = 0; i < 8; i++ )
 	{
 		process_control_block->fds[i].inode = 0;
@@ -276,17 +307,26 @@ int32_t execute(const uint8_t* command)
 		process_control_block->fds[i].flags = NOT_IN_USE;
 	}
 	
+	/* Store the args passed to this function into the PCB. */
 	strcpy((int8_t*)process_control_block->argbuf, (const int8_t*)localargbuf);
 	
+	/* 
+	 * Set the kernel_stack_bottom and tss.esp0 field to be the bottom of the new kernel stack.
+	 */
 	kernel_stack_bottom = tss.esp0 = 0x00800000 - (0x2000)*open_process - 4;
 	
+	/* Call open for stdin and stdout. */
 	open("stdin");
 	open("stdout");
 	
+	/* Put kernel_stack_bottom into the %ESP and push entry_point. */
 	asm volatile("movl %0, %%esp	;"
-				 "pushl %1			;"::"g"(kernel_stack_bottom), "g"(entry_point)); // Asm stuff put the "kernel_stack_bottom" into the %ESP
-	asm volatile("movl %0, %%ebp"::"g"(kernel_stack_bottom)); // Asm stuff put the "kernel_stack_bottom" into the %EBP
+				 "pushl %1			;"::"g"(kernel_stack_bottom), "g"(entry_point));
+				 
+	/* Put kernel_stack_bottom into the %EBP. */
+	asm volatile("movl %0, %%ebp"::"g"(kernel_stack_bottom));
 
+	/* Pop the entry_point into 'entry'. */
 	int32_t entry;
 	asm volatile("popl %0			;":"=g"(entry));
 	
@@ -296,6 +336,14 @@ int32_t execute(const uint8_t* command)
 	return 0;
 }
 
+/*
+ * execute_test()
+ *
+ * Our test function for the execute syscall.
+ *
+ * Retvals
+ * none
+ */
 void execute_test(void)
 {
 	const uint8_t * test_string = "shell";
@@ -313,21 +361,26 @@ void execute_test(void)
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes)
 {
-	
+	/* Restore interrupts. */
 	sti();
 
+	/* Local variables. */
 	int bytesread;
+	
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	//Check for invalid fd or buf. 
+	/* Check for invalid fd or buf. */
 	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
 	{
 		return -1;
 	}
 
+	/* Get the filename and fileposition of the file with the given fd. */
 	uint8_t* filename = process_control_block->filenames[fd];
 	uint32_t fileposition = process_control_block->fds[fd].fileposition;
 
+	/* Push arguments for the file's read function and call it. */
 	asm volatile("pushl %0		;"
 				 "pushl %1		;"
 				 "pushl %2		;"
@@ -337,62 +390,14 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 				 : "g" (fileposition), "g" ((int32_t)filename), "g" (nbytes), "g" ((int32_t)buf),
 				   "g" (process_control_block->fds[fd].jumptable[1]));
 				 
+	/* Store the return value from the read function. */
 	asm volatile("movl %%eax, %0":"=g"(bytesread));
 	asm volatile("addl $16, %esp	;");
 	
+	/* Update the current file's fileposition. */
 	process_control_block->fds[fd].fileposition += bytesread;
 	
 	return bytesread;
-
-
-
-/*	dentry_t dentry;
-	
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
-	
-	//Check for invalid fd or buf. 
-	if( fd < 0 || fd > 7 || buf == NULL )
-	{
-		return -1;
-	}
-	
-	if( -1 == read_dentry_by_name(process_control_block->filenames[fd], &dentry)) {
-		return -1;
-	}
-	
-	// Stdin. 
-	if( fd == 0 )
-	{
-		terminal_read(buf,nbytes);
-		return nbytes;
-	}
-	
-	// 'Read' on stdout does nothing.
-	if( fd == 1 )
-	{
-		return -1;
-	}
-	
-	// Call read for the file with the given fd.
-	if( dentry.filetype == 0 ) // rtc
-	{
-		//( (void (*)(void))(process_control_block->fds[fd].jumptable[1]) )(void);
-		return 0;
-	}
-	else if( dentry.filetype == 1 ) // dir
-	{
-		//( (void (*)(uint8_t*))(process_control_block->fds[fd].jumptable[1]) )((uint8_t *)buf);
-		return 0;
-	}
-	else if( dentry.filetype == 2 ) // reg file
-	{
-		//( (void (*)(const int8_t*,uint8_t*,uint32_t))(process_control_block->fds[fd].jumptable[1]) )
-		//((const int8_t*)process_control_block->filenames[fd], (uint8_t*)buf, (uint32_t)nbytes);
-		return 0;
-	}
-
-	return -1;
-	*/
 }
 
 /*
@@ -405,21 +410,26 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
+	/* Local variables. */
 	int byteswritten;
+	
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	//Check for invalid fd or buf. 
+	/* Check for invalid fd or buf. */
 	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
 	{
 		return -1;
 	}
 
+	/* Push arguments for the file's write function and call it. */
 	asm volatile("pushl %0		;"
 				 "pushl %1		;"
 				 "call  %2		;"
 				 :
 				 : "g" (nbytes), "g" ((int32_t)buf), "g" (process_control_block->fds[fd].jumptable[2]));
 				 
+	/* Store the return value from the write function. */
 	asm volatile("movl %%eax, %0":"=g"(byteswritten));
 	asm volatile("addl $8, %esp	;");
 	
@@ -437,10 +447,11 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
  */
 int32_t open(const uint8_t* filename)
 {
+	/* Local variables. */
 	int i;
-
 	dentry_t tempdentry;
 
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 
 	/* Call appropriate function for opening stdin. */
@@ -462,38 +473,37 @@ int32_t open(const uint8_t* filename)
 		return -1;
 	}
 
-	for (i=2; i<8; i++) {
-		if (process_control_block->fds[i].flags == NOT_IN_USE) {	
-			
-			if (tempdentry.filetype == 0) //RTC
+	/* 
+	 * Look for the next open slot in the file array and populate 
+	 * file descriptor information for this file in the PCB. 
+	 */
+	for (i=2; i<8; i++) 
+	{
+		if (process_control_block->fds[i].flags == NOT_IN_USE) 
+		{	
+			/* RTC */
+			if (tempdentry.filetype == 0)
 			{ 		
 				if (-1 == rtc_open()) {
 					return -1;
 				} else {
-					//process_control_block->fds[i].jumptable[0] = (uint32_t)(rtc_open);
-					//process_control_block->fds[i].jumptable[1] = (uint32_t)(rtc_read);
-					//process_control_block->fds[i].jumptable[2] = (uint32_t)(rtc_write);
-					//process_control_block->fds[i].jumptable[3] = (uint32_t)(rtc_close);
 					process_control_block->fds[i].jumptable = rtc_fops_table;
 				}
 			}
-			else if(tempdentry.filetype == 1) //Directory
+			
+			/* Directory */
+			else if(tempdentry.filetype == 1)
 			{ 
-				//process_control_block->fds[i].jumptable[0] = (uint32_t)(dir_open);
-				//process_control_block->fds[i].jumptable[1] = (uint32_t)(dir_read);
-				//process_control_block->fds[i].jumptable[2] = (uint32_t)(dir_write);
-				//process_control_block->fds[i].jumptable[3] = (uint32_t)(dir_close);
 				process_control_block->fds[i].jumptable = dir_fops_table;
 			}
-			else if(tempdentry.filetype == 2) //Regular File
+			
+			/* Regular File */
+			else if(tempdentry.filetype == 2)
 			{ 
-				//process_control_block->fds[i].jumptable[0] = (uint32_t)(file_open);
-				//process_control_block->fds[i].jumptable[1] = (uint32_t)(file_read);
-				//process_control_block->fds[i].jumptable[2] = (uint32_t)(file_write);
-				//process_control_block->fds[i].jumptable[3] = (uint32_t)(file_close);
 				process_control_block->fds[i].jumptable = file_fops_table;
 			}
 
+			/* Fill in remaining data and return the new fd. */
 			process_control_block->fds[i].flags = IN_USE;
 			process_control_block->fds[i].inode = tempdentry.inode;
 			strcpy((int8_t*)process_control_block->filenames[i], (const int8_t*)filename);
@@ -501,62 +511,84 @@ int32_t open(const uint8_t* filename)
 		}		
 	}
 
+	/* Print an error message if the file array is full. */
 	printf("The File Descriptor Array is Filled\n");
 	return -1;	
 }
 
+/*
+ * open_stdin()
+ *
+ * Called when we need to open stdin to initialize a new process.
+ *
+ * Retvals
+ * none
+ */
 void open_stdin( int32_t fd )
 {
-	/* get the PCB by using the KSP */
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	/* set the jumptable -- NOTE: for stdin, we only have a read function */
-	//process_control_block->fds[fd].jumptable[0] = (uint32_t)(no_function);
-	//process_control_block->fds[fd].jumptable[1] = (uint32_t)(terminal_read);
-	//process_control_block->fds[fd].jumptable[2] = (uint32_t)(no_function);
-	//process_control_block->fds[fd].jumptable[3] = (uint32_t)(no_function);
+	/* Set the jumptable -- NOTE: for stdin, we only have a read function. */
 	process_control_block->fds[fd].jumptable = stdin_fops_table;
 	
-	/* mark this fd as in use */
+	/* Mark this fd as in use. */
 	process_control_block->fds[fd].flags = IN_USE;
 }
 
+/*
+ * open_stdout()
+ *
+ * Called when we need to open stdout to initialize a new process.
+ *
+ * Retvals
+ * none
+ */
 void open_stdout( int32_t fd )
 {
-	/* get the PCB by using the KSP */
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	/* set the jumptable -- NOTE: for stdout, we only have a write function */
-	//process_control_block->fds[fd].jumptable[0] = (uint32_t)(no_function);
-	//process_control_block->fds[fd].jumptable[1] = (uint32_t)(no_function);
-	//process_control_block->fds[fd].jumptable[2] = (uint32_t)(terminal_write);
-	//process_control_block->fds[fd].jumptable[3] = (uint32_t)(no_function);
+	/* Set the jumptable -- NOTE: for stdout, we only have a write function. */
 	process_control_block->fds[fd].jumptable = stdout_fops_table;
 	
-	/* mark this fd as in use */
+	/* Mark this fd as in use. */
 	process_control_block->fds[fd].flags = IN_USE;
 }
 
-//( (void (*)(char*,int))(jumptable[1]) )(parameter1, parameter2);
-
+/*
+ * close()
+ *
+ * Closes the speciﬁed ﬁle descriptor and makes it available for return from
+ * later calls to open.
+ *
+ * Retvals
+ * -1: error
+ * 0: success
+ */
 int32_t close(int32_t fd)
 {
+	/* Local variables. */
 	uint32_t retval;
 	
-	/* get the PCB by using the KSP */
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
-	//Check for invalid fd. 
+	/* Check for an invalid fd. */
 	if( fd < 2 || fd > 7 || process_control_block->fds[fd].flags == NOT_IN_USE )
 	{
 		return -1;
 	}
 	
+	/* Call the file's close function. */
 	asm volatile("call  %0		;"
 				 :
 				 : "g" (process_control_block->fds[fd].jumptable[3]));
+				 
+	/* Store the return value from the close function. */
 	asm volatile("movl %%eax, %0":"=g"(retval));
 	
+	/* Reset file descriptor information associated with the file. */
 	process_control_block->fds[fd].jumptable = NULL;
 	process_control_block->fds[fd].inode = 0;
 	process_control_block->fds[fd].fileposition = 0;
@@ -565,28 +597,48 @@ int32_t close(int32_t fd)
 	return retval;
 }
 
+/*
+ * getargs()
+ *
+ * Reads the program’s command line arguments into a user-level buffer.
+ *
+ * Retvals
+ * -1: arguments and a terminal null byte do not fit into buffer
+ */
 int32_t getargs(uint8_t* buf, int32_t nbytes)
 {
+	/* Check for invalid parameters. */
 	if( buf == NULL || nbytes == 0 )
 	{
 		return -1;
 	}
 	
-	/* get the PCB by using the KSP */
+	/* Get a pointer to the PCB. */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
 	
+	/* Ensure we are not asking for less characters than the argbuf (?) */
 	if( strlen((const int8_t*)process_control_block->argbuf) > nbytes )
 	{
 		return -1;
 	}
 	
+	/* Copy the args to the user-level buffer. */
 	strcpy((int8_t*)buf, (const int8_t*)process_control_block->argbuf);
 	
 	return 0;
 }
 
+/*
+ * vidmap()
+ *
+ * Maps the text-mode video memory into user space at a pre-set virtual address.
+ *
+ * Retvals
+ * -1: invalid location
+ */
 int32_t vidmap(uint8_t** screen_start)
 {
+	/* Ensure screen_start is within proper bounds. */
 	if( screen_start < 0x08000000 || screen_start > 0x08400000 )
 	{
 		return -1;
@@ -596,16 +648,40 @@ int32_t vidmap(uint8_t** screen_start)
 	return 0;
 }
 
+/*
+ * set_handler()
+ *
+ * Related to signal handling.
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t set_handler(int32_t signum, void* handler_address)
 {
 	return 0;
 }
 
+/*
+ * sigreturn()
+ *
+ * Related to signal handling.
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t sigreturn(void)
 {
 	return 0;
 }
 
+/*
+ * no_function()
+ *
+ * A function that literally does absolutely nothing. 
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t no_function(void)
 {
 	return 0;
