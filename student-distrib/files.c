@@ -1,7 +1,6 @@
 /****************************************************/
 /* files.c - The file system driver for the kernel. */
 /****************************************************/
-
 #include "files.h"
 #include "syscalls.h"
 #include "x86_desc.h"
@@ -26,7 +25,10 @@ inode_t * inodes;
 /* The address of the first data block. */
 uint32_t data_start;
 
+/* The number of filenames read from the filesystem. */
 uint32_t dir_reads;
+
+
 
 /*
  * fs_open()
@@ -116,8 +118,7 @@ int32_t fs_write(void)
 /*
  * fs_load()
  *
- * Loads an executable file into memory and prepares to begin
- * the new process.
+ * Loads an executable file into memory and prepares to begin the new process.
  *
  * Retvals
  * -1: failure
@@ -148,7 +149,8 @@ int32_t fs_load(const int8_t * fname, uint32_t address)
 }	
  
 /*
- * filesystem_init()
+ * fs_init()
+ *
  * Initializes global variables associated with the file system.
  */
 void fs_init(uint32_t fs_start, uint32_t fs_end)
@@ -227,8 +229,6 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t * dentry)
 	{
 		return -1;
 	}
-	
-	/* QUESTION: do we need to check for a valid dentry? */
 	
 	/* Copy the data into 'dentry'. */
 	strcpy( dentry->filename, fs_dentries[index].filename );
@@ -340,40 +340,87 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 	return total_successful_reads;
 }
 
-/* Regular file operations. */
+/**** Regular file operations. ****/
 
+/*
+ * file_open()
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t file_open(void)
 {
 	return 0;
 }
 
+/*
+ * file_close()
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t file_close(void)
 {
 	return 0;
 }
 
+/*
+ * file_read()
+ *
+ * Performs a fs_read.
+ *
+ * Retvals
+ * -1: failure (invalid parameters, nonexistent file)
+ * 0: success
+ */
 int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset)
 {
 	return fs_read(fname, offset, buf, length);
 }
 
+/*
+ * file_write()
+ *
+ * Retvals
+ * -1: always
+ */
 int32_t file_write(void)
 {
 	return -1;
 }
 
-/* Directory operations. */
+/**** Directory operations. ****/
 
+/*
+ * dir_open()
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t dir_open(void)
 {
 	return 0;
 }
 
+/*
+ * dir_close()
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t dir_close(void)
 {
 	return 0;
 }
 
+/*
+ * dir_read()
+ *
+ * Implements ls.
+ *
+ * Retvals
+ * n: number of bytes in buf
+ */
 int32_t dir_read(uint8_t * buf)
 {
 	if( dir_reads >= fs_stats.num_dentries )
@@ -389,6 +436,12 @@ int32_t dir_read(uint8_t * buf)
 	return strlen(buf);
 }
 
+/*
+ * dir_write()
+ *
+ * Retvals
+ * -1: always
+ */
 int32_t dir_write(void)
 {
 	return -1;
@@ -418,53 +471,41 @@ void files_test(void)
 	
 	clear();
 	jump_to_point(0,0);
-	
-	/*
-	for( i = 0; i < 10; i++ )
-	{
-		read_dentry_by_index( i, &dentry );
-		puts(dentry.filename);
-		putc(' ');
-		printf("%d", dentry.inode);
-		putc('\n');
-	}
-	*/
-	
+		
 	a = fs_read(test_string, offset, buf, bytes_to_read);	
 	
 	for( i = 0; i < a; i++ )
 	{
 		printf("%c", buf[i]);
-		/*
-		if( (i+1) % 16 == 0 )
-		{
-			putc('\n');
-		}
-		*/
 	}
 
 	putc('\n');
 	printf("%d", a);
-	
-	//puts((int8_t *)buf);
+
 	/*
-	. 0
-	frame1.txt 15
-	ls 18
-	grep 9
-	sched 19
-	hello 1
-	rtc 3
-	testprint 10
-	sigtest 16
-	shell 17
+		for debugging:
+		inode numbers for the following files:
+			. 			0
+			frame1.txt 	15
+			ls 			18
+			grep 		9
+			sched 		19
+			hello 		1
+			rtc 		3
+			testprint 	10
+			sigtest 	16
+			shell 		17
 	*/
 }
 
+/*
+ * reset_dir_reads()
+ *
+ * Clears dir_reads.
+ * 
+ * Retvals: none
+ */
 void reset_dir_reads(void)
 {
 	dir_reads = 0;
 }
-
- 
-

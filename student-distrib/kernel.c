@@ -171,12 +171,7 @@ entry (unsigned long magic, unsigned long addr)
 	keyboard_open();
 
 	/* Enable interrupts */
-	/* Do not enable the following until after you have set up your
-	 * IDT correctly otherwise QEMU will triple fault and simple close
-	 * without showing you any output */
-	//printf("Enabling Interrupts\n");
 	sti();
-
 
 	//test_syscall(SYS_OPEN,"test", 0 ,0);
 
@@ -194,7 +189,6 @@ entry (unsigned long magic, unsigned long addr)
     	}
     }
 	*/
-    
 
 	/* Running Handin RTC tests */
 	/*	
@@ -220,11 +214,9 @@ entry (unsigned long magic, unsigned long addr)
 	}
 	*/
 	
-
 	/* Execute the first program (`shell') ... */
 	//files_test();
 	execute_test();
-	//printf("hello");
 	
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
