@@ -7,6 +7,7 @@
 #define KEYBOARD_PORT			0x60
 #define KEYBOARD_STATUS_PORT	0x64
 
+
 /*** keyboard flags ***/ 
 // TODO @dan! remove the last few magic constants
 

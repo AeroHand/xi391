@@ -43,7 +43,9 @@ void scrolling(){
 		return;
 	}
 
-	command_y--;
+	if(screen_x ==0 && screen_y ==24){
+		command_y--;
+	}	
 
 	for(y=0; y<NUM_ROWS; y++){
 		for(x=0; x<NUM_COLS; x++){
