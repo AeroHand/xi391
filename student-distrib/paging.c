@@ -1,13 +1,23 @@
-/* paging.c - the paging initialization part of the kernel
- */
+/**********************************/
+/* paging.c - The paging manager. */
+/**********************************/
 
 #include "lib.h"
 #include "paging.h"
 #include "files.h"
 #include "syscalls.h"
 
+
+/* 
+ * The current process number, used in initializing a new 
+ * page directory for the process. 
+ */
 int process_number;
+
+/* Used to populate the PDBR with the new page directory address. */
 uint32_t new_page_dir_addr;
+
+
 
 /*
  * init_paging()
@@ -19,6 +29,7 @@ uint32_t new_page_dir_addr;
  */
 int32_t init_paging(void)
 {
+	/* Local variables. */
 	int i;
 	int page_table_holder;
 	
@@ -109,6 +120,7 @@ int32_t init_paging(void)
  */
 int32_t setup_new_task( uint8_t process_number )
 {
+	/* Local variables. */
 	uint32_t i;
 	int new_page_table_holder;
 	
@@ -118,6 +130,7 @@ int32_t setup_new_task( uint8_t process_number )
 		return -1;
 	}
 	
+	/* Extract the new page directory address. */
 	new_page_dir_addr = (uint32_t)(&page_directories[process_number]);
 	
 	/* Initialize page table for initial space pages. */

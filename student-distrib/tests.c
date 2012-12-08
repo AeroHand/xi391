@@ -1,8 +1,13 @@
-/* tests.c - test cases for components of the kernel
- */
+/******************************************************/
+/* tests.c - Test cases for components of the kernel. */
+/******************************************************/
+
+
 
 #include "lib.h"
 #include "rtc.h"
+
+
 
 /*
 int

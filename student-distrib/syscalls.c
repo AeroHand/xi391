@@ -85,7 +85,7 @@ int32_t halt(uint8_t status)
 	int i;
 	
 	/* Extract the PCB from the KSP */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* 
 	 * Mark the current process as 0, aka this process is done and its slot
@@ -113,7 +113,7 @@ int32_t halt(uint8_t status)
 	: : : "eax", "cc" );
 	
 	/* Set the kernel_stack_bottom and the TSS to point back at the parent's kernel stack. */
-	kernel_stack_bottom = tss.esp0 = 0x00800000 - (0x2000)*process_control_block->parent_process_number - 4;
+	kernel_stack_bottom = tss.esp0 = _8MB - (_8KB)*process_control_block->parent_process_number - 4;
 	
 	/* 
 	 * Switch the kernel stack back to the parent's kernel stack by
@@ -267,7 +267,7 @@ int32_t execute(const uint8_t* command)
 	fs_load((const int8_t *)fname, 0x08048000);
 	
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)( 0x00800000 - (0x2000)*(open_process + 1) );
+	pcb_t * process_control_block = (pcb_t *)( _8MB - (_8KB)*(open_process + 1) );
 	
 	/* Store the %ESP as "parent_ksp" in the PCB. */
 	uint32_t esp;
@@ -295,7 +295,7 @@ int32_t execute(const uint8_t* command)
 		 * Set the parent_process_number of the new process to be the process 
 		 * number of the current process that called it (find this in the PCB).
 		 */
-		process_control_block->parent_process_number = ( (pcb_t *)(esp & 0xFFFFE000) )->process_number;
+		process_control_block->parent_process_number = ( (pcb_t *)(esp & ALIGN_8KB) )->process_number;
 	}
 	process_control_block->process_number = open_process;
 	
@@ -313,7 +313,7 @@ int32_t execute(const uint8_t* command)
 	/* 
 	 * Set the kernel_stack_bottom and tss.esp0 field to be the bottom of the new kernel stack.
 	 */
-	kernel_stack_bottom = tss.esp0 = 0x00800000 - (0x2000)*open_process - 4;
+	kernel_stack_bottom = tss.esp0 = _8MB - (_8KB)*open_process - 4;
 	
 	/* Call open for stdin and stdout. */
 	open("stdin");
@@ -368,7 +368,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 	int bytesread;
 	
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Check for invalid fd or buf. */
 	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
@@ -414,7 +414,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 	int byteswritten;
 	
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Check for invalid fd or buf. */
 	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
@@ -452,7 +452,7 @@ int32_t open(const uint8_t* filename)
 	dentry_t tempdentry;
 
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 
 	/* Call appropriate function for opening stdin. */
 	if( 0 == strncmp((const int8_t*)filename, (const int8_t*)"stdin", 5) ) 
@@ -482,7 +482,7 @@ int32_t open(const uint8_t* filename)
 		if (process_control_block->fds[i].flags == NOT_IN_USE) 
 		{	
 			/* RTC */
-			if (tempdentry.filetype == 0)
+			if (tempdentry.filetype == FILE_TYPE_RTC)
 			{ 		
 				if (-1 == rtc_open()) {
 					return -1;
@@ -492,13 +492,13 @@ int32_t open(const uint8_t* filename)
 			}
 			
 			/* Directory */
-			else if(tempdentry.filetype == 1)
+			else if(tempdentry.filetype == FILE_TYPE_DIRECTORY)
 			{ 
 				process_control_block->fds[i].jumptable = dir_fops_table;
 			}
 			
 			/* Regular File */
-			else if(tempdentry.filetype == 2)
+			else if(tempdentry.filetype == FILE_TYPE_REGULAR_FILE)
 			{ 
 				process_control_block->fds[i].jumptable = file_fops_table;
 			}
@@ -527,7 +527,7 @@ int32_t open(const uint8_t* filename)
 void open_stdin( int32_t fd )
 {
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Set the jumptable -- NOTE: for stdin, we only have a read function. */
 	process_control_block->fds[fd].jumptable = stdin_fops_table;
@@ -547,7 +547,7 @@ void open_stdin( int32_t fd )
 void open_stdout( int32_t fd )
 {
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Set the jumptable -- NOTE: for stdout, we only have a write function. */
 	process_control_block->fds[fd].jumptable = stdout_fops_table;
@@ -572,7 +572,7 @@ int32_t close(int32_t fd)
 	uint32_t retval;
 	
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Check for an invalid fd. */
 	if( fd < 2 || fd > 7 || process_control_block->fds[fd].flags == NOT_IN_USE )
@@ -614,7 +614,7 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
 	}
 	
 	/* Get a pointer to the PCB. */
-	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & 0xFFFFE000);
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Ensure we are not asking for less characters than the argbuf (?) */
 	if( strlen((const int8_t*)process_control_block->argbuf) > nbytes )

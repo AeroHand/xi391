@@ -1,8 +1,12 @@
-
+/******************************************/
+/* rtc.h - The RTC driver for the kernel. */
+/******************************************/
 #ifndef RTC_H
 #define RTC_H
 
-/*** register summary ***/
+
+
+/* Register summary. */
 #define RTC_SECONDS             0
 #define RTC_SECONDS_ALARM       1
 #define RTC_MINUTES             2
@@ -18,7 +22,7 @@
 #define RTC_REG_C               12
 #define RTC_REG_D               13
 
-/*** io constants ***/
+/* IO Constants. */
 #define RTC_PORT		0x70
 #define CMOS_PORT		0x71
 #define INDEX_REGISTER_A	0x8A
@@ -26,14 +30,14 @@
 #define	INDEX_REGISTER_C	0x8C
 #define	INDEX_REGISTER_D	0x8D
 
-/*** useful init masks ***/
+/* Useful init masks. */
 #define KILL_DV_RS		0x80 
 #define KILL_RS			0xF0 
 #define DV_RS			0x2F
 #define KILL_SET_PIE_AIE_UIE	0x0F 
 #define SET_PIE_AIE_UIE		0x40 
 
-/*** frequency constants ***/
+/* Frequency constants. */
 #define HZ0			0x00
 #define HZ2			0x0F
 #define HZ4			0x0E
@@ -46,20 +50,25 @@
 #define HZ512			0x07
 #define HZ1024			0x06
 
-/*** irq constant ***/
+/* IRQ Constant. */
 #define RTC_IRQ			8
 
-/* Clock Interrupt */
+
+
+/* The handler for an RTC interrupt. */
 void clock_interruption(void); 
 
-/* System Call: read */
+/* Should always return 0, but only after an interrupt has occurred. */
 int32_t rtc_read (uint32_t a, int32_t b, int32_t c, int32_t d);
-/* System Call: write */
+
+/* Sets the rate of periodic interrupts. */
 int32_t rtc_write (int32_t * buf, int32_t nbytes);
-/* System Call: open */
+
+/* Opens the RTC. */
 int32_t rtc_open (void);
-/* System Call: close */
+
+/* Closes the RTC. */
 int32_t rtc_close (void);
 
-#endif
+#endif /* RTC_H */
 
