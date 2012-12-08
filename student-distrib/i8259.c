@@ -18,9 +18,12 @@ uint8_t slave_mask = 0xFF;
 /*
  * i8259_init()
  *
+ * Description:
  * Initializes the 8259 PIC by sending the correct bytes to the controller as
  * specified its datasheet.
  *
+ * Inputs: none
+ * 
  * Retvals: none
  */
 void i8259_init(void)
@@ -59,9 +62,12 @@ void i8259_init(void)
 /*
  * enable_irq()
  *
+ * Description:
  * Enables (e.g. unmasks) the specified IRQ with an ACTIVE LOW bitmask. This 
  * function writes an 8-bit value the mask (master or slave) corresponding to
  * the integer input: irq_num.
+ *
+ * Inputs: none
  *
  * Retvals: none
  */
@@ -109,9 +115,12 @@ void enable_irq(uint32_t irq_num)
 /*
  * disable_irq()
  *
+ * Description:
  * Disable (e.g. masks) the specified IRQ with an INACTIVE HIGH bitmask. This 
  * function writes an 8-bit value the mask (master or slave) corresponding to
  * the integer input: irq_num.
+ *
+ * Inputs: none
  *
  * Retvals: none
  */
@@ -158,7 +167,10 @@ void disable_irq(uint32_t irq_num)
 /*
  * send_eoi()
  *
+ * Description:
  * Send end-of-interrupt signal for the specified IRQ
+ *
+ * Inputs: none
  *
  * Retvals: none
  */

@@ -1,11 +1,13 @@
-/* keyboard.c - the keyboard driver for the kernel
- */
-
+/*************************************************/
+/* files.c - The terminal driver for the kernel. */
+/*************************************************/
 #include "lib.h"
 #include "keyboard.h"
 #include "i8259.h"
 
-// There are three char scan arrays, 0 = nothing, 1 = SHIFT, 2 = Caps, 3=Shift+Caps;
+
+
+/* There are three char scan arrays, 0 = nothing, 1 = SHIFT, 2 = Caps, 3=Shift+Caps */
 unsigned char kbd_chars[4][128] = {
 	{
 	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
@@ -119,15 +121,31 @@ unsigned char kbd_chars[4][128] = {
 	}	
 };
 
+/* */
 unsigned int terminalsize;
+
+/* */
 unsigned char command_buffer[TERMINAL_BUFFER_MAX_SIZE];
+
+/* */
 unsigned char print_buffer[TERMINAL_BUFFER_MAX_SIZE+20] = {'[', 't', 'e', 'r', 'm', 'i', 'n', 'a', 'l', ']', '$', ' ', };
+
+/* */
 unsigned int command_length;
+
+/* */
 unsigned int cursor_x;
-unsigned char keyboardflag; // 0x0000 'ctrl''caps''shift'
+
+/* 0x0000 'ctrl''caps''shift' */
+unsigned char keyboardflag;
+
+/* */
 unsigned int allow_terminal_read;
 
-int terminal_read(unsigned char * buf, int cnt){
+
+
+/* */
+int terminal_read(unsigned char * buf, int cnt) {
 	int i;
 	int countread =0;
 	
@@ -150,7 +168,8 @@ int terminal_read(unsigned char * buf, int cnt){
 	}
 }
 
-int terminal_write(const unsigned char * buf, int nbytes){
+/* */
+int terminal_write(const unsigned char * buf, int nbytes) {
 	int successputs = 0;
 	int i;
 	for(i=0; i<nbytes; i++){
@@ -161,8 +180,7 @@ int terminal_write(const unsigned char * buf, int nbytes){
 }
 
 /* Initialize the keyboard */
-void
-keyboard_open(void) {
+void keyboard_open(void) {
 
 	/* Initially zero the buffer. [is this necessary?] */
 	int i;
@@ -186,6 +204,7 @@ keyboard_open(void) {
 
 }
 
+/* */
 void place_character_at_index(unsigned char scancode, int index) {
 	int end_of_line = command_length;
 	unsigned char datum;
@@ -200,6 +219,7 @@ void place_character_at_index(unsigned char scancode, int index) {
 	cursor_x++;
  }
 
+/* */
 void printthebuffer(){
 	int i;
 	carriage_return();
@@ -209,9 +229,8 @@ void printthebuffer(){
 
 }
 
-
-void
-dosomethingwiththis(unsigned char scancode)
+/* */
+void dosomethingwiththis(unsigned char scancode)
 {
 	unsigned char nextcode;
 	int cursor_index = cursor_x;
@@ -312,8 +331,7 @@ dosomethingwiththis(unsigned char scancode)
 }
 
 /* Keyboard Interrupt */
-void
-keyboard_interruption() {
+void keyboard_interruption() {
 	
 	/* Mask interrupts */
 	cli();
@@ -345,4 +363,3 @@ keyboard_interruption() {
 	sti();
 	
 }
-

@@ -1,16 +1,14 @@
 /******************************************/
 /* rtc.c - The RTC driver for the kernel. */
 /******************************************/
-
-
-
 #include "lib.h"
 #include "rtc.h"
 #include "i8259.h"
 
 
 
-/* Flag for identifying an interrupt. */
+/* Flag used to lock an rtc_read and prevent its returning until a
+ * clock interrupt occurs.  */
 int interrupt_occurred = 0;
 
 
@@ -68,9 +66,6 @@ void clock_interruption(void)
 	
 	/* We don't even care what it is at this point */
 	inb(CMOS_PORT);
-
-	/* As specified in the MP3 spec, we call test_interrupts() */
-	//test_interrupts();
 
 	/* Send End-of-Interrupt */
 	send_eoi(RTC_IRQ);
@@ -139,9 +134,11 @@ int32_t rtc_write (int32_t * buf, int32_t nbytes)
 		freq = *buf;
 	}
 
+	/* Get the old value of RTC Register A to save values we don't change. */
 	outb(INDEX_REGISTER_A, RTC_PORT);
 	unsigned char a_old = inb(CMOS_PORT);
 
+	/* Find the correct byte to send to the RTC based on the requested freq */
 	switch(freq) {
 		case 8192:
 		case 4096:

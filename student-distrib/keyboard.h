@@ -1,21 +1,22 @@
-
+/*************************************************/
+/* files.c - The terminal driver for the kernel. */
+/*************************************************/
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
 
-/*** io constants ***/
+
+/*** I/O Constants ***/
 #define KEYBOARD_PORT			0x60
 #define KEYBOARD_STATUS_PORT	0x64
 
-/*** keyboard flags ***/ 
-// TODO @dan! remove the last few magic constants
+/*** Keyboard Flags ***/ 
 
-/*** irq constant ***/
+/*** IRQ Constant ***/
 #define KEYBOARD_IRQ		1
 
-/*** make/break constants ***/
+/*** Make/Break Constants ***/
 #define EXTRAS						0xE0
-
 #define MAKE_A						0x1E
 #define MAKE_B						0x30
 #define MAKE_C						0x2E
@@ -90,7 +91,6 @@
 #define MAKE_L_ARROW				0x4B
 #define MAKE_R_ARROW				0x4D
 #define MAKE_DELETE					0x53
-
 #define BREAK_A						0x9E
 #define BREAK_B						0xB0
 #define BREAK_C						0xAE
@@ -166,8 +166,10 @@
 #define BREAK_R_ARROW				0xCD
 #define BREAK_DELETE				0xD3
 
-/*** other constants ***/
+/*** Other Constants ***/
 #define TERMINAL_BUFFER_MAX_SIZE   1024
+
+
 
 /* Called to initialize keyboard before using it. */
 void keyboard_open(void);
@@ -186,5 +188,4 @@ void keyboard_interruption(void);
 
 
 
-#endif
-
+#endif /* KEYBOARD_H */

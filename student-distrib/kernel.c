@@ -14,12 +14,15 @@
 #include "files.h"
 #include "tests.h"
 #include "syscalls.h"
+#include "scheduler.h"
 
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 #define TERMINAL_BUFFER_MAX_SIZE   1024
+
+
 
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
@@ -166,6 +169,9 @@ entry (unsigned long magic, unsigned long addr)
 
 	/** Init the RTC **/
 	rtc_init();
+
+	/** Init the PIT (Programmable Interval Timer) **/
+	pit_init();
 
 	/** Initialize keyboard **/
 	keyboard_open();

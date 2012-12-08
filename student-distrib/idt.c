@@ -136,12 +136,15 @@ void general_interruption() {
 /*
  * init_idt()
  *
+ * Description:
  * Initializes the Interrupt Descriptor Table.
  * In order to initialize the IDT we fill in the values of the array of struct
  * with the values required of the interruption descriptor as defined in the 
  * ISA manual. Now because of the definition of the struct we don't have to 
  * worry about the size of individual bit manipulations, just put the desired 
  * value in the struct's parameters.
+ *
+ * Inputs: none
  *
  * Retvals: none
  */
@@ -207,6 +210,9 @@ void init_idt () {
 	SET_IDT_ENTRY(idt[17], exception_AC);
 	SET_IDT_ENTRY(idt[18], exception_MC);
 	SET_IDT_ENTRY(idt[19], exception_XF);
+
+	/* PIT interrupt routed to asm wrapper named: pit_handler */
+	SET_IDT_ENTRY(idt[32], pit_handler);
 	
 	/* Keyboard interrupt routed to asm wrapper named: keyboard_handler */
 	SET_IDT_ENTRY(idt[33], keyboard_handler);
