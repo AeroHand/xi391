@@ -14,12 +14,15 @@
 #include "files.h"
 #include "tests.h"
 #include "syscalls.h"
+#include "scheduler.h"
 
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 #define TERMINAL_BUFFER_MAX_SIZE   1024
+
+
 
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
@@ -167,16 +170,14 @@ entry (unsigned long magic, unsigned long addr)
 	/** Init the RTC **/
 	rtc_init();
 
+	/** Init the PIT (Programmable Interval Timer) **/
+	pit_init();
+
 	/** Initialize keyboard **/
 	keyboard_open();
 
 	/* Enable interrupts */
-	/* Do not enable the following until after you have set up your
-	 * IDT correctly otherwise QEMU will triple fault and simple close
-	 * without showing you any output */
-	//printf("Enabling Interrupts\n");
 	sti();
-
 
 	//test_syscall(SYS_OPEN,"test", 0 ,0);
 
@@ -194,7 +195,6 @@ entry (unsigned long magic, unsigned long addr)
     	}
     }
 	*/
-    
 
 	/* Running Handin RTC tests */
 	/*	
@@ -220,11 +220,9 @@ entry (unsigned long magic, unsigned long addr)
 	}
 	*/
 	
-
 	/* Execute the first program (`shell') ... */
 	//files_test();
 	execute_test();
-	//printf("hello");
 	
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

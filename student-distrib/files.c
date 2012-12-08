@@ -1,7 +1,6 @@
 /****************************************************/
 /* files.c - The file system driver for the kernel. */
 /****************************************************/
-
 #include "files.h"
 #include "syscalls.h"
 #include "x86_desc.h"
@@ -26,14 +25,22 @@ inode_t * inodes;
 /* The address of the first data block. */
 uint32_t data_start;
 
+/* The number of filenames read from the filesystem. */
 uint32_t dir_reads;
+
+
 
 /*
  * fs_open()
  *
+ * Description:
  * Opens the file system by calling fs_init.
  *
- * Retvals
+ * Inputs:
+ * fs_start: location of the boot block
+ * fs_end: end
+ *
+ * Retvals:
  * -1: failure (file sytem already open)
  * 0: success
  */
@@ -52,9 +59,12 @@ int32_t fs_open(uint32_t fs_start, uint32_t fs_end)
 /*
  * fs_close()
  *
+ * Description:
  * Close the file system.
  *
- * Retvals
+ * Inputs: none
+ *
+ * Retvals:
  * -1: failure (file system already closed)
  * 0: success
  */
@@ -72,11 +82,18 @@ int32_t fs_close(void)
 /*
  * fs_read()
  *
+ * Description:
  * Performs a read on the file with name 'fname' by calling read_data
  * for the specified number of bytes and starting at the specified offset
  * in the file.
  *
- * Retvals
+ * Inputs:
+ * fname: name of file
+ * offset: offset to start read
+ * buf: buffer to send to read_data
+ * length: number of bytes
+ *
+ * Retvals:
  * -1: failure (invalid parameters, nonexistent file)
  * 0: success
  */
@@ -103,9 +120,12 @@ int32_t fs_read(const int8_t * fname, uint32_t offset, uint8_t * buf,
 /*
  * fs_write()
  *
+ * Description:
  * Does nothing as our file system is read only.
  *
- * Retvals
+ * Inputs: none
+ *
+ * Retvals:
  * 0: default
  */
 int32_t fs_write(void)
@@ -116,10 +136,14 @@ int32_t fs_write(void)
 /*
  * fs_load()
  *
- * Loads an executable file into memory and prepares to begin
- * the new process.
+ * Description:
+ * Loads an executable file into memory and prepares to begin the new process.
  *
- * Retvals
+ * Inputs:
+ * fname: name of file
+ * address: address of read - offset
+ *
+ * Retvals:
  * -1: failure
  * 0: success
  */
@@ -148,8 +172,16 @@ int32_t fs_load(const int8_t * fname, uint32_t address)
 }	
  
 /*
- * filesystem_init()
+ * fs_init()
+ *
+ * Description:
  * Initializes global variables associated with the file system.
+ *
+ * Inputs:
+ * fs_start: start
+ * fs_end: end
+ *
+ * Retvals: none
  */
 void fs_init(uint32_t fs_start, uint32_t fs_end)
 {
@@ -173,11 +205,16 @@ void fs_init(uint32_t fs_start, uint32_t fs_end)
 
 /*
  * read_dentry_by_name()
- * 
+ *
+ * Description:
  * Returns directory entry information (file name, file type, inode number)
  * for the file with the given name via the dentry_t block passed in.
  *
- * Retvals
+ * Inputs:
+ * fname: name of file
+ * dentry: directory entry
+ *
+ * Retvals:
  * -1: failure (non-existent file)
  * 0: success 
  */
@@ -212,9 +249,14 @@ int32_t read_dentry_by_name(const uint8_t * fname, dentry_t * dentry)
 
 /*
  * read_dentry_by_index()
- * 
+ *
+ * Description:
  * Returns directory entry information (file name, file type, inode number) 
  * for the file with the given index via the dentry_t block passed in.
+ *
+ * Inputs:
+ * fname: name of file
+ * dentry: directory entry
  *
  * Retvals
  * -1: failure (invalid index)
@@ -228,8 +270,6 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t * dentry)
 		return -1;
 	}
 	
-	/* QUESTION: do we need to check for a valid dentry? */
-	
 	/* Copy the data into 'dentry'. */
 	strcpy( dentry->filename, fs_dentries[index].filename );
 	dentry->filetype = fs_dentries[index].filetype;
@@ -242,9 +282,16 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t * dentry)
 /*
  * read_data()
  * 
+ * Description:
  * Reads (up to) 'length' bytes starting from position 'offset' in the file 
  * with inode number 'inode'. Returns the number of bytes read and placed 
  * in the buffer 'buf'. 
+ *
+ * Inputs:
+ * inode: index node
+ * offset: offset
+ * buf: buffer
+ * length: number of bytes
  *
  * Retvals
  * -1: failure (bad data block number within inode)
@@ -340,40 +387,100 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 	return total_successful_reads;
 }
 
-/* Regular file operations. */
+/**** Regular file operations. ****/
 
+/*
+ * file_open()
+ *
+ * Inputs: none
+ *
+ * Retvals:
+ * 0: always
+ */
 int32_t file_open(void)
 {
 	return 0;
 }
 
+/*
+ * file_close()
+ *
+ * Retvals
+ * 0: always
+ */
 int32_t file_close(void)
 {
 	return 0;
 }
 
+/*
+ * file_read()
+ *
+ * Performs a fs_read.
+ *
+ * Inputs: none
+ *
+ * Retvals:
+ * -1: failure (invalid parameters, nonexistent file)
+ * 0: success
+ */
 int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset)
 {
 	return fs_read(fname, offset, buf, length);
 }
 
+/*
+ * file_write()
+ *
+ * Inputs: none
+ *
+ * Retvals:
+ * -1: always
+ */
 int32_t file_write(void)
 {
 	return -1;
 }
 
-/* Directory operations. */
+/**** Directory operations. ****/
 
+/*
+ * dir_open()
+ *
+ * Inputs: none
+ *
+ * Retvals:
+ * 0: always
+ */
 int32_t dir_open(void)
 {
 	return 0;
 }
 
+/*
+ * dir_close()
+ *
+ * Inputs: none
+ *
+ * Retvals:
+ * 0: always
+ */
 int32_t dir_close(void)
 {
 	return 0;
 }
 
+/*
+ * dir_read()
+ *
+ * Description:
+ * Implements ls.
+ *
+ * Inputs: none
+ *
+ * Retvals:
+ * n: number of bytes in buf
+ */
 int32_t dir_read(uint8_t * buf)
 {
 	if( dir_reads >= fs_stats.num_dentries )
@@ -389,6 +496,14 @@ int32_t dir_read(uint8_t * buf)
 	return strlen(buf);
 }
 
+/*
+ * dir_write()
+ *
+ * Inputs: none
+ *
+ * Retvals:
+ * -1: always
+ */
 int32_t dir_write(void)
 {
 	return -1;
@@ -399,12 +514,13 @@ int32_t dir_write(void)
  * 
  * Test function for the file system driver. 
  *
+ * Inputs: none
+ *
  * Retvals: none
  */
 void files_test(void)
 {
 	/* Local variables. */
-	//dentry_t dentry;
 	int i;
 	int a;
 	uint8_t buf[40000];
@@ -418,53 +534,44 @@ void files_test(void)
 	
 	clear();
 	jump_to_point(0,0);
-	
-	/*
-	for( i = 0; i < 10; i++ )
-	{
-		read_dentry_by_index( i, &dentry );
-		puts(dentry.filename);
-		putc(' ');
-		printf("%d", dentry.inode);
-		putc('\n');
-	}
-	*/
-	
+		
 	a = fs_read(test_string, offset, buf, bytes_to_read);	
 	
 	for( i = 0; i < a; i++ )
 	{
 		printf("%c", buf[i]);
-		/*
-		if( (i+1) % 16 == 0 )
-		{
-			putc('\n');
-		}
-		*/
 	}
 
 	putc('\n');
 	printf("%d", a);
-	
-	//puts((int8_t *)buf);
+
 	/*
-	. 0
-	frame1.txt 15
-	ls 18
-	grep 9
-	sched 19
-	hello 1
-	rtc 3
-	testprint 10
-	sigtest 16
-	shell 17
+		for debugging:
+		inode numbers for the following files:
+			. 			0
+			frame1.txt 	15
+			ls 			18
+			grep 		9
+			sched 		19
+			hello 		1
+			rtc 		3
+			testprint 	10
+			sigtest 	16
+			shell 		17
 	*/
 }
 
+/*
+ * reset_dir_reads()
+ *
+ * Description:
+ * Clears dir_reads.
+ * 
+ * Inputs: none
+ *
+ * Retvals: none
+ */
 void reset_dir_reads(void)
 {
 	dir_reads = 0;
 }
-
- 
-
