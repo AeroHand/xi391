@@ -460,6 +460,7 @@ int32_t bootup(void)
 		/* Store KSP and KBP before change. */
 		process_control_block->ksp_before_change = kernel_stack_bottom - 60;
 		process_control_block->kbp_before_change = kernel_stack_bottom - 60;
+
 	
 		/* Call open for stdin and stdout. */
 		open( (uint8_t*) "stdin" );
