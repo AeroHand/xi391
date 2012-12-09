@@ -4,6 +4,7 @@
 #include "lib.h"
 #include "keyboard.h"
 #include "i8259.h"
+#include "scheduler.h"
 
 
 
@@ -210,7 +211,7 @@ int32_t terminal_write(const unsigned char * buf, int32_t nbytes) {
 	for (i = 0; i < nbytes; i++) {
 
 		/* Print a char from the buffer. */
-		putit(buf[i], current_terminal, get_tty_num());
+		putit(buf[i], current_terminal, get_tty_number());
 
 		/* Increment the number of bytes printed. */
 		successputs++;
@@ -446,7 +447,7 @@ void process_keyboard_input(uint8_t scancode)
 
 		if(keyboardflag[current_terminal] & 0x8){
 			new_terminal = (scancode & 0x7) - 3;
-			curr_process = get_tty_num();
+			curr_process = get_tty_number();
 			if( new_terminal != curr_process){
 				current_terminal = new_terminal;
 				load_video_memory(current_terminal);
