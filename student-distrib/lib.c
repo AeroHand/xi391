@@ -121,8 +121,8 @@ void new_line(){
 }
 
 void set_command_location(){
-    command_x[active_terminal] = screen_x[active_terminal];
-    command_y[active_terminal] = screen_y[active_terminal]; 
+    command_x[process_term_number] = screen_x[process_term_number];
+    command_y[process_term_number] = screen_y[process_term_number]; 
 }
 
 void update_cursor(int x) {

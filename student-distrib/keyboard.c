@@ -351,7 +351,6 @@ void process_keyboard_input(uint8_t scancode)
 {
 	uint8_t nextcode;
 	uint32_t new_terminal;
-	uint32_t curr_process;
 
 	int32_t cursor_index = cursor_x[active_terminal];
 
