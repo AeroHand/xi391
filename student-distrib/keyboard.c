@@ -336,8 +336,9 @@ void printthebuffer(void) {
  */
 void process_keyboard_input(uint8_t scancode)
 {
-	uint32_t nextcode;
+	uint8_t nextcode;
 	int32_t cursor_index = cursor_x;
+
 	int i;
 
 	/* Store the datum received from the keyboard port. */
@@ -351,7 +352,7 @@ void process_keyboard_input(uint8_t scancode)
 
 		/* (Stop placing characters in the command_buffer if 
 		 * command_length is big.) */
-		if (command_length < 100) {
+		if (command_length < TERMINAL_BUFFER_MAX_SIZE) {
 			/* Put the character into the buffer (shift data if necessary). */
 			place_character_at_index(scancode, cursor_x);
 		}
@@ -480,10 +481,10 @@ void keyboard_interruption() {
 	cli();
 	
 	/* Scancode (byte) that we receive from the keyboard. */
-	uint32_t keyboard_scancode;
+	uint8_t keyboard_scancode;
 
 	/* Status that we get from keyboard to see if the buffer is full. */
-	uint32_t keyboard_status;
+	uint8_t keyboard_status;
 
 	do {
 		/* Dequeue the typed character from the keyboard buffer. */

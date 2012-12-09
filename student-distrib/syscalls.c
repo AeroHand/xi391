@@ -33,7 +33,7 @@ typedef struct pcb_t {
 	uint32_t parent_kbp;
 	uint8_t process_number;
 	uint8_t parent_process_number;
-	uint8_t argbuf[100];
+	uint8_t argbuf[TERMINAL_BUFFER_MAX_SIZE];
 } pcb_t;
 
 
@@ -173,7 +173,7 @@ int32_t execute(const uint8_t* command)
 	uint8_t open_process;
 	uint32_t first_space_reached;
 	uint32_t length_of_fname;
-	uint8_t localargbuf[100];
+	uint8_t localargbuf[TERMINAL_BUFFER_MAX_SIZE];
 	
 	/* Initializations. */
 	entry_point = 0;
@@ -220,6 +220,9 @@ int32_t execute(const uint8_t* command)
 		}
 		else
 		{
+			if(i>=32 && first_space_reached == 0){
+				return -1;
+			}
 			fname[i] = command[i];
 		}
 	}
