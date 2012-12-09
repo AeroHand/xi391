@@ -12,7 +12,7 @@
 /* The bitmask representing running processes. */
 uint8_t running_processes = 0x80;
 
-/* The address of the kernel stack bottom. */
+/* The address of the current process's kernel stack bottom. */
 uint32_t kernel_stack_bottom;
 
 /* Used in halt for switching the page directory. */
@@ -34,6 +34,10 @@ typedef struct pcb_t {
 	uint8_t process_number;
 	uint8_t parent_process_number;
 	uint8_t argbuf[100];
+	uint32_t has_child;
+	uint32_t tty_number;
+	uint32_t ksp_before_change;
+	uint32_t kbp_before_change;
 } pcb_t;
 
 
@@ -319,19 +323,8 @@ int32_t execute(const uint8_t* command)
 	open("stdin");
 	open("stdout");
 	
-	/* Put kernel_stack_bottom into the %ESP and push entry_point. */
-	asm volatile("movl %0, %%esp	;"
-				 "pushl %1			;"::"g"(kernel_stack_bottom), "g"(entry_point));
-				 
-	/* Put kernel_stack_bottom into the %EBP. */
-	asm volatile("movl %0, %%ebp"::"g"(kernel_stack_bottom));
-
-	/* Pop the entry_point into 'entry'. */
-	int32_t entry;
-	asm volatile("popl %0			;":"=g"(entry));
-	
 	/* Jump to the entry point and begin execution. */
-	to_the_user_space(entry);
+	to_the_user_space(entry_point);
 
 	return 0;
 }
@@ -348,6 +341,135 @@ void execute_test(void)
 {
 	const uint8_t * test_string = "shell";
 	execute(test_string);
+}
+
+/*
+ * bootup()
+ *
+ * Loads the initial three shells and jumps to the entry point of the first one.
+ *
+ * Retvals
+ * 
+ */
+int32_t bootup(void)
+{
+	/* Local variables. */
+	uint8_t buf[4];
+	uint32_t i;
+	uint32_t j;
+	uint32_t entry_point;
+	uint32_t esp;
+	uint32_t ebp;
+	pcb_t * process_control_block;
+	
+	/* Initializations. */
+	entry_point = 0;
+	
+	/* Get the entry point to shell. */
+	if( -1 == fs_read((const int8_t *)("shell"), 24, buf, 4) )
+	{
+		return -1;
+	}
+	
+	/* Save the entry point. */
+	for( i = 0; i < 4; i++ )
+	{
+		entry_point |= (buf[i] << 8*i);
+	}
+	
+	/* Setup each shell. */
+	for( i = 3; i > 0; i-- )
+	{
+		/* Set up the new page directory for the new shell. */
+		if( -1 == setup_new_task(i) )
+		{
+			return -1;
+		}
+		
+		/* Load the program to the appropriate starting address. */
+		fs_load((const int8_t *)("shell"), 0x08048000);
+		
+		/* Get a pointer to the PCB. */
+		process_control_block = (pcb_t *)( _8MB - (_8KB)*(i + 1) );
+	
+		/* Store the %ESP as "parent_ksp" in the PCB. */
+		asm volatile("movl %%esp, %0":"=g"(esp));
+		process_control_block->parent_ksp = esp;
+	
+		/* Store the %EBP as "parent_kbp" in the PCB. */
+		asm volatile("movl %%ebp, %0":"=g"(ebp));
+		process_control_block->parent_kbp = ebp;
+		
+		/* Set the parent process number to be 0. */
+		process_control_block->parent_process_number = 0;
+		
+		/* Set the process number. */
+		process_control_block->process_number = i;
+		
+		/* Initialize fields in the PCB for each file descriptor. */
+		for( j = 0; j < 8; j++ )
+		{
+			process_control_block->fds[j].inode = 0;
+			process_control_block->fds[j].fileposition = 0;
+			process_control_block->fds[j].flags = NOT_IN_USE;
+		}
+		
+		/* The shells initially have no children. */
+		process_control_block->has_child = 0;
+		
+		/* Set the shell's terminal number. */
+		process_control_block->tty_number = i-1;
+		
+		/* 
+		 * Set the kernel_stack_bottom and tss.esp0 field to be the bottom 
+		 * of the new kernel stack.
+		 */
+		kernel_stack_bottom = tss.esp0 = _8MB - (_8KB)*i - 4;
+		
+		if( i != 1 )
+		{
+			/* Push things onto the kernel stack to initialize task switching. */
+			asm volatile("movl %%esp, %%eax      ;"
+						 "movl %%ebp, %%ebx      ;"
+						 "movl %0, %%esp         ;"
+						 "movl %0, %%ebp         ;"
+						 "pushl %1               ;"
+						 "pushl $0x83FFFF0       ;"
+						 "pushl $0               ;"
+						 "pushl %2               ;"
+						 "pushl %3               ;"
+						 "pushl $0               ;"
+						 "pushl $0               ;"
+						 "pushl $0               ;"
+						 "pushl $0               ;"
+						 "pushl $0               ;"
+						 "pushl $0               ;"
+						 "pushl $0               ;"
+						 "pushl $0               ;"
+						 "pushl end_pit_handler  ;"
+						 "pushl %0               ;"
+						 "movl %%eax, %%esp      ;"
+						 "movl %%ebx, %%ebp      ;"
+						 :: "g"(kernel_stack_bottom), "g"(USER_DS), "g"(USER_CS), 
+							"g"(entry_point): "eax", "ebx");
+		}
+		
+		/* Store KSP and KBP before change. */
+		process_control_block->ksp_before_change = kernel_stack_bottom - 24;
+		process_control_block->kbp_before_change = kernel_stack_bottom - 24;
+	
+		/* Call open for stdin and stdout. */
+		open("stdin");
+		open("stdout");
+	}
+	
+	/* Update the running processes bitmask. */
+	running_processes |= 0x70;
+	
+	/* Jump to the entry point and begin execution. */
+	to_the_user_space(entry_point);
+
+	return 0;
 }
 
 /*

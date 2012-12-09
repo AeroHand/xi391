@@ -8,6 +8,7 @@
 .global keyboard_handler
 .global clock_handler
 .global pit_handler
+.global end_pit_handler
 .global syscall_handler
 .global test_syscall
 .global to_the_user_space
@@ -102,6 +103,7 @@ pit_handler:
 
 	call pit_interruption
 
+end_pit_handler:
 	popfl
 	popl %esi
 	popl %edi
