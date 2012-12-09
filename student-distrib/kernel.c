@@ -170,7 +170,7 @@ entry (unsigned long magic, unsigned long addr)
 	rtc_init();
 
 	/** Init the PIT (Programmable Interval Timer) **/
-	//pit_init();
+	pit_init();
 
 	/** Initialize keyboard **/
 	keyboard_open();
