@@ -14,6 +14,7 @@
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
+void putit(uint8_t c, uint32_t active_terminal, uint32_t tty);
 int32_t puts(int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
@@ -33,15 +34,17 @@ void test_interrupts(void);
 /* Extra functions */
 void delc(void);
 void swap(void* item1, void* item2);
-void jump_to_point(int x, int y);
-void move_x(int x);
 void placec(uint8_t c);
+
+/* Functions used by keyboard.c to manipulate the video screen */
+void set_curr_term(uint32_t current_terminal);
+void jump_to_point(int x, int y);
 void update_cursor();
-void move_cursor(int x);
 void carriage_return();
 void new_line();
 void set_command_y(int y);
 void clear_the_screen();
+void load_video_memory(uint32_t new_terminal);
 
 /* Userspace address-check functions */
 int32_t bad_userspace_addr(const void* addr, int32_t len);
