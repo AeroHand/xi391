@@ -11,7 +11,13 @@
 #define KEYBOARD_STATUS_PORT	0x64
 
 /*** keyboard flags ***/ 
-// TODO @dan! remove the last few magic constants
+#define FLAG_NOTHING			0x00
+#define FLAG_SHIFT				0x01
+#define FLAG_CAPS				0x02
+#define FLAG_SHIFT_CAPS			0x03
+#define FLAG_SHIFT_CAPS_MASK	0x03
+#define FLAG_CTRL				0x04
+#define BUFFER_NOT_EMPTY		0x02
 
 /*** IRQ Constant ***/
 #define KEYBOARD_IRQ		1
@@ -171,6 +177,7 @@
 
 /*** Other Constants ***/
 #define TERMINAL_BUFFER_MAX_SIZE   1024
+#define CURSOR_START				7
 
 
 

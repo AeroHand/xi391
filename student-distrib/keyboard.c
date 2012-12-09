@@ -236,7 +236,7 @@ void keyboard_open(void) {
 	}
 	
 	/* Initially set the key input flags to 00 */
-	keyboardflag = 0x00;
+	keyboardflag = FLAG_NOTHING;
 
 	/* Forbit terminal read until a return */
 	allow_terminal_read = 0;
@@ -248,7 +248,7 @@ void keyboard_open(void) {
 	cursor_x = 0;
 	
 	set_command_y(0);
-	update_cursor(7);
+	update_cursor(CURSOR_START);
 
 	/* Unmask IRQ1 */
 	enable_irq(KEYBOARD_IRQ);
@@ -277,13 +277,13 @@ void place_character_at_index(uint8_t scancode, int index) {
     int8_t datum;
 	/* This character-to-be-added (datum) is retreieved from the 
 	 * massive "kbd_chars" array. */
-    datum = kbd_chars[keyboardflag & 0x03][scancode];
+    datum = kbd_chars[keyboardflag & FLAG_SHIFT_CAPS_MASK][scancode];
    
     /* If the user is inserting the character before the last possible position,
 	 * then the data on and in front of the cursor needs to move to the right to
 	 * let the new character be placed at the new spot (where the cursor is). */
-    while( index <= end_of_line){
-            command_buffer[end_of_line+1] = command_buffer[end_of_line];
+    while (index <= end_of_line) {
+            command_buffer[end_of_line + 1] = command_buffer[end_of_line];
             end_of_line--;
     }
 	
@@ -314,7 +314,7 @@ void printthebuffer(void) {
 	carriage_return();
 
 	/* Iterate though command buffer and print each char. */
-	for (i=0; i<=command_length; i++) {
+	for (i = 0; i <= command_length; i++) {
 		putc(command_buffer[i]);
 	}
 
@@ -342,7 +342,7 @@ void process_keyboard_input(uint8_t scancode)
 	int i;
 
 	/* Store the datum received from the keyboard port. */
-	if ( (keyboardflag & 0x04) == 0 &&
+	if ( 0 == (keyboardflag & FLAG_CTRL) &&
 			((scancode >= MAKE_1 && scancode <= MAKE_EQUALS) ||
 			 (scancode >= MAKE_Q && scancode <= MAKE_R_SQUARE_BRACKET) ||
 			 (scancode >= MAKE_A && scancode <= MAKE_ACCENT) ||
@@ -352,7 +352,7 @@ void process_keyboard_input(uint8_t scancode)
 
 		/* (Stop placing characters in the command_buffer if 
 		 * command_length is big.) */
-		if (command_length < TERMINAL_BUFFER_MAX_SIZE) {
+		if (command_length + 1 < TERMINAL_BUFFER_MAX_SIZE) {
 			/* Put the character into the buffer (shift data if necessary). */
 			place_character_at_index(scancode, cursor_x);
 		}
@@ -368,7 +368,7 @@ void process_keyboard_input(uint8_t scancode)
 		if (cursor_index > 0 ) {
 			cursor_index--;
 			while ( cursor_index < command_length) {
-				command_buffer[cursor_index] = command_buffer[cursor_index+1];
+				command_buffer[cursor_index] = command_buffer[cursor_index + 1];
 				cursor_index++;
 			}
 			command_length--;
@@ -380,7 +380,7 @@ void process_keyboard_input(uint8_t scancode)
 		/* Delete, shifting data if necessary. */
 		if (cursor_index >= 0 && cursor_index < command_length) {
 			while (cursor_index < command_length) {
-				command_buffer[cursor_index] = command_buffer[cursor_index+1];
+				command_buffer[cursor_index] = command_buffer[cursor_index + 1];
 				cursor_index++;
 			}
 			command_length--;
@@ -389,27 +389,27 @@ void process_keyboard_input(uint8_t scancode)
 	} else if (scancode == MAKE_CAPS) {
 
 		/* Change the keyboard flags for +/- CAPSLOCK */
-		keyboardflag ^= 0x02;
+		keyboardflag ^= FLAG_CAPS;
 
 	} else if (scancode == MAKE_L_SHFT || scancode == MAKE_R_SHFT) /* Shift down */ {
 
 		/* Change the keyboard flags for + SHIFT */
-		keyboardflag |= 0x01;
+		keyboardflag |= FLAG_SHIFT;
 
 	} else if (scancode == BREAK_L_SHFT || scancode == BREAK_R_SHFT) /* Shift up */	{
 
 		/* Change the keyboard flags for - SHIFT */
-		keyboardflag &= ~0x01;
+		keyboardflag &= ~FLAG_SHIFT;
 
 	} else if (scancode == MAKE_L_CTRL) /* Ctrl down */ {
 
 		/* Change the keyboard flags for + CTRL */
-		keyboardflag |= 0x04;
+		keyboardflag |= FLAG_CTRL;
 
 	} else if (scancode == BREAK_L_CTRL) /* Ctrl up */ {
 
 		/* Change the keyboard flags for - CTRL */
-		keyboardflag &= ~0x4;
+		keyboardflag &= ~FLAG_CTRL;
 
 	} else if (scancode == MAKE_L_ALT) /* Alt down */ {
 
@@ -438,28 +438,30 @@ void process_keyboard_input(uint8_t scancode)
 		} else if (nextcode == MAKE_L_CTRL) {
 
 			/* Change the keyboard flags for + CTRL */
-			keyboardflag |=  0x04;
+			keyboardflag |=  FLAG_CTRL;
 
 		} else if (nextcode == BREAK_L_CTRL) {
 
 			/* Change the keyboard flags for - CTRL */
-			keyboardflag &= ~0x04;
+			keyboardflag &= ~FLAG_CTRL;
 
 		}
 
-	} else if (keyboardflag & 0x04) /* CTRL + L */ {
+	} else if (keyboardflag & FLAG_CTRL) /* CTRL + L */ {
 
 		/* Implement screen clear with CTRL + L input. */
 		if (scancode == MAKE_L){
-			for (i=0; i < command_length; i++) {
+			for (i = 0; i < command_length; i++) {
 				command_buffer[i] = NULL;
 			}
 			command_length = 0;
 			cursor_x = 0;
 			clear_the_screen();
-			keyboardflag &= ~0x4;
+			keyboardflag &= ~FLAG_CTRL;
 		}
 
+	} else {
+		/* unknown scancode: do nothing */
 	}
 
 	update_cursor(cursor_x);
@@ -501,7 +503,7 @@ void keyboard_interruption() {
 
 	/* If the buffer is still full, repeat the process until the buffer 
 	 * is empty. */
-	} while ((keyboard_status & 0x02) != 0x00);
+	} while (keyboard_status & BUFFER_NOT_EMPTY);
 
 	/* Send End-of-Interrupt */
 	send_eoi(KEYBOARD_IRQ);

@@ -62,7 +62,8 @@ uint32_t dir_fops_table[4] = { (uint32_t)(dir_open),
  *
  * Terminates a process, returning the specified value to its parent process.
  *
- * Retvals
+ * Inputs: status
+ * Retvals: 0
  * 
  */
 int32_t halt(uint8_t status)
@@ -331,8 +332,8 @@ int32_t execute(const uint8_t* command)
  *
  * Our test function for the execute syscall.
  *
- * Retvals
- * none
+ * Inputs: none
+ * Retvals: none
  */
 void execute_test(void)
 {
@@ -345,7 +346,8 @@ void execute_test(void)
  *
  * Loads the initial three shells and jumps to the entry point of the first one.
  *
- * Retvals
+ * Inputs: none
+ * Retvals: 0
  * 
  */
 int32_t bootup(void)
@@ -475,8 +477,12 @@ int32_t bootup(void)
  * Reads 'nbytes' bytes into 'buf' from the file corresponding to the
  * given 'fd'.
  *
- * Retvals
- * 
+ * Inputs:
+ * fd: file descriptor
+ * buf: buffer to read from
+ * nbytes: number of bytes to read from
+ *
+ * Retvals: number of bytes read
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes)
 {
@@ -524,8 +530,13 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  *
  * Writes 'nbytes' bytes from 'buf' into the file associated with 'fd'.
  *
- * Retvals
- * 
+ * Inputs:
+ * fd: file descriptor
+ * buf: buffer to write into
+ * nbytes: number of bytes to write
+ *
+ * Retvals:
+ * number of bytes written
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
@@ -561,8 +572,12 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
  * Attempts to open the file with the given filename and give it a spot
  * in the file array in the pcb associated with the current process.
  *
- * Retvals
- * 
+ * Inputs:
+ * filename: file to open
+ *
+ * Retvals:
+ * 0 on success
+ * -1 on fail
  */
 int32_t open(const uint8_t* filename)
 {
@@ -640,8 +655,10 @@ int32_t open(const uint8_t* filename)
  *
  * Called when we need to open stdin to initialize a new process.
  *
- * Retvals
- * none
+ * Inputs:
+ * fd: file descriptor
+ *
+ * Retvals: none
  */
 void open_stdin( int32_t fd )
 {
@@ -660,8 +677,10 @@ void open_stdin( int32_t fd )
  *
  * Called when we need to open stdout to initialize a new process.
  *
- * Retvals
- * none
+ * Inputs:
+ * fd: file descriptor
+ *
+ * Retvals: none
  */
 void open_stdout( int32_t fd )
 {
@@ -681,7 +700,10 @@ void open_stdout( int32_t fd )
  * Closes the speciﬁed ﬁle descriptor and makes it available for return from
  * later calls to open.
  *
- * Retvals
+ * Inputs:
+ * fd: file descriptor
+ *
+ * Retvals:
  * -1: error
  * 0: success
  */
@@ -721,7 +743,11 @@ int32_t close(int32_t fd)
  *
  * Reads the program’s command line arguments into a user-level buffer.
  *
- * Retvals
+ * Inputs:
+ * buf: buffer
+ * nbytes: number of bytes
+ *
+ * Retvals:
  * -1: arguments and a terminal null byte do not fit into buffer
  */
 int32_t getargs(uint8_t* buf, int32_t nbytes)
@@ -752,7 +778,11 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
  *
  * Maps the text-mode video memory into user space at a pre-set virtual address.
  *
+ * Inputs:
+ * screen_start: pointer to a pointer
+ *
  * Retvals
+ * 0: sucesses
  * -1: invalid location
  */
 int32_t vidmap(uint8_t** screen_start)
@@ -772,7 +802,11 @@ int32_t vidmap(uint8_t** screen_start)
  *
  * Related to signal handling.
  *
- * Retvals
+ * Inputs:
+ * signum: don't use
+ * handler_address: don't use
+ *
+ * Retvals:
  * 0: always
  */
 int32_t set_handler(int32_t signum, void* handler_address)
@@ -784,6 +818,8 @@ int32_t set_handler(int32_t signum, void* handler_address)
  * sigreturn()
  *
  * Related to signal handling.
+ *
+ * Inputs: none
  *
  * Retvals
  * 0: always
@@ -798,6 +834,8 @@ int32_t sigreturn(void)
  *
  * A function that literally does absolutely nothing. 
  *
+ * Inputs: none
+ *
  * Retvals
  * 0: always
  */
@@ -806,42 +844,113 @@ int32_t no_function(void)
 	return 0;
 }
 
-
+/*
+ * set_running_processes
+ *
+ * Sets running_processes.
+ *
+ * Inputs: setter value.
+ *
+ * Retvals: none
+ */
 void set_running_processes( uint8_t value )
 {
 	running_processes = value;
 }
 
+/*
+ * get_running_processes
+ *
+ * Gets running_processes.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint8_t get_running_processes( void )
 {
 	return running_processes;
 }
 
+/*
+ * set_kernel_stack_bottom
+ *
+ * Sets kernel_stack_bottom.
+ *
+ * Inputs: setter value.
+ *
+ * Retvals: none
+ */
 void set_kernel_stack_bottom( uint32_t value )
 {
 	kernel_stack_bottom = value;
 }
 
+/*
+ * get_kernel_stack_bottom
+ *
+ * Gets kernel_stack_bottom.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint32_t get_kernel_stack_bottom( void )
 {
 	return kernel_stack_bottom;
 }
 
+/*
+ * set_page_dir_addr
+ *
+ * Sets page_dir_addr
+ *
+ * Inputs: setter value.
+ *
+ * Retvals: none
+ */
 void set_page_dir_addr( uint32_t value )
 {
 	page_dir_addr = value;
 }
 
+/*
+ * get_page_dir_addr
+ *
+ * Gets page_dir_addr.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint32_t get_page_dir_addr( void )
 {
 	return page_dir_addr;
 }
 
+/*
+ * set_current_process_number
+ *
+ * Sets current_process_number
+ *
+ * Inputs: setter value.
+ *
+ * Retvals: none
+ */
 void set_current_process_number( uint8_t value )
 {
 	current_process_number = value;
 }
 
+/*
+ * get_current_process_number
+ *
+ * Gets current_process_number.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint8_t get_current_process_number( void )
 {
 	return current_process_number;

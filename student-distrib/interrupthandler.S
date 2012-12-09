@@ -133,9 +133,9 @@ syscall_jumptable:
 
 # syscall_handler()
 # Saves registers and jumps to respective C-implemented system call function.
-# Inputs   :
-# Outputs  :
-# Registers:
+# Inputs   : none
+# Outputs  : none
+# Registers: edx, ecx, ebx, eax act as inputs
 syscall_handler:
 #	pushl %xes
 #	pushl %xds
@@ -209,8 +209,8 @@ test_syscall:
 
 
 # to_the_user_space()
-# 
-# Inputs   :
+# Description: [The function declaration in the .h file needs to have a comment too plz.]
+# Inputs   : newEIP?
 # Outputs  :
 # Registers:
 to_the_user_space:

@@ -6,7 +6,10 @@
 
 
 
-#define SYSCALL_INT	0x80
+#define PIT_INT			0x20
+#define KEYBOARD_INT	0x21
+#define RTC_INT			0x28
+#define SYSCALL_INT		0x80
 
 
 

@@ -103,9 +103,6 @@ int32_t dir_read(uint8_t * buf);
 /* Return -1 */
 int32_t dir_write(void);
 
-/* Clears dir_reads. */
-void reset_dir_reads(void);
-
 
 
 #endif /* FILES_H */
