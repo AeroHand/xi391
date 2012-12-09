@@ -23,6 +23,7 @@ uint32_t page_dir_addr;
 uint8_t current_process_number = 0;
 
 
+
 /*
  * Initialize the file operations tables -- we will make the
  * file descriptors' jumptable pointers point to these tables when
@@ -161,7 +162,7 @@ int32_t execute(const uint8_t* command)
 	uint8_t open_process;
 	uint32_t first_space_reached;
 	uint32_t length_of_fname;
-	uint8_t localargbuf[100];
+	uint8_t localargbuf[TERMINAL_BUFFER_MAX_SIZE];
 	
 	/* Initializations. */
 	entry_point = 0;
@@ -210,6 +211,9 @@ int32_t execute(const uint8_t* command)
 		}
 		else
 		{
+			if(i>=32 && first_space_reached == 0){
+				return -1;
+			}
 			fname[i] = command[i];
 		}
 	}

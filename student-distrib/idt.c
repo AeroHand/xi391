@@ -10,6 +10,7 @@
 #include "interrupthandler.h"
 
 
+
 /* Divide Error Exception */
 void exception_DE(){
 	printf("Divide Error!\n");
@@ -96,8 +97,6 @@ void exception_GP(){
 
 /* Page Fault Exception */
 void exception_PF(){
-	asm volatile(" movl %cr3, %eax ");
-
 	printf("Page Fault Exception!\n");
 	while(1){}
 }

@@ -17,8 +17,36 @@
 #define KEYBOARD_IRQ		1
 
 /*** Make/Break Constants ***/
-#define EXTRAS						0xE0
+#define MAKE_1						0x02
+#define MAKE_EQUALS					0x0D
+#define MAKE_Q						0x10
+#define MAKE_R_SQUARE_BRACKET		0x1B
 #define MAKE_A						0x1E
+#define MAKE_ACCENT					0x29
+#define MAKE_BACKSLASH				0x2B
+#define MAKE_SLASH					0x35
+#define MAKE_SPACE					0x39
+#define MAKE_ENTER					0x1C
+#define MAKE_BKSP					0x0E
+#define MAKE_DELETE					0x53
+#define MAKE_CAPS					0x3A
+#define MAKE_L_SHFT					0x2A
+#define MAKE_R_SHFT					0x36
+#define BREAK_L_SHFT				0xAA
+#define BREAK_R_SHFT				0xB6
+#define MAKE_L_CTRL					0x1D
+#define BREAK_L_CTRL				0x9D
+#define MAKE_L_ALT					0x38
+#define BREAK_L_ALT					0xB8
+#define EXTRAS						0xE0
+#define MAKE_L_ARROW				0x4B
+#define MAKE_R_ARROW				0x4D
+#define MAKE_L						0x26
+#define MAKE_F1						0x3B
+#define MAKE_F2						0x3C
+#define MAKE_F3						0x3D
+
+/*** Unneccessary Make/Break Constants ***/
 #define MAKE_B						0x30
 #define MAKE_C						0x2E
 #define MAKE_D						0x20
@@ -29,12 +57,10 @@
 #define MAKE_I						0x17
 #define MAKE_J						0x24
 #define MAKE_K						0x25
-#define MAKE_L						0x26
 #define MAKE_M						0x32
 #define MAKE_N						0x31
 #define MAKE_O						0x18
 #define MAKE_P						0x19
-#define MAKE_Q						0x10
 #define MAKE_R						0x13
 #define MAKE_S						0x1F
 #define MAKE_T						0x14
@@ -45,7 +71,6 @@
 #define MAKE_Y						0x15
 #define MAKE_Z						0x2C
 #define MAKE_0						0x0B
-#define MAKE_1						0x02
 #define MAKE_2						0x03
 #define MAKE_3						0x04
 #define MAKE_4						0x05
@@ -54,23 +79,9 @@
 #define MAKE_7						0x08
 #define MAKE_8						0x09
 #define MAKE_9						0x0A
-#define MAKE_ACCENT					0x29
 #define MAKE_HYPHEN					0x0C
-#define MAKE_EQUALS					0x0D
-#define MAKE_BACKSLASH				0x2B
-#define MAKE_BKSP					0x0E
-#define MAKE_SPACE					0x39
 #define MAKE_TAB					0x0F
-#define MAKE_CAPS					0x3A
-#define MAKE_L_SHFT					0x2A
-#define MAKE_L_CTRL					0x1D
-#define MAKE_L_ALT					0x38
-#define MAKE_R_SHFT					0x36
-#define MAKE_ENTER					0x1C
 #define MAKE_ESC					0x01
-#define MAKE_F1						0x3B
-#define MAKE_F2						0x3C
-#define MAKE_F3						0x3D
 #define MAKE_F4						0x3E
 #define MAKE_F5						0x3F
 #define MAKE_F6						0x40
@@ -83,15 +94,10 @@
 #define MAKE_SCROLL					0x46
 #define MAKE_L_SQUARE_BRACKET		0x1A
 #define MAKE_NUM					0x45
-#define MAKE_R_SQUARE_BRACKET		0x1B
 #define MAKE_SEMICOLON				0x27
 #define MAKE_APOSTRPHE				0x28
 #define MAKE_COMMA					0x33
 #define MAKE_PERIOD					0x34
-#define MAKE_SLASH					0x35
-#define MAKE_L_ARROW				0x4B
-#define MAKE_R_ARROW				0x4D
-#define MAKE_DELETE					0x53
 #define BREAK_A						0x9E
 #define BREAK_B						0xB0
 #define BREAK_C						0xAE
@@ -136,10 +142,6 @@
 #define BREAK_SPACE					0xB9
 #define BREAK_TAB					0x8F
 #define BREAK_CAPS					0xBA
-#define BREAK_L_SHFT				0xAA
-#define BREAK_L_CTRL				0x9D
-#define BREAK_L_ALT					0xB8
-#define BREAK_R_SHFT				0xB6
 #define BREAK_ENTER					0x9C
 #define BREAK_ESC					0x81
 #define BREAK_F1					0xBB
@@ -176,13 +178,13 @@
 void keyboard_open(void);
 
 /* Called to read from command buffer */
-int terminal_read(unsigned char * buf, int cnt);
+int32_t terminal_read(unsigned char * buf, int32_t nbytes);
 
 /* Called to read from command buffer */
-int terminal_write(const unsigned char * buf, int numbytes);
+int32_t terminal_write(const unsigned char * buf, int32_t nbytes);
 
 /* Called to read from command buffer */
-void printthebuffer();
+void printthebuffer(void);
 
 /* Keyboard Interrupt */
 void keyboard_interruption(void);

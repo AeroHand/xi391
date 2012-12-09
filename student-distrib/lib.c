@@ -84,14 +84,15 @@ void set_command_y(int y){
 
 void update_cursor(int x) {
 
-    unsigned short position=(command_y*NUM_COLS) + command_x + x;
+    uint16_t position = (command_y * NUM_COLS) + command_x + x;
  
-    // cursor LOW port to vga INDEX register
+    /* cursor LOW port to vga INDEX register */
     outb(0x0F, 0x3D4);
     outb((unsigned char)(position&0xFF), 0x3D5);
-    // cursor HIGH port to vga INDEX register
+    /* cursor HIGH port to vga INDEX register */
     outb(0x0E, 0x3D4);
     outb((unsigned char )((position>>8)&0xFF), 0x3D5);
+
  }
 
 
