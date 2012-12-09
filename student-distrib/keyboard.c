@@ -8,7 +8,7 @@
 
 
 /* There are three char scan arrays, 0 = nothing, 1 = SHIFT, 2 = Caps, 3=Shift+Caps */
-unsigned char kbd_chars[4][128] = {
+int8_t kbd_chars[4][128] = {
 	{
 	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
 	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0, 'a', 's',	
@@ -125,10 +125,10 @@ unsigned char kbd_chars[4][128] = {
 unsigned int terminalsize;
 
 /* */
-unsigned char command_buffer[TERMINAL_BUFFER_MAX_SIZE];
+int8_t command_buffer[TERMINAL_BUFFER_MAX_SIZE];
 
 /* */
-unsigned char print_buffer[TERMINAL_BUFFER_MAX_SIZE+20] = {'[', 't', 'e', 'r', 'm', 'i', 'n', 'a', 'l', ']', '$', ' ', };
+int8_t print_buffer[TERMINAL_BUFFER_MAX_SIZE+20] = {'[', 't', 'e', 'r', 'm', 'i', 'n', 'a', 'l', ']', '$', ' ', };
 
 /* */
 unsigned int command_length;
@@ -137,7 +137,7 @@ unsigned int command_length;
 unsigned int cursor_x;
 
 /* 0x0000 'ctrl''caps''shift' */
-unsigned char keyboardflag;
+int8_t keyboardflag;
 
 /* */
 unsigned int allow_terminal_read;
@@ -145,31 +145,30 @@ unsigned int allow_terminal_read;
 
 
 /* */
-int terminal_read(unsigned char * buf, int cnt) {
+int terminal_read(int8_t * buf, int cnt) {
 	int i;
-	int countread =0;
+	int countread;
 	
 	set_command_y(0);
 
 	while (1){ 
 		if(allow_terminal_read){
 			new_line();
+			strncpy(buf, command_buffer, cnt);
 			for(i=0; i<cnt; i++){
-				buf[i] = command_buffer[i];
 				command_buffer[i] = NULL;
-				countread++;
 			}
 			command_length = 0;
 			cursor_x = 0;
 			allow_terminal_read = 0;
+			countread = strlen(buf);
 			return countread;
-		}else{
 		}
 	}
 }
 
 /* */
-int terminal_write(const unsigned char * buf, int nbytes) {
+int terminal_write(const int8_t * buf, int nbytes) {
 	int successputs = 0;
 	int i;
 	for(i=0; i<nbytes; i++){
@@ -205,9 +204,9 @@ void keyboard_open(void) {
 }
 
 /* */
-void place_character_at_index(unsigned char scancode, int index) {
+void place_character_at_index(int8_t scancode, int index) {
 	int end_of_line = command_length;
-	unsigned char datum;
+	int8_t datum;
 
 	datum = kbd_chars[keyboardflag & 0x03][scancode];
 	while( index <= end_of_line){
@@ -230,9 +229,9 @@ void printthebuffer(){
 }
 
 /* */
-void dosomethingwiththis(unsigned char scancode)
+void dosomethingwiththis(uint8_t scancode)
 {
-	unsigned char nextcode;
+	uint8_t nextcode;
 	int cursor_index = cursor_x;
 	int i;
 	/* Store the datum received from the keyboard port. */
@@ -244,7 +243,7 @@ void dosomethingwiththis(unsigned char scancode)
 			  scancode == MAKE_SPACE)
 			)
 	{
-		if(command_length < 100)
+		if(command_length < TERMINAL_BUFFER_MAX_SIZE)
 			place_character_at_index(scancode, cursor_x);
 	}
 	else if(scancode == MAKE_ENTER) //Enter
@@ -336,8 +335,8 @@ void keyboard_interruption() {
 	/* Mask interrupts */
 	cli();
 	
-	unsigned char keyboardscancode;
-	unsigned char keyboardstatus;
+	int8_t keyboardscancode;
+	int8_t keyboardstatus;
 
 	do {
 		/* Dequeue the typed character from the keyboard buffer. */

@@ -176,10 +176,10 @@
 void keyboard_open(void);
 
 /* Called to read from command buffer */
-int terminal_read(unsigned char * buf, int cnt);
+int terminal_read(int8_t * buf, int cnt);
 
 /* Called to read from command buffer */
-int terminal_write(const unsigned char * buf, int numbytes);
+int terminal_write(const int8_t * buf, int numbytes);
 
 /* Called to read from command buffer */
 void printthebuffer();
