@@ -317,8 +317,8 @@ int32_t execute(const uint8_t* command)
 	kernel_stack_bottom = tss.esp0 = _8MB - (_8KB)*open_process - 4;
 	
 	/* Call open for stdin and stdout. */
-	open("stdin");
-	open("stdout");
+	open( (uint8_t *) "stdin"  );
+	open( (uint8_t *) "stdout" );
 	
 	/* Jump to the entry point and begin execution. */
 	to_the_user_space(entry_point);
@@ -336,7 +336,7 @@ int32_t execute(const uint8_t* command)
  */
 void execute_test(void)
 {
-	const uint8_t * test_string = "shell";
+	const uint8_t * test_string = (uint8_t *) "shell";
 	execute(test_string);
 }
 
@@ -375,7 +375,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 				 "pushl %1		;"
 				 "pushl %2		;"
 				 "pushl %3		;"
-				 "call  %4		;"
+				 "call  *%4		;"
 				 :
 				 : "g" (fileposition), "g" ((int32_t)filename), "g" (nbytes), "g" ((int32_t)buf),
 				   "g" (process_control_block->fds[fd].jumptable[1]));
@@ -415,7 +415,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 	/* Push arguments for the file's write function and call it. */
 	asm volatile("pushl %0		;"
 				 "pushl %1		;"
-				 "call  %2		;"
+				 "call  *%2		;"
 				 :
 				 : "g" (nbytes), "g" ((int32_t)buf), "g" (process_control_block->fds[fd].jumptable[2]));
 				 
@@ -571,7 +571,7 @@ int32_t close(int32_t fd)
 	}
 	
 	/* Call the file's close function. */
-	asm volatile("call  %0		;"
+	asm volatile("call  *%0		;"
 				 :
 				 : "g" (process_control_block->fds[fd].jumptable[3]));
 				 
@@ -629,12 +629,12 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
 int32_t vidmap(uint8_t** screen_start)
 {
 	/* Ensure screen_start is within proper bounds. */
-	if( screen_start < 0x08000000 || screen_start > 0x08400000 )
+	if( (uint32_t) screen_start < 0x08000000 || (uint32_t) screen_start > 0x08400000 )
 	{
 		return -1;
 	}
 
-	*screen_start = VIDEO;
+	*screen_start = (uint8_t *) VIDEO;
 	return 0;
 }
 
