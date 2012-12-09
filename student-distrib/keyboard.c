@@ -164,7 +164,7 @@ int32_t terminal_read(unsigned char * buf, int32_t nbytes) {
 	int i;
 	int countread = 0;
 	
-	set_command_location();
+	set_command_location(get_tty_number());
 
 	/* Spin until allow_terminal_read = 1 (we allow it to be read). */
 	while(!allow_terminal_read[get_tty_number()]);
@@ -257,13 +257,14 @@ void keyboard_open(void) {
 
 		/* x position of the cursor is initially zero */
 		cursor_x[i] = 0;
+
+		set_command_location(i);
 	}
 	
 	/* the beginning terminal is index 0 */
 	active_terminal = 0;
 	set_active_term(0);
 
-	set_command_location();
 	update_cursor(CURSOR_START);
 
 	/* Unmask IRQ1 */

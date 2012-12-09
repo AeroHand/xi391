@@ -125,9 +125,9 @@ void new_line(){
     }
 }
 
-void set_command_location(){
-    command_x[process_term_number] = screen_x[process_term_number];
-    command_y[process_term_number] = screen_y[process_term_number]; 
+void set_command_location(uint32_t tty){
+    command_x[tty] = screen_x[tty];
+    command_y[tty] = screen_y[tty]; 
 }
 
 void update_cursor(int x) {
