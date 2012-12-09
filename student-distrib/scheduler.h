@@ -5,7 +5,6 @@
 #define SCHEDULER_H
 
 
-
 /* PIT Chip's Command Register Port */
 #define PIT_CMDREG        0x43
 

@@ -4,7 +4,7 @@
 #include "scheduler.h"
 #include "lib.h"
 #include "i8259.h"
-
+#include "syscalls.h"
 
 
 /*
@@ -80,5 +80,101 @@ void pit_interruption(void)
  */
 void change_process()
 {
-
+	/* Local variables */
+	int i;
+	pcb_t * process_control_block;
+	
+	uint8_t running_processes = get_running_processes();
+	uint8_t current_process_number = get_current_process_number();
+	
+	
+	/* Find the next process to be scheduled */
+	uint8_t next_process_number = (current_process_number+1) % 8;
+	uint8_t bitmask = 0x80;
+	for( i = 0; i < next_process_number; i++ )
+	{
+		bitmask >>= 1;
+	}
+	while( next_process_number != current_process_number )
+	{
+		/* Check to see if the process number is running (but don't look at 
+		 * process #0, aka "no process running") 
+		 */
+		if( bitmask & (running_processes & 0x7F) )
+		{
+			/* Extract the PCB from the process number */
+			process_control_block = (pcb_t *)( _8MB - (_8KB)*(next_process_number + 1) );
+			
+			if( !process_control_block->has_child )
+			{
+				break;
+			}
+		}
+		
+		next_process_number = (next_process_number+1) % 8;
+	}
+	
+	/* If we didn't find another process to schedule, return */
+	if( current_process_number == next_process_number )
+	{
+		return;
+	}
+	
+	/* Extract the PCB from the process number */
+	process_control_block = (pcb_t *)( _8MB - (_8KB)*(current_process_number + 1) );
+		
+	/* Store the %ESP as "ksp_before_change" in the PCB of the current process. */
+	uint32_t esp;
+	asm volatile("movl %%esp, %0":"=g"(esp));
+	process_control_block->ksp_before_change = esp;
+	
+	/* Store the %EBP as "kbp_before_change" in the PCB of the current process. */
+	uint32_t ebp;
+	asm volatile("movl %%ebp, %0":"=g"(ebp));
+	process_control_block->kbp_before_change = ebp;
+	
+	
+	/* Set the current process to the next process */
+	current_process_number = next_process_number;
+	
+	
+	/* Load the page directory of the next process. */
+	set_page_dir_addr( (uint32_t)(&page_directories[next_process_number]) );
+	asm (
+	"movl page_dir_addr, %%eax        ;"
+	"andl $0xFFFFFFE7, %%eax          ;"
+	"movl %%eax, %%cr3                ;"
+	"movl %%cr4, %%eax                ;"
+	"orl $0x00000090, %%eax           ;"
+	"movl %%eax, %%cr4                ;"
+	"movl %%cr0, %%eax                ;"
+	"orl $0x80000000, %%eax 	      ;"
+	"movl %%eax, %%cr0                 "
+	: : : "eax", "cc" );
+	
+	
+	/* Set the kernel_stack_bottom and the TSS to point to the next process's kernel stack. */
+	tss.esp0 = _8MB - (_8KB)*next_process_number - 4;
+	set_kernel_stack_bottom( _8MB - (_8KB)*next_process_number - 4 );
+	
+	
+	/* Extract the PCB from the process number */
+	process_control_block = (pcb_t *)( _8MB - (_8KB)*(next_process_number + 1) );
+	
+	/* Put the "ksp_before_change" of the next process into the %ESP. */
+	asm volatile("movl %0, %%esp	;"
+				 ::"g"(process_control_block->ksp_before_change));
+				 
+	/* Put the "kbp_before_change" of the next process into the %EBP. */
+	asm volatile("movl %0, %%ebp"::"g"(process_control_block->kbp_before_change));
+	
+	/* 
+	 * We have now switched to the stack of the next process (now-current process). Remember that this
+	 * stack was where we originally called 'change_process' for this process. Thus, the current stack 
+	 * contains the appropriate data that was pushed when we made the 'change_process' syscall for the 
+	 * now-current process. If we now leave and ret, we will return back to the syscall_handler for the 
+	 * original 'change_process' syscall, which can then iret, resuming the now-current process.
+	 */
+	asm volatile("leave");
+	asm volatile("ret");
 }

@@ -493,7 +493,7 @@ int32_t dir_read(uint8_t * buf)
 	
 	dir_reads++;
 	
-	return strlen(buf);
+	return strlen((int8_t *)buf);
 }
 
 /*

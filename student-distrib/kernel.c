@@ -222,7 +222,8 @@ entry (unsigned long magic, unsigned long addr)
 	
 	/* Execute the first program (`shell') ... */
 	//files_test();
-	execute_test();
+	//execute_test();
+	bootup();
 	
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
