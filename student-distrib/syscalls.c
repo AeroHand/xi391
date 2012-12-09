@@ -333,7 +333,7 @@ int32_t execute(const uint8_t* command)
  * execute_test()
  *
  * Our test function for the execute syscall.
- * 
+ *
  * Inputs: none
  * Retvals: none
  */
@@ -348,7 +348,8 @@ void execute_test(void)
  *
  * Loads the initial three shells and jumps to the entry point of the first one.
  *
- * Retvals
+ * Inputs: none
+ * Retvals: 0
  * 
  */
 int32_t bootup(void)
@@ -484,8 +485,12 @@ int32_t bootup(void)
  * Reads 'nbytes' bytes into 'buf' from the file corresponding to the
  * given 'fd'.
  *
- * Retvals
- * 
+ * Inputs:
+ * fd: file descriptor
+ * buf: buffer to read from
+ * nbytes: number of bytes to read from
+ *
+ * Retvals: number of bytes read
  */
 int32_t read(int32_t fd, void* buf, int32_t nbytes)
 {
@@ -539,6 +544,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  * Retvals:
  * -1: invalid fd or buf
  * n: number of bytes written to the buffer
+>>>>>>> e07e1b407f1c5b72891e92b5b5ab3ed79996470a
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
@@ -775,6 +781,7 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
  * Inputs: the address of a pointer in user-space that needs to get the
  *         pointer to video memory
  * Retvals:
+ * 0: success
  * -1: the (input) address of the pointer is not in user-space, aka invalid
  */
 int32_t vidmap(uint8_t** screen_start)
@@ -833,12 +840,13 @@ int32_t no_function(void)
 }
 
 /*
- * set_running_processes()
+ * set_running_processes
  *
  * Set the running_processes variable from an external location. 
  *
- * Retvals
- * 0: none
+ * Inputs: setter value.
+ *
+ * Retvals: none
  */
 void set_running_processes( uint8_t value )
 {
@@ -846,12 +854,13 @@ void set_running_processes( uint8_t value )
 }
 
 /*
- * get_running_processes()
+ * get_running_processes
  *
  * Get the running_processes variable for an external location. 
  *
- * Retvals
- * 0: the value of running_processes
+ * Inputs: none.
+ *
+ * Retvals: getter value.
  */
 uint8_t get_running_processes( void )
 {
@@ -859,38 +868,84 @@ uint8_t get_running_processes( void )
 }
 
 /*
- * set_running_processes()
+ * set_kernel_stack_bottom
  *
  * Set the running_processes variable from an external location. 
  *
- * Retvals
- * 0: none
+ * Inputs: setter value.
+ *
+ * Retvals: none
  */
 void set_kernel_stack_bottom( uint32_t value )
 {
 	kernel_stack_bottom = value;
 }
 
+/*
+ * get_kernel_stack_bottom
+ *
+ * Gets kernel_stack_bottom.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint32_t get_kernel_stack_bottom( void )
 {
 	return kernel_stack_bottom;
 }
 
+/*
+ * set_page_dir_addr
+ *
+ * Sets page_dir_addr
+ *
+ * Inputs: setter value.
+ *
+ * Retvals: none
+ */
 void set_page_dir_addr( uint32_t value )
 {
 	page_dir_addr = value;
 }
 
+/*
+ * get_page_dir_addr
+ *
+ * Gets page_dir_addr.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint32_t get_page_dir_addr( void )
 {
 	return page_dir_addr;
 }
 
+/*
+ * set_current_process_number
+ *
+ * Sets current_process_number
+ *
+ * Inputs: setter value.
+ *
+ * Retvals: none
+ */
 void set_current_process_number( uint8_t value )
 {
 	current_process_number = value;
 }
 
+/*
+ * get_current_process_number
+ *
+ * Gets current_process_number.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint8_t get_current_process_number( void )
 {
 	return current_process_number;

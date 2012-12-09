@@ -20,6 +20,8 @@
 
 
 /*** STRUCTS ***/
+/* Explanation: 
+ * */
 typedef struct file_descriptor_t {
 	uint32_t * jumptable;
 	int32_t inode;
@@ -27,6 +29,8 @@ typedef struct file_descriptor_t {
 	int32_t flags;
 } file_descriptor_t;
 
+/* Explanation:
+ * */
 typedef struct pcb_t {
 	file_descriptor_t fds[8];
 	uint8_t filenames[8][32]; 

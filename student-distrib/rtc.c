@@ -9,7 +9,7 @@
 
 /* Flag used to lock an rtc_read and prevent its returning until a
  * clock interrupt occurs.  */
-int interrupt_occurred = 0;
+volatile int interrupt_occurred = 0;
 
 
 
@@ -18,8 +18,8 @@ int interrupt_occurred = 0;
  *
  * Initializes the RTC.
  *
- * Retvals
- * none
+ * Inputs: none
+ * Retvals: none
  */
 void rtc_init(void) 
 {
@@ -53,8 +53,8 @@ void rtc_init(void)
  *
  * The handler for an RTC interrupt.
  *
- * Retvals
- * none
+ * Inputs: none
+ * Retvals: none
  */
 void clock_interruption(void) 
 {
@@ -84,8 +84,8 @@ void clock_interruption(void)
  * (set a flag and wait until the interrupt handler clears it, then 
  * return 0).
  *
- * Retvals
- * none
+ * Inputs: none
+ * Retvals: none
  */
 int32_t rtc_read (uint32_t a, int32_t b, int32_t c, int32_t d) 
 {
@@ -108,6 +108,9 @@ int32_t rtc_read (uint32_t a, int32_t b, int32_t c, int32_t d)
  * Should always accept only a 4-byte integer specifying the interrupt 
  * rate in Hz, and should set the rate of periodic interrupts accordingly.
  *
+ * Inputs: 
+ * buf: hz to be set
+ * nbytes: number of bytes to set
  * Retvals
  * -1: failure
  * n: number of bytes written
@@ -172,8 +175,8 @@ int32_t rtc_write (int32_t * buf, int32_t nbytes)
  *
  * Opens the RTC.
  *
- * Retvals
- * 
+ * Inputs: none
+ * Retvals: 0
  */
 int32_t rtc_open (void) 
 {
@@ -185,8 +188,8 @@ int32_t rtc_open (void)
  *
  * Closes the RTC.
  *
- * Retvals
- * 
+ * Inputs: none
+ * Retvals: 0 
  */
 int32_t rtc_close (void) 
 {

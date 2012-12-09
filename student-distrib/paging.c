@@ -23,7 +23,8 @@ uint32_t new_page_dir_addr;
  *
  * Called from kernel.c to initialize paging.
  *
- * Retvals
+ * Inputs: none
+ * Retvals: 0 on success, -1 on failure
  * 
  */
 int32_t init_paging(void)
@@ -61,7 +62,7 @@ int32_t init_paging(void)
 	page_directories[0].dentries[0].KB.page_size = 0;
 	page_directories[0].dentries[0].KB.global = 0;
 	page_directories[0].dentries[0].KB.avail = 0;
-	page_directories[0].dentries[0].KB.table_addr = page_table_holder >> 12;
+	page_directories[0].dentries[0].KB.table_addr = page_table_holder >> TABLE_ADDRESS_SHIFT;
 
 	/* Initialize the kernel page directory entry. */
 	page_directories[0].dentries[1].MB.present = 1;
@@ -114,7 +115,8 @@ int32_t init_paging(void)
  *
  * Called from 'execute' to set up a new page directory.
  *
- * Retvals
+ * Inputs: process_number
+ * Retvals: 0 on success, -1 on failure
  * 
  */
 int32_t setup_new_task( uint8_t process_number )
@@ -124,8 +126,7 @@ int32_t setup_new_task( uint8_t process_number )
 	int new_page_table_holder;
 	
 	/* Reject the request if it is out of range. */
-	if( process_number >= 8 )
-	{
+	if( process_number >= MAX_NUM_OF_PROCESSES ) {
 		return -1;
 	}
 	
@@ -159,7 +160,7 @@ int32_t setup_new_task( uint8_t process_number )
 	page_directories[process_number].dentries[0].KB.page_size = 0;
 	page_directories[process_number].dentries[0].KB.global = 0;
 	page_directories[process_number].dentries[0].KB.avail = 0;
-	page_directories[process_number].dentries[0].KB.table_addr = new_page_table_holder >> 12;
+	page_directories[process_number].dentries[0].KB.table_addr = new_page_table_holder >> TABLE_ADDRESS_SHIFT;
 	
 	/* Initialize the kernel page directory entry. */
 	page_directories[process_number].dentries[1].MB.present = 1;
@@ -176,18 +177,18 @@ int32_t setup_new_task( uint8_t process_number )
 	page_directories[process_number].dentries[1].MB.page_addr = 1;
 	
 	/* Set up a directory entry for the program image. */
-	page_directories[process_number].dentries[0x20].MB.present = 1;
-	page_directories[process_number].dentries[0x20].MB.read_write = 1;
-	page_directories[process_number].dentries[0x20].MB.user_supervisor = 1;
-	page_directories[process_number].dentries[0x20].MB.write_through = 0;
-	page_directories[process_number].dentries[0x20].MB.cache_disabled = 0;
-	page_directories[process_number].dentries[0x20].MB.accessed = 0;
-	page_directories[process_number].dentries[0x20].MB.dirty = 0;
-	page_directories[process_number].dentries[0x20].MB.page_size = 1;
-	page_directories[process_number].dentries[0x20].MB.global = 0;
-	page_directories[process_number].dentries[0x20].MB.avail = 0;
-	page_directories[process_number].dentries[0x20].MB.pat = 0;
-	page_directories[process_number].dentries[0x20].MB.page_addr = process_number+1;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.present = 1;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.read_write = 1;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.user_supervisor = 1;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.write_through = 0;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.cache_disabled = 0;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.accessed = 0;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.dirty = 0;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.page_size = 1;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.global = 0;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.avail = 0;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.pat = 0;
+	page_directories[process_number].dentries[PROGRAM_IMG_ENTRY].MB.page_addr = process_number+1;
 	
 	/* Set control registers to enable paging correctly. */
 	asm (

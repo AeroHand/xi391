@@ -45,13 +45,6 @@ void disable_irq(uint32_t irq_num);
 /* Send end-of-interrupt signal for the specified IRQ */
 void send_eoi(uint32_t irq_num);
 
-/* Mask all interrupts */
-void mask_all(void);
-
-/* Return mask to previous (unmasked) state. */
-void undo_mask_all(void);
-
-
 
 
 #endif /* I8259_H */

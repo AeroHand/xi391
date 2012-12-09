@@ -184,7 +184,7 @@ void init_idt () {
 		}
 		
 		/* A syscall (int 0x80) comes from privilege level 3 */
-		if(index == 0x80) {
+		if(SYSCALL_INT == index) {
 			idt[index].dpl = 0x3;
 		}
 	}
@@ -211,13 +211,13 @@ void init_idt () {
 	SET_IDT_ENTRY(idt[19], exception_XF);
 
 	/* PIT interrupt routed to asm wrapper named: pit_handler */
-	SET_IDT_ENTRY(idt[32], pit_handler);
+	SET_IDT_ENTRY(idt[PIT_INT], pit_handler);
 	
 	/* Keyboard interrupt routed to asm wrapper named: keyboard_handler */
-	SET_IDT_ENTRY(idt[33], keyboard_handler);
+	SET_IDT_ENTRY(idt[KEYBOARD_INT], keyboard_handler);
 
 	/* RTC interrupt routed to asm wrapper named: clock_handler */
-	SET_IDT_ENTRY(idt[40], clock_handler);
+	SET_IDT_ENTRY(idt[RTC_INT], clock_handler);
 
 	/* System Call interrupt routed to asm wrapper named: syscall_handler */
 	SET_IDT_ENTRY(idt[SYSCALL_INT], syscall_handler);

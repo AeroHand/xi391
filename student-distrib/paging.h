@@ -11,6 +11,12 @@
 
 
 
+#define	TABLE_ADDRESS_SHIFT		12
+#define MAX_NUM_OF_PROCESSES	8
+#define PROGRAM_IMG_ENTRY		0x20
+
+
+
 /* Called from kernel.c to initialize paging. */
 int32_t init_paging(void);
 
