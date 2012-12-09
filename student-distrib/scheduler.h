@@ -5,7 +5,6 @@
 #define SCHEDULER_H
 
 
-
 /* PIT Chip's Command Register Port */
 #define PIT_CMDREG        0x43
 
@@ -18,6 +17,9 @@
 #define DIVISOR_100HZ	11932
 #define DIVISOR_33HZ	36157
 #define DIVISOR_20HZ	59659
+
+/* Pit Mode 3 */
+#define PIT_MODE3		0x36
 
 /* IRQ Constant. */
 #define PIT_IRQ			0
