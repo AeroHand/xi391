@@ -9,33 +9,18 @@
 #include "files.h"
 
 
+/*** GLOBAL VARIABLES ***/
 /* The bitmask representing running processes. */
 uint8_t running_processes = 0x80;
 
 /* The address of the kernel stack bottom. */
 uint32_t kernel_stack_bottom;
 
-/* Used in halt for switching the page directory. */
+/* Address of the page directory for the current process. */
 uint32_t page_dir_addr;
 
-
-typedef struct file_descriptor_t {
-	uint32_t * jumptable;
-	int32_t inode;
-	int32_t fileposition;
-	int32_t flags;
-} file_descriptor_t;
-
-typedef struct pcb_t {
-	file_descriptor_t fds[8];
-	uint8_t filenames[8][32]; 
-	uint32_t parent_ksp;
-	uint32_t parent_kbp;
-	uint8_t process_number;
-	uint8_t parent_process_number;
-	uint8_t argbuf[100];
-} pcb_t;
-
+/* Number of the current running process, defined from 0-7 */
+uint8_t current_process_number = 0;
 
 
 /*
@@ -97,6 +82,9 @@ int32_t halt(uint8_t status)
 		bitmask = (bitmask >> 1) + 0x80;
 	}
 	running_processes &= bitmask;
+	
+	/* Set the current process number back to the parent */
+	current_process_number = process_control_block->parent_process_number;
 	
 	/* Load the page directory of the parent. */
 	page_dir_addr = (uint32_t)(&page_directories[process_control_block->parent_process_number]);
@@ -188,11 +176,13 @@ int32_t execute(const uint8_t* command)
 	
 	/* Look for an open slot for the process. */
 	uint8_t bitmask = 0x80;
-	for( i = 0; i < 8; i++ ) {
+	for( i = 0; i < 8; i++ ) 
+	{
 		if( !(running_processes & bitmask) ) 
 		{
 			open_process = i;
 			running_processes |= bitmask;
+			current_process_number = open_process;
 			break;
 		}
 		bitmask >>= 1;
@@ -288,6 +278,9 @@ int32_t execute(const uint8_t* command)
 		 * process does not have a PCB.
 		 */
 		process_control_block->parent_process_number = 0;
+		
+		/* If this is the first process, initialize it to tty #1. */
+		process_control_block->tty_number = 1;
 	}
 	else
 	{
@@ -296,6 +289,12 @@ int32_t execute(const uint8_t* command)
 		 * number of the current process that called it (find this in the PCB).
 		 */
 		process_control_block->parent_process_number = ( (pcb_t *)(esp & ALIGN_8KB) )->process_number;
+		
+		/* Indicate that the parent process has a child */
+		( (pcb_t *)(esp & ALIGN_8KB) )->has_child = 1;
+		
+		/* Set the tty number of this process to be the same as the parent */
+		process_control_block->tty_number = ( (pcb_t *)(esp & ALIGN_8KB) )->tty_number;
 	}
 	process_control_block->process_number = open_process;
 	
@@ -310,28 +309,15 @@ int32_t execute(const uint8_t* command)
 	/* Store the args passed to this function into the PCB. */
 	strcpy((int8_t*)process_control_block->argbuf, (const int8_t*)localargbuf);
 	
-	/* 
-	 * Set the kernel_stack_bottom and tss.esp0 field to be the bottom of the new kernel stack.
-	 */
+	/* Set the kernel_stack_bottom and tss.esp0 field to be the bottom of the new kernel stack. */
 	kernel_stack_bottom = tss.esp0 = _8MB - (_8KB)*open_process - 4;
 	
 	/* Call open for stdin and stdout. */
 	open("stdin");
 	open("stdout");
 	
-	/* Put kernel_stack_bottom into the %ESP and push entry_point. */
-	asm volatile("movl %0, %%esp	;"
-				 "pushl %1			;"::"g"(kernel_stack_bottom), "g"(entry_point));
-				 
-	/* Put kernel_stack_bottom into the %EBP. */
-	asm volatile("movl %0, %%ebp"::"g"(kernel_stack_bottom));
-
-	/* Pop the entry_point into 'entry'. */
-	int32_t entry;
-	asm volatile("popl %0			;":"=g"(entry));
-	
 	/* Jump to the entry point and begin execution. */
-	to_the_user_space(entry);
+	to_the_user_space(entry_point);
 
 	return 0;
 }
@@ -685,4 +671,45 @@ int32_t sigreturn(void)
 int32_t no_function(void)
 {
 	return 0;
+}
+
+
+void set_running_processes( uint8_t value )
+{
+	running_processes = value;
+}
+
+uint8_t get_running_processes( void )
+{
+	return running_processes;
+}
+
+void set_kernel_stack_bottom( uint32_t value )
+{
+	kernel_stack_bottom = value;
+}
+
+uint32_t get_kernel_stack_bottom( void )
+{
+	return kernel_stack_bottom;
+}
+
+void set_page_dir_addr( uint32_t value )
+{
+	page_dir_addr = value;
+}
+
+uint32_t get_page_dir_addr( void )
+{
+	return page_dir_addr;
+}
+
+void set_current_process_number( uint8_t value )
+{
+	current_process_number = value;
+}
+
+uint8_t get_current_process_number( void )
+{
+	return current_process_number;
 }
