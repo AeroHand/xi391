@@ -222,6 +222,7 @@ entry (unsigned long magic, unsigned long addr)
 	/* Execute the first program (`shell') ... */
 	//files_test();
 	//execute_test();
+	clear();
 	bootup();
 	
 	/* Spin (nicely, so we don't chew up cycles) */
