@@ -432,13 +432,15 @@ int32_t bootup(void)
 			/* Push things onto the kernel stack to initialize task switching. */
 			asm volatile("movl %%esp, %%eax      ;"
 						 "movl %%ebp, %%ebx      ;"
-						 "movl %0, %%esp         ;"
-						 "movl %0, %%ebp         ;"
+						 "movl %0, %%ecx		 ;"
+						 "movl %3, %%edx		 ;"
+						 "movl %%ecx, %%esp      ;"
+						 "movl %%ecx, %%ebp      ;"
 						 "pushl %1               ;"
 						 "pushl $0x83FFFF0       ;"
 						 "pushl $0               ;"
 						 "pushl %2               ;"
-						 "pushl %3               ;"
+						 "pushl %%edx            ;"
 						 "pushl $0               ;"
 						 "pushl $0               ;"
 						 "pushl $0               ;"
@@ -447,17 +449,17 @@ int32_t bootup(void)
 						 "pushl $0               ;"
 						 "pushl $0               ;"
 						 "pushl $0               ;"
-						 "pushl end_pit_handler  ;"
-						 "pushl %0               ;"
+						 "pushl $end_pit_handler ;"
+						 "pushl %%ecx            ;"
 						 "movl %%eax, %%esp      ;"
 						 "movl %%ebx, %%ebp      ;"
 						 :: "g"(kernel_stack_bottom), "g"(USER_DS), "g"(USER_CS), 
-							"g"(entry_point): "eax", "ebx");
+							"g"(entry_point): "eax", "ebx", "ecx", "edx");
 		}
 		
 		/* Store KSP and KBP before change. */
-		process_control_block->ksp_before_change = kernel_stack_bottom - 24;
-		process_control_block->kbp_before_change = kernel_stack_bottom - 24;
+		process_control_block->ksp_before_change = kernel_stack_bottom - 60;
+		process_control_block->kbp_before_change = kernel_stack_bottom - 60;
 	
 		/* Call open for stdin and stdout. */
 		open( (uint8_t*) "stdin" );
@@ -472,6 +474,10 @@ int32_t bootup(void)
 	
 	/* Update the running processes bitmask. */
 	running_processes |= 0x70;
+	
+	current_process_number = 1;
+	
+	sti();
 	
 	/* Jump to the entry point and begin execution. */
 	to_the_user_space(entry_point);

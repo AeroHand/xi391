@@ -113,6 +113,8 @@ end_pit_handler:
 	popl %eax
 	popl %ebp
 
+	sti
+	
 	iret
 
 
