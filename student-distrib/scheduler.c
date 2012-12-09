@@ -19,7 +19,7 @@
 void pit_init(void) 
 {
 	/* Set frequency to 33HZ (interrupt every 30 milliseconds). */
-    outb(0x36, PIT_CMDREG);
+    outb(PIT_MODE3, PIT_CMDREG);
     outb(DIVISOR_33HZ & 0xFF, PIT_CHANNEL0);
     outb(DIVISOR_33HZ >> 8, PIT_CHANNEL0);
 
@@ -45,7 +45,7 @@ void pit_interruption(void)
 	/* ????? */
 	change_process();
 	/* ????? */
-
+	
 	/* Send EOI, otherwise we freeze up. */
 	send_eoi(PIT_IRQ);
 
