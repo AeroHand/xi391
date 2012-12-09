@@ -94,7 +94,7 @@ int32_t set_handler(int32_t signum, void* handler_address);
 int32_t sigreturn(void);
 
 
-/*** Helper functions ***/ 
+/*** Other functions ***/ 
  /* Called when we need to open stdin to initialize a new process. */
 void open_stdin( int32_t fd );
 
@@ -106,6 +106,9 @@ void execute_test(void);
 
 /* A function that literally does absolutely nothing. */
 int32_t no_function(void);
+
+/* Loads the initial three shells and jumps to the entry point of the first one. */
+int32_t bootup(void);
 
 /*** Set/Get functions ***/
 void set_running_processes( uint8_t value );
