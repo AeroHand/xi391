@@ -43,7 +43,7 @@ void pit_interruption(void)
 	cli();
 
 	/* ????? */
-	//change_process();
+	change_process();
 	/* ????? */
 	
 	/* Send EOI, otherwise we freeze up. */

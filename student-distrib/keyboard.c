@@ -164,7 +164,7 @@ int32_t terminal_read(unsigned char * buf, int32_t nbytes) {
 	int i;
 	int countread = 0;
 	
-	set_command_location( );
+	set_command_location();
 
 	/* Spin until allow_terminal_read = 1 (we allow it to be read). */
 	while(!allow_terminal_read[active_terminal]);
@@ -439,8 +439,7 @@ void process_keyboard_input(uint8_t scancode)
 
 		if(keyboardflag[active_terminal] & 0x8){
 			new_terminal = (scancode & 0x7) - 3;
-			curr_process = get_tty_number();
-			if( new_terminal != curr_process){
+			if( new_terminal != active_terminal){
 				active_terminal = new_terminal;
 				set_active_terminal(new_terminal);
 				load_video_memory(active_terminal);
