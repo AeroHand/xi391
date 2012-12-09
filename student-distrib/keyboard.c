@@ -442,7 +442,7 @@ void process_keyboard_input(uint8_t scancode)
 		if(keyboardflag[active_terminal] & 0x8){
 			new_terminal = (scancode & 0x7) - 3;
 			curr_process = get_tty_number();
-			if( new_terminal != curr_process){
+			if( new_terminal != active_terminal){
 				active_terminal = new_terminal;
 				set_active_terminal(new_terminal);
 				load_video_memory(active_terminal);

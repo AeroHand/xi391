@@ -54,18 +54,11 @@ void carriage_return(void) {
     screen_y[active_terminal] = command_y[active_terminal];
 }
 
-
-
-
-
-
-
-
 void scrolling_mem(){
         
     int x, y;
 
-    for(y=0; y<NUM_ROWS; y++){
+    for(y=0; y<NUM_ROWS-1; y++){
         for(x=0; x<NUM_COLS; x++){
             *(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS*(y+1) + x) << 1));
             *(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1) + 1) = *(uint8_t *)(video_mem + ((NUM_COLS*(y+1) + x) << 1) + 1);
@@ -73,7 +66,8 @@ void scrolling_mem(){
     }
 
     for(x=0; x<NUM_COLS; x++){
-    	*(uint8_t *)(video_mem + ((NUM_COLS*NUM_ROWS + x) << 1)) = ' ';
+		*(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
+		*(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1) + 1) = ATTRIB;
     }
     
 }
@@ -86,7 +80,7 @@ void scrolling_buff(uint32_t tty){
         command_y[tty]--;
     }       
 
-    for(y=0; y<NUM_ROWS; y++){
+    for(y=0; y<NUM_ROWS-1; y++){
         for(x=0; x<NUM_COLS; x++){
         	*(uint8_t *)(video_buff[tty] + ((NUM_COLS*y + x	) << 1)) = *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(y+1) + x) << 1));
         	*(uint8_t *)(video_buff[tty] + ((NUM_COLS*y + x) << 1) + 1) = *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(y+1) + x) << 1) + 1);
@@ -95,7 +89,8 @@ void scrolling_buff(uint32_t tty){
 
 
     for(x=0; x<NUM_COLS; x++){
-    	*(uint8_t *)(video_buff[tty] + ((NUM_COLS*NUM_ROWS + x) << 1)) = ' ';
+    	*(uint8_t *)(video_buff[tty] + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
+        *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(NUM_ROWS-1) + x) << 1) + 1) = ATTRIB;
     }
     
 }
