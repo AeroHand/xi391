@@ -4,6 +4,7 @@
 #include "lib.h"
 #include "rtc.h"
 #include "i8259.h"
+#include "keyboard.h"
 
 
 
@@ -95,6 +96,23 @@ int32_t rtc_read (uint32_t a, int32_t b, int32_t c, int32_t d)
 		/* Do nothing. */
 	}
 
+	/* Get the active terminal number */
+	uint32_t active_terminal = get_active_term();
+	
+	/* Copy the buffer for the active terminal into the actual video memory */
+	switch( active_terminal )
+	{
+		case 0:
+			memcpy((uint8_t *)VIDEO, (uint8_t *)VIDEO_BUF1, _4KB);
+			break;
+		case 1:
+			memcpy((uint8_t *)VIDEO, (uint8_t *)VIDEO_BUF2, _4KB);
+			break;
+		case 2:
+			memcpy((uint8_t *)VIDEO, (uint8_t *)VIDEO_BUF3, _4KB);
+			break;
+	}
+	
 	/* Clear the flag. */
 	interrupt_occurred = 0;
 

@@ -41,7 +41,8 @@ void placec(uint8_t c);
 
 /* Functions used by keyboard.c to manipulate the video screen */
 void set_process_term_number(uint32_t value);
-void set_active_terminal(uint32_t value);
+void set_active_term(uint32_t value);
+uint32_t get_active_term( void );
 void update_cursor();
 void carriage_return();
 void new_line();
