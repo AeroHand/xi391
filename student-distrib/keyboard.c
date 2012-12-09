@@ -4,6 +4,7 @@
 #include "lib.h"
 #include "keyboard.h"
 #include "i8259.h"
+#include "syscalls.h"
 
 
 
@@ -121,24 +122,28 @@ uint8_t kbd_chars[4][128] = {
 	}	
 };
 
+
+uint32_t active_terminal;
+
 /* The buffer of chars which make up the command. */
-char command_buffer[TERMINAL_BUFFER_MAX_SIZE];
+char command_buffer[3][TERMINAL_BUFFER_MAX_SIZE];
 
 /* Length of the current command (buffer). */
-uint32_t command_length;
+uint32_t command_length[3];
 
 /* The x position of the cursor. */
-uint32_t cursor_x;
+uint32_t cursor_x[3];
 
 /* Flags associated with the key pressed.
  * bit 0: shift on or off
  * bit 1: caps on or off
- * bit 2: ctrl on or off */
-unsigned char keyboardflag;
+ * bit 2: ctrl on or off 
+ * bit 3: alt on or off */
+unsigned char keyboardflag[3];
 
 /* This lock on terminal reading allows us to send complete buffers for reading
  * by foribing terminal_read until ready (upon a MAKE_ENTER scancode). */
-uint32_t allow_terminal_read;
+uint32_t allow_terminal_read[3];
 
 
 
@@ -159,24 +164,24 @@ int32_t terminal_read(unsigned char * buf, int32_t nbytes) {
 	int i;
 	int countread = 0;
 	
-	set_command_y(0);
+	set_command_location( );
 
 	/* Spin until allow_terminal_read = 1 (we allow it to be read). */
-	while(!allow_terminal_read);
+	while(!allow_terminal_read[active_terminal]);
 
 	new_line();
 
 	/* Iterate through nbytes reading (putting) the command buffer into buf. */
 	for (i = 0; i < nbytes; i++) {
-		buf[i] = command_buffer[i];
-		command_buffer[i] = NULL;
+		buf[i] = command_buffer[active_terminal][i];
+		command_buffer[active_terminal][i] = NULL;
 		countread++;
 	}
 
 	/* Reset command_length, cursor, and the allow_terminal_read lock. */
-	command_length = 0;
-	cursor_x = 0;
-	allow_terminal_read = 0;
+	command_length[active_terminal] = 0;
+	cursor_x[active_terminal] = 0;
+	allow_terminal_read[active_terminal] = 0;
 
 	return countread;
 }
@@ -206,7 +211,7 @@ int32_t terminal_write(const unsigned char * buf, int32_t nbytes) {
 	for (i = 0; i < nbytes; i++) {
 
 		/* Print a char from the buffer. */
-		putc(buf[i]);
+		putit(buf[i], get_tty_number());
 
 		/* Increment the number of bytes printed. */
 		successputs++;
@@ -230,29 +235,36 @@ int32_t terminal_write(const unsigned char * buf, int32_t nbytes) {
 void keyboard_open(void) {
 
 	/* Initially zero the buffer. */
-	int i;
-	for( i = 0; i < TERMINAL_BUFFER_MAX_SIZE; i++ ) {
-		command_buffer[i] = 0;
+	int i,j; 
+
+	for(i = 0; i < 3; i++) {
+		for( j = 0; j < TERMINAL_BUFFER_MAX_SIZE; j++ ) {
+			command_buffer[i][j] = 0;
+		}
+		
+		/* Initially set the key input flags to 00 */
+		keyboardflag[i] = FLAG_NOTHING;
+
+
+		/* Forbit terminal read until a return */
+		allow_terminal_read[i]  = 0;
+
+		/* Initially command length is zero because nothing has been typed. */
+		command_length[i] = 0;
+
+		/* x position of the cursor is initially zero */
+		cursor_x[i] = 0;
 	}
 	
-	/* Initially set the key input flags to 00 */
-	keyboardflag = FLAG_NOTHING;
+	/* the beginning terminal is index 0 */
+	active_terminal = 0;
+	set_active_terminal(0);
 
-	/* Forbit terminal read until a return */
-	allow_terminal_read = 0;
-
-	/* Initially command length is zero because nothing has been typed. */
-	command_length = 0;
-
-	/* x position of the cursor is initially zero */
-	cursor_x = 0;
-	
-	set_command_y(0);
+	set_command_location();
 	update_cursor(CURSOR_START);
 
 	/* Unmask IRQ1 */
 	enable_irq(KEYBOARD_IRQ);
-
 }
 
 /* 
@@ -272,29 +284,30 @@ void keyboard_open(void) {
 void place_character_at_index(uint8_t scancode, int index) {
 	
 	/* The end of the line is set at first to be the same as command_length. */
-    int end_of_line = command_length;
+    int end_of_line = command_length[active_terminal];
    
     int8_t datum;
 	/* This character-to-be-added (datum) is retreieved from the 
 	 * massive "kbd_chars" array. */
-    datum = kbd_chars[keyboardflag & FLAG_SHIFT_CAPS_MASK][scancode];
+    datum = kbd_chars[keyboardflag[active_terminal] & FLAG_SHIFT_CAPS_MASK][scancode];
+
    
     /* If the user is inserting the character before the last possible position,
 	 * then the data on and in front of the cursor needs to move to the right to
 	 * let the new character be placed at the new spot (where the cursor is). */
-    while (index <= end_of_line) {
-            command_buffer[end_of_line + 1] = command_buffer[end_of_line];
+    while( index <= end_of_line) {
+            command_buffer[active_terminal][end_of_line + 1] = command_buffer[active_terminal][end_of_line];
             end_of_line--;
     }
 	
 	/* Place character at the index of the command buffer. */
-	command_buffer[index] = datum;
+	command_buffer[active_terminal][index] = datum;
 
 	/* Incrememnt command_length because it has just added a character. */
-	command_length++;
+	command_length[active_terminal]++;
 
 	/* Move the cursor by 1 x position because we have added a character. */
-	cursor_x++;
+	cursor_x[active_terminal]++;
  }
 
 /* 
@@ -314,8 +327,8 @@ void printthebuffer(void) {
 	carriage_return();
 
 	/* Iterate though command buffer and print each char. */
-	for (i = 0; i <= command_length; i++) {
-		putc(command_buffer[i]);
+	for (i = 0; i <= command_length[active_terminal]; i++) {
+		putc(command_buffer[active_terminal][i]);
 	}
 
 }
@@ -337,12 +350,15 @@ void printthebuffer(void) {
 void process_keyboard_input(uint8_t scancode)
 {
 	uint8_t nextcode;
-	int32_t cursor_index = cursor_x;
+	uint32_t new_terminal;
+	uint32_t curr_process;
+
+	int32_t cursor_index = cursor_x[active_terminal];
 
 	int i;
 
 	/* Store the datum received from the keyboard port. */
-	if ( 0 == (keyboardflag & FLAG_CTRL) &&
+	if ( 0 == (keyboardflag[active_terminal] & FLAG_CTRL) &&
 			((scancode >= MAKE_1 && scancode <= MAKE_EQUALS) ||
 			 (scancode >= MAKE_Q && scancode <= MAKE_R_SQUARE_BRACKET) ||
 			 (scancode >= MAKE_A && scancode <= MAKE_ACCENT) ||
@@ -352,74 +368,86 @@ void process_keyboard_input(uint8_t scancode)
 
 		/* (Stop placing characters in the command_buffer if 
 		 * command_length is big.) */
-		if (command_length + 1 < TERMINAL_BUFFER_MAX_SIZE) {
+		if (command_length[active_terminal] + 1 < TERMINAL_BUFFER_MAX_SIZE) {
 			/* Put the character into the buffer (shift data if necessary). */
-			place_character_at_index(scancode, cursor_x);
+			place_character_at_index(scancode, cursor_x[active_terminal]);
 		}
 
 	} else if (scancode == MAKE_ENTER) {
 		
 		/* Remove the lock on terminal reading. */
-		allow_terminal_read = 1;
+		allow_terminal_read[active_terminal] = 1;
 
 	} else if (scancode == MAKE_BKSP) {
 
 		/* Backspace, shifting data if necessary. */
 		if (cursor_index > 0 ) {
 			cursor_index--;
-			while ( cursor_index < command_length) {
-				command_buffer[cursor_index] = command_buffer[cursor_index + 1];
+			while ( cursor_index < command_length[active_terminal]) {
+				command_buffer[active_terminal][cursor_index] = command_buffer[active_terminal][cursor_index+1];
 				cursor_index++;
 			}
-			command_length--;
-			cursor_x--;
+			command_length[active_terminal]--;
+			cursor_x[active_terminal]--;
 		}
 
 	} else if (scancode == MAKE_DELETE) {
 
 		/* Delete, shifting data if necessary. */
-		if (cursor_index >= 0 && cursor_index < command_length) {
-			while (cursor_index < command_length) {
-				command_buffer[cursor_index] = command_buffer[cursor_index + 1];
+		if (cursor_index >= 0 && cursor_index < command_length[active_terminal]) {
+			while (cursor_index < command_length[active_terminal]) {
+				command_buffer[active_terminal][cursor_index] = command_buffer[active_terminal][cursor_index+1];
 				cursor_index++;
 			}
-			command_length--;
+			command_length[active_terminal]--;
 		}
 
 	} else if (scancode == MAKE_CAPS) {
 
 		/* Change the keyboard flags for +/- CAPSLOCK */
-		keyboardflag ^= FLAG_CAPS;
+		keyboardflag[active_terminal] ^= FLAG_CAPS;
 
 	} else if (scancode == MAKE_L_SHFT || scancode == MAKE_R_SHFT) /* Shift down */ {
 
 		/* Change the keyboard flags for + SHIFT */
-		keyboardflag |= FLAG_SHIFT;
+		keyboardflag[active_terminal] |= FLAG_SHIFT;
 
 	} else if (scancode == BREAK_L_SHFT || scancode == BREAK_R_SHFT) /* Shift up */	{
 
 		/* Change the keyboard flags for - SHIFT */
-		keyboardflag &= ~FLAG_SHIFT;
+		keyboardflag[active_terminal] &= ~FLAG_SHIFT;
 
 	} else if (scancode == MAKE_L_CTRL) /* Ctrl down */ {
 
 		/* Change the keyboard flags for + CTRL */
-		keyboardflag |= FLAG_CTRL;
+		keyboardflag[active_terminal] |= FLAG_CTRL;
 
 	} else if (scancode == BREAK_L_CTRL) /* Ctrl up */ {
 
 		/* Change the keyboard flags for - CTRL */
-		keyboardflag &= ~FLAG_CTRL;
+		keyboardflag[active_terminal] &= ~FLAG_CTRL;
 
 	} else if (scancode == MAKE_L_ALT) /* Alt down */ {
 
 		/* Change the keyboard flags for + ALT */
-
+		keyboardflag[active_terminal] |= 0x08;
 
 	} else if (scancode == BREAK_L_ALT) /* Alt up */ {
 
 		/* Change the keyboard flags for - ALT */
+		keyboardflag[active_terminal] &= ~0x8;
 
+	} else if ( scancode >= MAKE_F1 && scancode <= MAKE_F3){
+
+		if(keyboardflag[active_terminal] & 0x8){
+			new_terminal = (scancode & 0x7) - 3;
+			curr_process = get_tty_number();
+			if( new_terminal != curr_process){
+				active_terminal = new_terminal;
+				set_active_terminal(new_terminal);
+				load_video_memory(active_terminal);
+			}
+		}
 
 	} else if (scancode == EXTRAS) /* Directional and RCTRL */ {
 
@@ -427,44 +455,44 @@ void process_keyboard_input(uint8_t scancode)
 		nextcode = inb(KEYBOARD_PORT);
 
 		/* Move cursor based on arrow key input. */
-		if (nextcode == MAKE_L_ARROW && cursor_x > 0) {
+		if (nextcode == MAKE_L_ARROW && cursor_x[active_terminal] > 0) {
 
-			cursor_x--;
+			cursor_x[active_terminal]--;
 
-		} else if (nextcode == MAKE_R_ARROW && cursor_x < command_length ) {
+		} else if (nextcode == MAKE_R_ARROW && cursor_x[active_terminal] < command_length[active_terminal] ) {
 
-			cursor_x++;
+			cursor_x[active_terminal]++;
 
 		} else if (nextcode == MAKE_L_CTRL) {
 
 			/* Change the keyboard flags for + CTRL */
-			keyboardflag |=  FLAG_CTRL;
+			keyboardflag[active_terminal] |=  FLAG_CTRL;
 
 		} else if (nextcode == BREAK_L_CTRL) {
 
 			/* Change the keyboard flags for - CTRL */
-			keyboardflag &= ~FLAG_CTRL;
+			keyboardflag[active_terminal] &= ~FLAG_CTRL;
 
 		}
 
-	} else if (keyboardflag & FLAG_CTRL) /* CTRL + L */ {
+	} else if (keyboardflag[active_terminal] & FLAG_CTRL) /* CTRL + L */ {
 
 		/* Implement screen clear with CTRL + L input. */
 		if (scancode == MAKE_L){
-			for (i = 0; i < command_length; i++) {
-				command_buffer[i] = NULL;
+			for (i=0; i < command_length[active_terminal]; i++) {
+				command_buffer[active_terminal][i] = NULL;
 			}
-			command_length = 0;
-			cursor_x = 0;
+			command_length[active_terminal] = 0;
+			cursor_x[active_terminal] = 0;
 			clear_the_screen();
-			keyboardflag &= ~FLAG_CTRL;
+			keyboardflag[active_terminal] &= ~FLAG_CTRL;
 		}
 
 	} else {
 		/* unknown scancode: do nothing */
 	}
 
-	update_cursor(cursor_x);
+	update_cursor(cursor_x[active_terminal]);
 }
 
 /* 

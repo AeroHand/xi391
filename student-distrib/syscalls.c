@@ -60,10 +60,11 @@ uint32_t dir_fops_table[4] = { (uint32_t)(dir_open),
 /*
  * halt()
  *
- * Terminates a process, returning the specified value to its parent process.
+ * Terminates a process, returning the specified value to its parent process by switching
+ * back to the parent's kernel stack and then "finishing" the execute that called this process.
  *
- * Inputs: status
- * Retvals: 0
+ * Inputs: status of the terminated process
+ * Retvals: status of the terminated process (same as the input)
  * 
  */
 int32_t halt(uint8_t status)
@@ -71,7 +72,7 @@ int32_t halt(uint8_t status)
 	/* Local variables */
 	int i;
 	
-	/* Extract the PCB from the KSP */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* 
@@ -146,7 +147,8 @@ int32_t halt(uint8_t status)
  * Attempts to load and execute a new program, handing off the processor to the
  * new program until it terminates.
  *
- * Retvals
+ * Inputs: command string
+ * Retvals:
  * -1: command cannot be executed
  * 256: program dies by an exception
  * 0 to 255: program executes a halt system call, in which case the value returned 
@@ -261,7 +263,7 @@ int32_t execute(const uint8_t* command)
 	/* Load the program to the appropriate starting address. */
 	fs_load((const int8_t *)fname, 0x08048000);
 	
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)( _8MB - (_8KB)*(open_process + 1) );
 	
 	/* Store the %ESP as "parent_ksp" in the PCB. */
@@ -462,6 +464,12 @@ int32_t bootup(void)
 		open( (uint8_t*) "stdout");
 	}
 	
+	/* Initialize the video memory buffers */
+	memcpy((char *)VIDEO_BUF1, (char *)VIDEO, _4KB);
+	memcpy((char *)VIDEO_BUF2, (char *)VIDEO, _4KB);
+	memcpy((char *)VIDEO_BUF3, (char *)VIDEO, _4KB);
+	
+	
 	/* Update the running processes bitmask. */
 	running_processes |= 0x70;
 	
@@ -492,7 +500,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 	/* Local variables. */
 	int bytesread;
 	
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Check for invalid fd or buf. */
@@ -530,20 +538,20 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  *
  * Writes 'nbytes' bytes from 'buf' into the file associated with 'fd'.
  *
- * Inputs:
- * fd: file descriptor
- * buf: buffer to write into
- * nbytes: number of bytes to write
- *
+ * Inputs: fd - file descriptor to which we want to write
+ *         buf - the buffer containing the data we want to write
+ *         nbytes - the number of bytes we want to write
  * Retvals:
- * number of bytes written
+ * -1: invalid fd or buf
+ * n: number of bytes written to the buffer
+>>>>>>> e07e1b407f1c5b72891e92b5b5ab3ed79996470a
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {
 	/* Local variables. */
 	int byteswritten;
 	
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Check for invalid fd or buf. */
@@ -572,12 +580,11 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
  * Attempts to open the file with the given filename and give it a spot
  * in the file array in the pcb associated with the current process.
  *
- * Inputs:
- * filename: file to open
- *
+ * Inputs: the filename (string)
  * Retvals:
- * 0 on success
- * -1 on fail
+ * -1: failure
+ * 0: success
+ * 
  */
 int32_t open(const uint8_t* filename)
 {
@@ -585,7 +592,7 @@ int32_t open(const uint8_t* filename)
 	int i;
 	dentry_t tempdentry;
 
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 
 	/* Call appropriate function for opening stdin. */
@@ -655,14 +662,12 @@ int32_t open(const uint8_t* filename)
  *
  * Called when we need to open stdin to initialize a new process.
  *
- * Inputs:
- * fd: file descriptor
- *
+ * Inputs: the file descriptor we want to use
  * Retvals: none
  */
 void open_stdin( int32_t fd )
 {
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Set the jumptable -- NOTE: for stdin, we only have a read function. */
@@ -677,14 +682,12 @@ void open_stdin( int32_t fd )
  *
  * Called when we need to open stdout to initialize a new process.
  *
- * Inputs:
- * fd: file descriptor
- *
+ * Inputs: the file descriptor we want to use
  * Retvals: none
  */
 void open_stdout( int32_t fd )
 {
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Set the jumptable -- NOTE: for stdout, we only have a write function. */
@@ -700,9 +703,7 @@ void open_stdout( int32_t fd )
  * Closes the speciﬁed ﬁle descriptor and makes it available for return from
  * later calls to open.
  *
- * Inputs:
- * fd: file descriptor
- *
+ * Inputs: the file descriptor we want to close
  * Retvals:
  * -1: error
  * 0: success
@@ -712,7 +713,7 @@ int32_t close(int32_t fd)
 	/* Local variables. */
 	uint32_t retval;
 	
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Check for an invalid fd. */
@@ -743,12 +744,11 @@ int32_t close(int32_t fd)
  *
  * Reads the program’s command line arguments into a user-level buffer.
  *
- * Inputs:
- * buf: buffer
- * nbytes: number of bytes
- *
- * Retvals:
+ * Inputs: buf - pointer to a user-level buffer
+ *         nbytes - number of bytes to read from the agruments buffer
+ * Retvals
  * -1: arguments and a terminal null byte do not fit into buffer
+ * 0: success
  */
 int32_t getargs(uint8_t* buf, int32_t nbytes)
 {
@@ -758,7 +758,7 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
 		return -1;
 	}
 	
-	/* Get a pointer to the PCB. */
+	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	/* Ensure we are not asking for less characters than the argbuf (?) */
@@ -778,12 +778,11 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
  *
  * Maps the text-mode video memory into user space at a pre-set virtual address.
  *
- * Inputs:
- * screen_start: pointer to a pointer
- *
- * Retvals
- * 0: sucesses
- * -1: invalid location
+ * Inputs: the address of a pointer in user-space that needs to get the
+ *         pointer to video memory
+ * Retvals:
+ * 0: success
+ * -1: the (input) address of the pointer is not in user-space, aka invalid
  */
 int32_t vidmap(uint8_t** screen_start)
 {
@@ -802,11 +801,9 @@ int32_t vidmap(uint8_t** screen_start)
  *
  * Related to signal handling.
  *
- * Inputs:
- * signum: don't use
- * handler_address: don't use
- *
- * Retvals:
+ * Inputs: signum - number of the signal
+ *         handler_address - pointer to the handler function
+ * Retvals
  * 0: always
  */
 int32_t set_handler(int32_t signum, void* handler_address)
@@ -820,8 +817,7 @@ int32_t set_handler(int32_t signum, void* handler_address)
  * Related to signal handling.
  *
  * Inputs: none
- *
- * Retvals
+ * Retvals:
  * 0: always
  */
 int32_t sigreturn(void)
@@ -835,8 +831,7 @@ int32_t sigreturn(void)
  * A function that literally does absolutely nothing. 
  *
  * Inputs: none
- *
- * Retvals
+ * Retvals:
  * 0: always
  */
 int32_t no_function(void)
@@ -847,7 +842,7 @@ int32_t no_function(void)
 /*
  * set_running_processes
  *
- * Sets running_processes.
+ * Set the running_processes variable from an external location. 
  *
  * Inputs: setter value.
  *
@@ -861,7 +856,7 @@ void set_running_processes( uint8_t value )
 /*
  * get_running_processes
  *
- * Gets running_processes.
+ * Get the running_processes variable for an external location. 
  *
  * Inputs: none.
  *
@@ -875,7 +870,7 @@ uint8_t get_running_processes( void )
 /*
  * set_kernel_stack_bottom
  *
- * Sets kernel_stack_bottom.
+ * Set the running_processes variable from an external location. 
  *
  * Inputs: setter value.
  *
@@ -955,3 +950,12 @@ uint8_t get_current_process_number( void )
 {
 	return current_process_number;
 }
+
+uint32_t get_tty_number( void )
+{
+	/* Extract the PCB from the KBP */
+	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
+	
+	return process_control_block->tty_number;
+}
+

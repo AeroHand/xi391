@@ -43,7 +43,7 @@ void pit_interruption(void)
 	cli();
 
 	/* ????? */
-	change_process();
+	//change_process();
 	/* ????? */
 	
 	/* Send EOI, otherwise we freeze up. */
@@ -53,26 +53,15 @@ void pit_interruption(void)
 	sti();
 }
 
-/*
- * change_process
+/* 
+ * change_process()
  *
  * Description:
- * Here is what I imagine we do to get this scheduler to work.
- *  - (What's already happened: the PIT is a timer which will fire occasionally
- *     when it's time to move on to the next process in the round-robin
- *     scheduling technique. The PIT fires and is set up in the idt to link to a
- * 	   handy interrupt wrapper which calls "pit_interruption" which calls this.)
- *  - We need to switch to the next available process now.
- *  - To do that we do what we do in a halt syscall, but instead of dropping
- *    back into the parent process, we want to simply move onto the next process
- *    in our "running_processes" bitmask.
- *  --- All this should take is swapping the current ksp and ebp with the
- *      next_ksp and next_ebp (instead of the parent_ksp and parent_ebp).
- *  - PITFALL: We can't simply move onto the next bit in the bitmask (from bit 7
- *    to bit 6) because if bit 6 represents a shell which is currently running
- *    fish, it will fuck up the terminating of fish or do something weird-ish.
- * Sound good? 
- *  -rob
+ * Swap to the next process. This happens very rapidly, allowing the processor
+ * to appear to be running multiple processes at once.
+ * -- NOTE: We only want to run "leaf" processes. Otherwise, bad things will
+ *          happen (like if we tried to run a shell that was currently running
+ *          another program).
  * 
  * Inputs: none
  * Retvals: none
@@ -105,6 +94,9 @@ void change_process()
 			/* Extract the PCB from the process number */
 			process_control_block = (pcb_t *)( _8MB - (_8KB)*(next_process_number + 1) );
 			
+			/* If the current process does not have a child, it is a "leaf" process,
+			 * and we want to run it.
+			 */
 			if( !process_control_block->has_child )
 			{
 				break;
@@ -122,7 +114,7 @@ void change_process()
 	
 	/* Extract the PCB from the process number */
 	process_control_block = (pcb_t *)( _8MB - (_8KB)*(current_process_number + 1) );
-		
+	
 	/* Store the %ESP as "ksp_before_change" in the PCB of the current process. */
 	uint32_t esp;
 	asm volatile("movl %%esp, %0":"=g"(esp));
@@ -167,6 +159,10 @@ void change_process()
 				 
 	/* Put the "kbp_before_change" of the next process into the %EBP. */
 	asm volatile("movl %0, %%ebp"::"g"(process_control_block->kbp_before_change));
+	
+	
+	/* Set the current_terminal in lib.c so that the display functions know where to write */
+	set_process_term_number( process_control_block->tty_number );
 	
 	/* 
 	 * We have now switched to the stack of the next process (now-current process). Remember that this

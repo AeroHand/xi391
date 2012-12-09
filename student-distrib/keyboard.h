@@ -196,6 +196,10 @@ void printthebuffer(void);
 /* Keyboard Interrupt */
 void keyboard_interruption(void);
 
+/* Keyboard Interrupt */
+void keyboard_interruption(void);
 
+/* Returns active terminal */
+int32_t get_active(void);
 
 #endif /* KEYBOARD_H */

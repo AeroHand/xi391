@@ -8,12 +8,16 @@
 #include "types.h"
 #include "keyboard.h"
 #define VIDEO 0xB8000
+#define VIDEO_BUF1 0x01000
+#define VIDEO_BUF2 0x03000
+#define VIDEO_BUF3 0x05000
 #define NUM_COLS 80
 #define NUM_ROWS 25
 #define ATTRIB 0x7
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
+void putit(uint8_t c, uint32_t tty);
 int32_t puts(int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
@@ -33,15 +37,17 @@ void test_interrupts(void);
 /* Extra functions */
 void delc(void);
 void swap(void* item1, void* item2);
-void jump_to_point(int x, int y);
-void move_x(int x);
 void placec(uint8_t c);
+
+/* Functions used by keyboard.c to manipulate the video screen */
+void set_process_term_number(uint32_t value);
+void set_active_terminal(uint32_t value);
 void update_cursor();
-void move_cursor(int x);
 void carriage_return();
 void new_line();
-void set_command_y(int y);
+void set_command_location( void );
 void clear_the_screen();
+void load_video_memory(uint32_t new_terminal);
 
 /* Userspace address-check functions */
 int32_t bad_userspace_addr(const void* addr, int32_t len);

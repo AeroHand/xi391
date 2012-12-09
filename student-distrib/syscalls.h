@@ -123,6 +123,7 @@ void set_page_dir_addr( uint32_t value );
 uint32_t get_page_dir_addr( void );
 void set_current_process_number( uint8_t value );
 uint8_t get_current_process_number( void );
+uint32_t get_tty_number( void );
 
 #endif /* SYSCALLS_H */
 
