@@ -175,24 +175,6 @@ int32_t execute(const uint8_t* command)
 		return -1;
 	}
 	
-	/* Look for an open slot for the process. */
-	uint8_t bitmask = 0x80;
-	for( i = 0; i < 8; i++ ) 
-	{
-		if( !(running_processes & bitmask) ) 
-		{
-			open_process = i;
-			running_processes |= bitmask;
-			current_process_number = open_process;
-			break;
-		}
-		bitmask >>= 1;
-		if( bitmask == 0 )
-		{
-			return -1;
-		}
-	}
-	
 	/* 
 	 * Get the file name of the program to be executed and store
 	 * the additional args into the argbuf.
@@ -237,6 +219,24 @@ int32_t execute(const uint8_t* command)
 	if( 0 != strncmp((const int8_t*)buf, (const int8_t*)magic_nums, 4) )
 	{
 		return -1;
+	}
+	
+	/* Look for an open slot for the process. */
+	uint8_t bitmask = 0x80;
+	for( i = 0; i < 8; i++ ) 
+	{
+		if( !(running_processes & bitmask) ) 
+		{
+			open_process = i;
+			running_processes |= bitmask;
+			current_process_number = open_process;
+			break;
+		}
+		bitmask >>= 1;
+		if( bitmask == 0 )
+		{
+			return -1;
+		}
 	}
 	
 	/* Get the entry point to the program. */
@@ -456,8 +456,8 @@ int32_t bootup(void)
 		process_control_block->kbp_before_change = kernel_stack_bottom - 24;
 	
 		/* Call open for stdin and stdout. */
-		open("stdin");
-		open("stdout");
+		open( (uint8_t*) "stdin" );
+		open( (uint8_t*) "stdout");
 	}
 	
 	/* Update the running processes bitmask. */
