@@ -43,7 +43,7 @@ void pit_interruption(void)
 	cli();
 
 	/* ????? */
-	change_process();
+	//change_process();
 	/* ????? */
 	
 	/* Send EOI, otherwise we freeze up. */
@@ -114,7 +114,7 @@ void change_process()
 	
 	/* Extract the PCB from the process number */
 	process_control_block = (pcb_t *)( _8MB - (_8KB)*(current_process_number + 1) );
-		
+	
 	/* Store the %ESP as "ksp_before_change" in the PCB of the current process. */
 	uint32_t esp;
 	asm volatile("movl %%esp, %0":"=g"(esp));
@@ -162,7 +162,7 @@ void change_process()
 	
 	
 	/* Set the current_terminal in lib.c so that the display functions know where to write */
-	set_curr_term( process_control_block->tty_number );
+	set_process_term_number( process_control_block->tty_number );
 	
 	/* 
 	 * We have now switched to the stack of the next process (now-current process). Remember that this

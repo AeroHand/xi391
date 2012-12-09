@@ -533,7 +533,7 @@ void files_test(void)
 	bytes_to_read = 40000;
 	
 	clear();
-	jump_to_point(0,0);
+	//jump_to_point(0,0);
 		
 	a = fs_read(test_string, offset, buf, bytes_to_read);	
 	
