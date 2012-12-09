@@ -12,7 +12,6 @@
 #include "interrupthandler.h"
 #include "paging.h"
 #include "files.h"
-#include "tests.h"
 #include "syscalls.h"
 #include "scheduler.h"
 
