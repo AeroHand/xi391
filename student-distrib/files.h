@@ -15,6 +15,7 @@
 #define MAX_NUM_FS_DENTRIES  63
 #define MAX_FILENAME_LENGTH  32
 #define FS_PAGE_SIZE         0x1000 // 4kB
+#define FS_STATS_SIZE        64
 
 
 

@@ -200,10 +200,10 @@ void fs_init(uint32_t fs_start, uint32_t fs_end)
 	bb_start = fs_start;
 
 	/* Populate the fs_stats variable with the filesystem statistics. */
-	memcpy( &fs_stats, (void *)bb_start, 64 );
+	memcpy( &fs_stats, (void *)bb_start, FS_STATS_SIZE );
 
 	/* Set the location of the directory entries array. */
-	fs_dentries = (dentry_t *)(bb_start + 64);
+	fs_dentries = (dentry_t *)(bb_start + FS_STATS_SIZE);
 
 	/* Set the location of the array of inodes. */
 	inodes = (inode_t *)(bb_start + FS_PAGE_SIZE);
