@@ -122,7 +122,7 @@ int32_t sigreturn(void);
 
 
 /*** Other functions ***/ 
- /* Called when we need to open stdin to initialize a new process. */
+/* Called when we need to open stdin to initialize a new process. */
 void open_stdin( int32_t fd );
 
 /* Called when we need to open stdout to initialize a new process. */
@@ -139,15 +139,25 @@ int32_t bootup(void);
 
 
 /*** Set/Get functions ***/
+/* Setter function */
 void set_running_processes( uint8_t value );
+/* Getter function */
 uint8_t get_running_processes( void );
+/* Setter function */
 void set_kernel_stack_bottom( uint32_t value );
+/* Getter function */
 uint32_t get_kernel_stack_bottom( void );
+/* Setter function */
 void set_page_dir_addr( uint32_t value );
+/* Getter function */
 uint32_t get_page_dir_addr( void );
+/* Setter function */
 void set_current_process_number( uint8_t value );
+/* Getter function */
 uint8_t get_current_process_number( void );
+/* Getter function */
 uint32_t get_tty_number( void );
 
-#endif /* SYSCALLS_H */
 
+
+#endif /* SYSCALLS_H */
