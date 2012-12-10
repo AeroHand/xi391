@@ -122,7 +122,7 @@ uint8_t kbd_chars[4][128] = {
 	}	
 };
 
-
+/* Represents which tty is active: 0, 1 or 2. */
 uint32_t active_terminal;
 
 /* The buffer of chars which make up the command. */
@@ -548,12 +548,12 @@ void keyboard_interruption() {
  * get_active_terminal()
  *
  * Description:
- * Returns the active_terminal to an external source
+ * Returns the active_terminal to an external source as saved by the keyboard
  *
  * Inputs: none
  *
  * Outputs:
- * active_terminal: the value of active_terminal
+ * active_terminal: the value of active_terminal as saved by the keyboard
  */
 uint32_t get_active_terminal( void )
 {

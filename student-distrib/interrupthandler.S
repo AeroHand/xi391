@@ -116,10 +116,17 @@ end_syscall:
 
 
 # to_the_user_space()
-# Description: [The function declaration in the .h file needs to have a comment too plz.]
-# Inputs   : newEIP?
-# Outputs  :
-# Registers:
+# Description: In order to jump back to the user space we must return from
+# the user level syscall interruption and rebuild the stack as shown below
+# in  order to fake the return from interruption
+#----TOP OF STACK----#
+		#EIP
+		#USER_CS
+		#EFLAGS
+		#USER_DS
+# Inputs   :none
+# Outputs  :none
+# Registers: %EBX, %EAX
 to_the_user_space:
 
 	cli
@@ -132,15 +139,15 @@ to_the_user_space:
 	movw %ax, %ds 
 	movw %ax, %es
 
-	pushl %eax
+	pushl %eax              # push the USER_DS to the top of the stack
 
-	pushl $0x83FFFF0
+	pushl $0x83FFFF0 		# push the User Space Extended Stack Pointer to the top of the stack
 
-	pushf
-	popl %eax
-	orl $0x4200, %eax 
-	pushl %eax
-	pushl $USER_CS
-	pushl %ebx
+	pushf 					# push the flags to the stack
+	popl %eax 				# pull them back down to...
+	orl $0x4200, %eax 		# be altered appropriately
+	pushl %eax 				# push the altered flags back onto the stack
+	pushl $USER_CS 			# push the USER_CS to the top of the stack
+	pushl %ebx 				# push the Extended Instruction Pointer to the top of the stack
 
-	iret
+	iret					#Return from interruption
