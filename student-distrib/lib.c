@@ -200,7 +200,7 @@ void carriage_return( void ) {
  */
 void set_command_location(uint32_t tty){
     command_x[tty] = screen_x[tty];
-    command_y[tty] = screen_y[tty]; 
+    command_y[tty] = screen_y[tty];
 }
 
 
@@ -231,8 +231,23 @@ void update_cursor(int x) {
 
  }
 
-
-
+/* 
+ * scrolling()
+ *
+ * Description:
+ * All functions looking to push video memory up is routed through this function
+ * All data stored in the bottom row is shifted up one row and the bottom row is cleared
+ * The conditional before is used to determine if it is a command asking for a new row 
+ * or a program. If it is a program then screen x will not equal zero and the command will
+ * not be bumped up. If it is a command than screen x will equal zero and we will decrement
+ * the command y component.
+ *
+ * Inputs: 
+ * tty: the current terminal shell being processed 
+ *
+ * Outputs: none
+ *
+ */
 void scrolling(uint32_t tty){
         
     int x, y;

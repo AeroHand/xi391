@@ -221,7 +221,7 @@ int32_t terminal_write(const unsigned char * buf, int32_t nbytes)
 		successputs++;
 
 	}
-	
+
 	/* Return the number of bytes printed. */
 	return successputs;
 }
