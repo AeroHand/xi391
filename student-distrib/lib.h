@@ -42,7 +42,7 @@ void placec(uint8_t c, uint32_t tty);
 void set_process_term_number(uint32_t value);
 void set_active_term(uint32_t value);
 uint32_t get_active_term( void );
-void update_cursor();
+void update_cursor(int x);
 void carriage_return();
 void new_line();
 void set_command_location( uint32_t tty );
