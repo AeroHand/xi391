@@ -46,18 +46,28 @@ typedef struct file_descriptor_t {
  * This is the PCB structure used by each process.  It is like a header that
  * contains all the relevant information that the OS might need to know as it
  * manipulates its processes.
-      fds[8] -- The array of file descriptors, which represent each file that the
-	            process has open.
-	  filenames[8][32] -- An array holding the names of each of the open files
-	                      for quick access by the OS.
-	  parent_ksp -- The kernel stack pointer of the parent process.  This is used
-	                to revert back to the parent kernel stack when we halt.
-	  parent_kbp -- the kernel base pointer of the parent process.  This is used
-					to revert back to the parent kernel stack when we halt.
-	  process_number -- The process number of this process.  It is a number from
-	                    1-7 (process 0 is the "no processes running" process.
-	  parent_process_number -- The process number of the parent process.  It is a
-							    */
+ *    fds[8] -- The array of file descriptors, which represent each file that the
+ *              process has open.
+ *    filenames[8][32] -- An array holding the names of each of the open files
+ *                        for quick access by the OS.
+ *    parent_ksp -- The kernel stack pointer of the parent process.  This is used
+ *                  to revert back to the parent kernel stack when we halt.
+ *    parent_kbp -- The kernel base pointer of the parent process.  This is used
+ *  				to revert back to the parent kernel stack when we halt.
+ *    process_number -- The process number of this process.  It is a number from
+ *                      1-7 (process 0 is the "no processes running" process).
+ *    parent_process_number -- The process number of the parent process.  It is a
+ *  						   number from 1-7 (process 0 is the "no processes running"
+ *  						   process).
+ *    argbuf -- Buffer for the arguments of this process.
+ *    has_child -- Flag that indicates whether this process has a child process.
+ *  			   If it has a child process, it will not be scheduled.
+ *    tty_number -- The number of the tty in which this process is running.
+ *    ksp_before_change -- This variable stores the KSP right before switching
+ *  					   processes.
+ *    kbp_before_change -- This variable stores the KBP right before switching
+ *  					processes.
+ */
 typedef struct pcb_t {
 	file_descriptor_t fds[8];
 	uint8_t filenames[8][32]; 
@@ -71,12 +81,6 @@ typedef struct pcb_t {
 	uint32_t ksp_before_change;
 	uint32_t kbp_before_change;
 } pcb_t;
-
-typedef struct file_op_table{
-	int32_t (*read)(void* buf, int32_t nbytes);
-	int32_t (*write)(const void* buf, int32_t nbytes);
-	int32_t (*close)();
-} file_op_table;
 
 
 

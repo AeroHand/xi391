@@ -32,9 +32,6 @@ void pit_init(void);
 /* The handler for an PIT interrupt. */
 void pit_interruption(void); 
 
-/* Switch process to next in the list (round-robin style). */
-void change_process(void);
-
 
 
 #endif /* SCHEDULER_H */

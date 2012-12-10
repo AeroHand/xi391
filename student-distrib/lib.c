@@ -200,7 +200,7 @@ void carriage_return( void ) {
  */
 void set_command_location(uint32_t tty){
     command_x[tty] = screen_x[tty];
-    command_y[tty] = screen_y[tty]; 
+    command_y[tty] = screen_y[tty];
 }
 
 
@@ -231,8 +231,23 @@ void update_cursor(int x) {
 
  }
 
-
-
+/* 
+ * scrolling()
+ *
+ * Description:
+ * All functions looking to push video memory up is routed through this function
+ * All data stored in the bottom row is shifted up one row and the bottom row is cleared
+ * The conditional before is used to determine if it is a command asking for a new row 
+ * or a program. If it is a program then screen x will not equal zero and the command will
+ * not be bumped up. If it is a command than screen x will equal zero and we will decrement
+ * the command y component.
+ *
+ * Inputs: 
+ * tty: the current terminal shell being processed 
+ *
+ * Outputs: none
+ *
+ */
 void scrolling(uint32_t tty){
         
     int x, y;
@@ -406,7 +421,19 @@ format_char_switch:
 }
 
 
-/* Output a string to the console */
+/* 
+ * puts()
+ *
+ * Description:
+ * Prints a string to the screen using repetitive putc commands.
+ *
+ * Inputs:
+ * s: pointer to the string to be printed
+ * tty: the tty on which to print the string
+ *
+ * Outputs: 
+ * index: number of successfully-written characters
+ */
 int32_t
 puts(int8_t* s, uint32_t tty)
 {
@@ -419,6 +446,21 @@ puts(int8_t* s, uint32_t tty)
     return index;
 }
 
+
+
+/* 
+ * putc()
+ *
+ * Description:
+ * Prints one character to the screen.
+ *
+ * Inputs:
+ * c: character to be printed
+ * tty: the tty on which to print the character
+ *
+ * Outputs: 
+ * none
+ */
 void
 putc(uint8_t c, uint32_t tty)
 {
@@ -448,11 +490,18 @@ putc(uint8_t c, uint32_t tty)
 }
 
 
-
-/*
- * delc()
+/* 
+ * putc()
+ *
+ * Description:
  * Deletes the character on the screen at location (screen_x,screen_y) and
  * adjusts (screen_x,screen_y) to point to the previous location.
+ *
+ * Inputs:
+ * tty: the tty on which to delete a character
+ *
+ * Outputs: 
+ * none
  */
 void
 delc(uint32_t tty)
@@ -472,6 +521,20 @@ delc(uint32_t tty)
     }
 }
 
+
+/* 
+ * putc()
+ *
+ * Description:
+ * Prints one character to the screen without moving the cursor.
+ *
+ * Inputs:
+ * c: character to be printed
+ * tty: the tty on which to print the character
+ *
+ * Outputs: 
+ * none
+ */
 void
 placec(uint8_t c, uint32_t tty)
 {
@@ -485,7 +548,20 @@ placec(uint8_t c, uint32_t tty)
     }
 }
 
-/* Convert a number to its ASCII representation, with base "radix" */
+/* 
+ * strlen()
+ *
+ * Description:
+ * Convert a number to its ASCII representation, with base "radix"
+ *
+ * Inputs:
+ * value: Good thing the staff commented this for us 
+ * buf: Good thing the staff commented this for us
+ * radix: Good thing the staff commented this for us
+ *
+ * Outputs: 
+ * strrev(buf): the input string reversed
+ */
 int8_t*
 itoa(uint32_t value, int8_t* buf, int32_t radix)
 {
@@ -521,7 +597,18 @@ itoa(uint32_t value, int8_t* buf, int32_t radix)
     return strrev(buf);
 }
 
-/* In-place string reversal */
+/* 
+ * strrev()
+ *
+ * Description:
+ * Reverses a string in place.
+ *
+ * Inputs:
+ * s: pointer to the string on which to perform the operation
+ *
+ * Outputs: 
+ * s: pointer to the same string that was input
+ */
 int8_t*
 strrev(int8_t* s)
 {
@@ -540,7 +627,18 @@ strrev(int8_t* s)
     return s;
 }
 
-/* String length */
+/* 
+ * strlen()
+ *
+ * Description:
+ * Calculates the length of a string.
+ *
+ * Inputs:
+ * s: the string on which to perform the operation
+ *
+ * Outputs: 
+ * len: the length of the string
+ */
 uint32_t
 strlen(const int8_t* s)
 {
@@ -551,7 +649,20 @@ strlen(const int8_t* s)
     return len;
 }
 
-/* Optimized memset */
+/* 
+ * memset()
+ *
+ * Description:
+ * Optimized memset.
+ *
+ * Inputs:
+ * s: Good thing the staff commented this for us 
+ * c: Good thing the staff commented this for us
+ * n: Good thing the staff commented this for us
+ *
+ * Outputs: 
+ * s: Good thing the staff commented this for us
+ */
 void*
 memset(void* s, int32_t c, uint32_t n)
 {
@@ -591,7 +702,20 @@ memset(void* s, int32_t c, uint32_t n)
     return s;
 }
 
-/* Optimized memset_word */
+/* 
+ * memset()
+ *
+ * Description:
+ * Optimized memset_word.
+ *
+ * Inputs:
+ * s: Good thing the staff commented this for us 
+ * c: Good thing the staff commented this for us
+ * n: Good thing the staff commented this for us
+ *
+ * Outputs: 
+ * s: Good thing the staff commented this for us
+ */
 void*
 memset_word(void* s, int32_t c, uint32_t n)
 {
@@ -609,7 +733,20 @@ memset_word(void* s, int32_t c, uint32_t n)
     return s;
 }
 
-/* Optimized memset_dword */
+/* 
+ * memset_dword()
+ *
+ * Description:
+ * Optimized memset_dword.
+ *
+ * Inputs:
+ * s: Good thing the staff commented this for us 
+ * c: Good thing the staff commented this for us
+ * n: Good thing the staff commented this for us
+ *
+ * Outputs: 
+ * s: Good thing the staff commented this for us
+ */
 void*
 memset_dword(void* s, int32_t c, uint32_t n)
 {
@@ -627,7 +764,20 @@ memset_dword(void* s, int32_t c, uint32_t n)
     return s;
 }
 
-/* Optimized memcpy */
+/* 
+ * memcpy()
+ *
+ * Description:
+ * Copies n bytes from a source address to a destination address.
+ *
+ * Inputs:
+ * dest: destination address 
+ * src: source address
+ * n: number of bytes to copy
+ *
+ * Outputs: 
+ * dest: destination address
+ */
 void*
 memcpy(void* dest, const void* src, uint32_t n)
 {
@@ -670,7 +820,20 @@ memcpy(void* dest, const void* src, uint32_t n)
     return dest;
 }
 
-/* Optimized memmove (used for overlapping memory areas) */
+/* 
+ * memmove()
+ *
+ * Description:
+ * Optimized memmove (used for overlapping memory areas).
+ *
+ * Inputs:
+ * dest: destination address 
+ * src: source address
+ * n: number of bytes to copy
+ *
+ * Outputs: 
+ * dest: destination address
+ */
 void*
 memmove(void* dest, const void* src, uint32_t n)
 {
@@ -694,7 +857,21 @@ memmove(void* dest, const void* src, uint32_t n)
     return dest;
 }
 
-/* Standard strncmp */
+/* 
+ * strncmp()
+ *
+ * Description:
+ * Checks to see if two strings are the same.
+ *
+ * Inputs:
+ * s1: the first string 
+ * s2: the second string
+ * n: number of bytes to check
+ *
+ * Outputs: 
+ * 0: the strings are equal
+ * anything else: the strings are not equal
+ */
 int32_t
 strncmp(const int8_t* s1, const int8_t* s2, uint32_t n)
 {
@@ -715,7 +892,19 @@ strncmp(const int8_t* s1, const int8_t* s2, uint32_t n)
     return 0;
 }
 
-/* Standard strcpy */
+/* 
+ * strcpy()
+ *
+ * Description:
+ * Copies one string into another
+ *
+ * Inputs:
+ * dest: destination string 
+ * src: source string
+ *
+ * Outputs: 
+ * dest: destination string
+ */
 int8_t*
 strcpy(int8_t* dest, const int8_t* src)
 {
@@ -729,7 +918,20 @@ strcpy(int8_t* dest, const int8_t* src)
     return dest;
 }
 
-/* Standard strncpy */
+/* 
+ * strcpy()
+ *
+ * Description:
+ * Copies n characters from one string into another
+ *
+ * Inputs:
+ * dest: destination string 
+ * src: source string
+ * n: number of characters to copy
+ *
+ * Outputs: 
+ * dest: destination string
+ */
 int8_t*
 strncpy(int8_t* dest, const int8_t* src, uint32_t n)
 {
@@ -747,6 +949,16 @@ strncpy(int8_t* dest, const int8_t* src, uint32_t n)
     return dest;
 }
 
+/* 
+ * test_interrupts()
+ *
+ * Description:
+ * Tests the interrupts.
+ *
+ * Inputs: none
+ *
+ * Outputs: none
+ */
 void
 test_interrupts(void)
 {

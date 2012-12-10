@@ -221,7 +221,7 @@ int32_t terminal_write(const unsigned char * buf, int32_t nbytes)
 		successputs++;
 
 	}
-	
+
 	/* Return the number of bytes printed. */
 	return successputs;
 }
@@ -487,6 +487,7 @@ void process_keyboard_input(uint8_t scancode)
 			}
 			command_length[active_terminal] = 0;
 			cursor_x[active_terminal] = 0;
+			allow_terminal_read[active_terminal] = 1;
 			clear_the_screen();
 			keyboardflag[active_terminal] &= ~FLAG_CTRL;
 		}

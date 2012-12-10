@@ -115,33 +115,3 @@ _idt:
 	.endr
 
 idt_bottom:
-
-### The Page Directory ###
-#.align 0x1000
-#page_directory:
-#_page_directory:
-
-#initial_space_pde:
-#	.long 0x0
-
-#kernel_page_pde:
-#	.long 0x0
-
-#remaining_pdes:
-#	.rept 1022
-#	.long 0x0
-#	.endr
-
-#page_directory_bottom:
-
-
-### The Page Table ###
-#.align 0x1000
-#page_table:
-#_page_table:
-
-#	.rept MAX_PAGE_TABLE_SIZE
-#	.long 0x0
-#	.endr
-
-#page_table_bottom:

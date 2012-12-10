@@ -510,6 +510,7 @@ int32_t bootup(void)
 	
 	current_process_number = 1;
 	
+	/* Enable interrupts */
 	sti();
 	
 	/* Jump to the entry point and begin execution. */
@@ -586,9 +587,6 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 {	
-	/* Local variables. */
-	int byteswritten;
-	
 	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
