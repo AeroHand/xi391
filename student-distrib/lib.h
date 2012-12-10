@@ -46,7 +46,7 @@ uint32_t get_active_term( void );
 void update_cursor();
 void carriage_return();
 void new_line();
-void set_command_location( void );
+void set_command_location( uint32_t tty );
 void clear_the_screen();
 void load_video_memory(uint32_t new_terminal);
 
