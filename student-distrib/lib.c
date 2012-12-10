@@ -6,19 +6,52 @@
 #include "types.h"
 #include "keyboard.h"
 
+/* Represents which tty is currently being processed: 0, 1 or 2. */
 static int process_term_number = 0;
+
+/* Represents which tty is active: 0, 1 or 2. */
 static int active_term = 0;
+
+/* This is an array of the current x position on the three terminals */
 static int screen_x[3];
+
+/* This is an array of the current y position on the three terminals */
 static int screen_y[3];
+
+/* This is an array of the current x position of the most recent command on the three terminals */
 static int command_x[3];
+
+/* This is an array of the current y position of the most recent command on the three terminals */
 static int command_y[3];
+
+/* This is a pointer to video memory */
 static char* video_mem = (char *)VIDEO;
 
+/* 
+ * This is an array of pointers to 3 separate video buffers.
+ * These buffers are used to store the actions of the three separate terminals.
+ * The video data for terminal 0 is in videobuff[0] and so on.
+ */
 static char* video_buff[3] = { (char *)VIDEO_BUF1,
                                (char *)VIDEO_BUF2,
                                (char *)VIDEO_BUF3
                              };
 
+
+/* 
+ * set_process_term_number()
+ *
+ * Description:
+ * Sets the value of the current tty to process_term_number
+ * so that the putc command called by terminal write knows 
+ * which video buffer to write to.
+ *
+ * Inputs:
+ * value: new tty being processed
+ *
+ * Outputs: 
+ * none
+ */
 void
 set_process_term_number(uint32_t value){
     if( value >= 0 && value < 3){
@@ -26,6 +59,20 @@ set_process_term_number(uint32_t value){
     }        
 }
 
+/* 
+ * set_active_term()
+ *
+ * Description:
+ * Sets the value of the current active terminal to active_term
+ * so that the putc command called by terminal write knows 
+ * whether to write commands to video memory as well as video buffers
+ *
+ * Inputs:
+ * value: new active terminal being viewed
+ *
+ * Outputs: 
+ * none
+ */
 void
 set_active_term(uint32_t value){
     if( value >= 0 && value < 3){
@@ -33,13 +80,36 @@ set_active_term(uint32_t value){
     }        
 }
 
+/* 
+ * get_active_term()
+ *
+ * Description:
+ * Returns the active_term to an external source as saved by the lib.c
+ *
+ * Inputs: none
+ *
+ * Outputs:
+ * active_term: the value of active_terminal as saved by the lib.c
+ */
 uint32_t
 get_active_term( void ){
     return active_term;      
 }
 
+
+/* 
+ * clear()
+ *
+ * Description:
+ * Will clear all of current memory and the video buffer of the active terminal
+ *
+ * Inputs: none
+ *
+ * Outputs: none
+ *
+ */
 void
-clear()
+clear( void ) 
 {
     int32_t i;
     for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
@@ -54,12 +124,127 @@ clear()
 
 }
 
-void carriage_return(void) {
+/* 
+ * clear_the_screen()
+ *
+ * Description:
+ * Will clear all of current memory and the video buffer of the active terminal
+ * and will also reset the command and screen pointers back to the top left most
+ * char space.
+ *
+ * Inputs: none
+ *
+ * Outputs: none
+ *
+ */
+void clear_the_screen( void ) {
+    clear();
+    screen_x[active_term] = 0;
+    screen_y[active_term] = 0;
+    command_x[active_term] = 0;
+    command_y[active_term] = 0;
+    update_cursor(0); 
+}
+
+/* 
+ * load_video_memory()
+ *
+ * Description:
+ * This function is called on terminal switch, it loads in the video stored
+ * in the individual video buffers into the active video memory. The cursor is 
+ * then refreshed to be in the correct location on load.
+ *
+ * Inputs: 
+ * new_terminal: the terminal buffer that we want to load into video memory
+ *
+ * Outputs: none
+ *
+ */
+void load_video_memory(uint32_t new_terminal) {
+    memcpy(video_mem, video_buff[new_terminal], _4KB);
+    update_cursor(0); 
+}
+
+/* 
+ * carriage_return()
+ *
+ * Description:
+ * This function is called right before the print_the_buffer function
+ * In order to display the command buffer, we reprint it each time it is changed
+ * This implementation made moving the cursor and deleting easier
+ *
+ * Inputs: none
+ *
+ * Outputs: none
+ *
+ */
+void carriage_return( void ) {
     screen_x[active_term] = command_x[active_term];
     screen_y[active_term] = command_y[active_term];
 }
 
-void scrolling_mem(){
+/* 
+ * set_command_location()
+ *
+ * Description:
+ * This function is called write before the terminal read function spins waiting
+ * for the user to enter their command. What this does is sets the command x and
+ * y location so that the command may be reprinted on keyboard interrupt
+ *
+ * Inputs: 
+ * tty: the current terminal read being processed
+ *
+ * Outputs: none
+ *
+ */
+void set_command_location(uint32_t tty){
+    command_x[tty] = screen_x[tty];
+    command_y[tty] = screen_y[tty]; 
+}
+
+
+/* 
+ * update_cursor()
+ *
+ * Description:
+ * This is the kernel's interface with the cursor. This function will use
+ * the current command location plus the offset argument passed in to place
+ * the cursor on the screen logically
+ *
+ * Inputs: 
+ * x: the x offset of the cursor location 
+ *
+ * Outputs: none
+ *
+ */
+void update_cursor(int x) {
+
+    uint16_t position = (command_y[active_term] * NUM_COLS) + command_x[active_term] + x;
+ 
+    /* cursor LOW port to vga INDEX register */
+    outb(0x0F, 0x3D4);
+    outb((unsigned char)(position&0xFF), 0x3D5);
+    /* cursor HIGH port to vga INDEX register */
+    outb(0x0E, 0x3D4);
+    outb((unsigned char )((position>>8)&0xFF), 0x3D5);
+
+ }
+
+/* 
+ * update_cursor()
+ *
+ * Description:
+ * This is the kernel's interface with the cursor. This function will use
+ * the current command location plus the offset argument passed in to place
+ * the cursor on the screen logically
+ *
+ * Inputs: 
+ * x: the x offset of the cursor location 
+ *
+ * Outputs: none
+ *
+ */
+void scrolling_mem(void){
         
     int x, y;
 
@@ -71,8 +256,8 @@ void scrolling_mem(){
     }
 
     for(x=0; x<NUM_COLS; x++){
-		*(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
-		*(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
+        *(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1) + 1) = ATTRIB;
     }
     
 }
@@ -87,63 +272,40 @@ void scrolling_buff(uint32_t tty){
 
     for(y=0; y<NUM_ROWS-1; y++){
         for(x=0; x<NUM_COLS; x++){
-        	*(uint8_t *)(video_buff[tty] + ((NUM_COLS*y + x	) << 1)) = *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(y+1) + x) << 1));
-        	*(uint8_t *)(video_buff[tty] + ((NUM_COLS*y + x) << 1) + 1) = *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(y+1) + x) << 1) + 1);
-   		}
+            *(uint8_t *)(video_buff[tty] + ((NUM_COLS*y + x ) << 1)) = *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(y+1) + x) << 1));
+            *(uint8_t *)(video_buff[tty] + ((NUM_COLS*y + x) << 1) + 1) = *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(y+1) + x) << 1) + 1);
+        }
     }
 
 
     for(x=0; x<NUM_COLS; x++){
-    	*(uint8_t *)(video_buff[tty] + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
+        *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
         *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(NUM_ROWS-1) + x) << 1) + 1) = ATTRIB;
     }
     
 }
 
-void clear_the_screen() {
-    clear();
-    screen_x[active_term] = 0;
-    screen_y[active_term] = 0;
-    command_x[active_term] = 0;
-    command_y[active_term] = 0;
-    update_cursor(0); 
-}
-
-void load_video_memory(uint32_t new_terminal) {
-    memcpy(video_mem, video_buff[new_terminal], _4KB);
-    update_cursor(0); 
-}
-
-void new_line(){
+/* 
+ * new_line()
+ *
+ * Description:
+ * A public function that can be called that does a simple new line logic
+ *
+ * Inputs: none
+ *
+ * Outputs: none
+ *
+ */
+void new_line(void){
     screen_x[active_term] =0;
     
     if(screen_y[active_term] < NUM_ROWS-1){
         screen_y[active_term]++;
     }else{
-    	scrolling_buff(active_term);
-    	scrolling_mem();
+        scrolling_buff(active_term);
+        scrolling_mem();
     }
 }
-
-void set_command_location(uint32_t tty){
-    command_x[tty] = screen_x[tty];
-    command_y[tty] = screen_y[tty]; 
-}
-
-void update_cursor(int x) {
-
-    uint16_t position = (command_y[active_term] * NUM_COLS) + command_x[active_term] + x;
- 
-    /* cursor LOW port to vga INDEX register */
-    outb(0x0F, 0x3D4);
-    outb((unsigned char)(position&0xFF), 0x3D5);
-    /* cursor HIGH port to vga INDEX register */
-    outb(0x0E, 0x3D4);
-    outb((unsigned char )((position>>8)&0xFF), 0x3D5);
-
- }
-
-
 
 /* Standard printf().
  * Only supports the following format strings:
@@ -309,6 +471,39 @@ putit(uint8_t c, uint32_t tty)
     }  
 }
 
+void
+putc(uint8_t c)
+{
+    if(c == '\n' || c == '\r') {
+        if(screen_y[active_term] < NUM_ROWS-1){
+            screen_y[active_term]++;
+        }else{
+            scrolling_buff(active_term);
+            scrolling_mem();
+        }
+        screen_x[active_term]=0;
+    } else if(c =='\0'){
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
+        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
+    }else {
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
+        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
+        screen_x[active_term]++;
+        if(screen_x[active_term] > 79){
+                screen_x[active_term] = 0;
+                if(screen_y[active_term] < NUM_ROWS-1){
+                    screen_y[active_term]++;
+                }else{
+                    scrolling_buff(active_term);
+                    scrolling_mem();
+                }
+        }
+    }
+}
 
 /* Output a string to the console */
 int32_t
@@ -323,39 +518,7 @@ puts(int8_t* s)
     return index;
 }
 
-void
-putc(uint8_t c)
-{
-    if(c == '\n' || c == '\r') {
-		if(screen_y[active_term] < NUM_ROWS-1){
-		    screen_y[active_term]++;
-		}else{
-			scrolling_buff(active_term);
-			scrolling_mem();
-		}
-        screen_x[active_term]=0;
-    } else if(c =='\0'){
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-		*(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-    }else {
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-        screen_x[active_term]++;
-        if(screen_x[active_term] > 79){
-                screen_x[active_term] = 0;
-                if(screen_y[active_term] < NUM_ROWS-1){
-				    screen_y[active_term]++;
-				}else{
-					scrolling_buff(active_term);
-					scrolling_mem();
-				}
-        }
-    }
-}
+
 
 /*
  * delc()
@@ -666,20 +829,4 @@ test_interrupts(void)
     for (i=0; i < NUM_ROWS*NUM_COLS; i++) {
         video_mem[i<<1]++;
     }
-}
-
-void 
-swap(void* item1, void* item2)
-{
-    /* Currently supports character swapping. */
-    unsigned char * a;
-    unsigned char * b;
-    unsigned char temp;
-    
-    a = (unsigned char *)item1;
-    b = (unsigned char *)item2;
-    
-    temp = *a;
-    *a = *b;
-    *b = temp;
 }
