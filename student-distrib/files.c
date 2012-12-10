@@ -424,7 +424,7 @@ int32_t file_close(void)
  * -1: failure (invalid parameters, nonexistent file)
  * 0: success
  */
-int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset)
+int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset )
 {
 	return fs_read(fname, offset, buf, length);
 }

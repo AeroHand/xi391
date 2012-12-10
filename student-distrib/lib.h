@@ -16,9 +16,8 @@
 #define ATTRIB 0x7
 
 int32_t printf(int8_t *format, ...);
-void putc(uint8_t c);
-void putit(uint8_t c, uint32_t tty);
-int32_t puts(int8_t *s);
+void putc(uint8_t c, uint32_t tty);
+int32_t puts(int8_t *s, uint32_t tty);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
@@ -35,9 +34,9 @@ int8_t* strncpy(int8_t* dest, const int8_t*src, uint32_t n);
 void test_interrupts(void);
 
 /* Extra functions */
-void delc(void);
+void delc(uint32_t tty);
 void swap(void* item1, void* item2);
-void placec(uint8_t c);
+void placec(uint8_t c, uint32_t tty);
 
 /* Functions used by keyboard.c to manipulate the video screen */
 void set_process_term_number(uint32_t value);

@@ -76,11 +76,29 @@ int32_t halt(uint8_t status)
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
 	
-	/* Prevent the user from closing the final shell */
+	/* Prevent the user from closing the final shell
+	 * NOTE -- In order to do this, we just restart the shell
+	 */
 	if( process_control_block->parent_process_number == 0 )
 	{
 		printf("Silly rabbit, trix are for kids.\n");
-		return 0;
+		
+		/* Get the entry point to shell */
+		uint8_t buf[4];
+		if( -1 == fs_read((const int8_t *)("shell"), 24, buf, 4) )
+		{
+			return -1;
+		}
+		
+		/* Save the entry point */
+		uint32_t entry_point;
+		for( i = 0; i < 4; i++ )
+		{
+			entry_point |= (buf[i] << 8*i);
+		}
+		
+		/* Jump back to the start of the shell */
+		to_the_user_space(entry_point);
 	}
 	
 	/* 
@@ -525,7 +543,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 	/* Check for invalid fd or buf. */
 	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
 	{
-		return -1;
+			return -1;
 	}
 
 	/* Get the filename and fileposition of the file with the given fd. */
@@ -533,18 +551,18 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
 	uint32_t fileposition = process_control_block->fds[fd].fileposition;
 
 	/* Push arguments for the file's read function and call it. */
-	asm volatile("pushl %0		;"
-				 "pushl %1		;"
-				 "pushl %2		;"
-				 "pushl %3		;"
-				 "call  *%4		;"
-				 :
-				 : "g" (fileposition), "g" ((int32_t)filename), "g" (nbytes), "g" ((int32_t)buf),
-				   "g" (process_control_block->fds[fd].jumptable[1]));
-				 
+	asm volatile("pushl %0          ;"
+							 "pushl %1              ;"
+							 "pushl %2              ;"
+							 "pushl %3              ;"
+							 "call  *%4             ;"
+							 :
+							 : "g" (fileposition), "g" ((int32_t)filename), "g" (nbytes), "g" ((int32_t)buf),
+							   "g" (process_control_block->fds[fd].jumptable[1]));
+							 
 	/* Store the return value from the read function. */
 	asm volatile("movl %%eax, %0":"=g"(bytesread));
-	asm volatile("addl $16, %esp	;");
+	asm volatile("addl $16, %esp    ;");
 	
 	/* Update the current file's fileposition. */
 	process_control_block->fds[fd].fileposition += bytesread;
@@ -563,10 +581,9 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes)
  * Retvals:
  * -1: invalid fd or buf
  * n: number of bytes written to the buffer
->>>>>>> e07e1b407f1c5b72891e92b5b5ab3ed79996470a
  */
 int32_t write(int32_t fd, const void* buf, int32_t nbytes)
-{
+{	
 	/* Local variables. */
 	int byteswritten;
 	
@@ -576,21 +593,19 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes)
 	/* Check for invalid fd or buf. */
 	if( fd < 0 || fd > 7 || buf == NULL || process_control_block->fds[fd].flags == NOT_IN_USE )
 	{
-		return -1;
+			return -1;
 	}
 
 	/* Push arguments for the file's write function and call it. */
-	asm volatile("pushl %0		;"
-				 "pushl %1		;"
-				 "call  *%2		;"
+	asm volatile("pushl %0          ;"
+				 "pushl %1              ;"
+				 "call  *%2             ;"
+				 "leave					;"
+				 "ret					;"
 				 :
 				 : "g" (nbytes), "g" ((int32_t)buf), "g" (process_control_block->fds[fd].jumptable[2]));
-				 
-	/* Store the return value from the write function. */
-	asm volatile("movl %%eax, %0":"=g"(byteswritten));
-	asm volatile("addl $8, %esp	;");
-	
-	return byteswritten;
+							 
+	return 0;
 }
 
 /*
@@ -982,6 +997,15 @@ uint8_t get_current_process_number( void )
 	return current_process_number;
 }
 
+/*
+ * get_tty_number
+ *
+ * Gets tty_number of the current process.
+ *
+ * Inputs: none.
+ *
+ * Retvals: getter value.
+ */
 uint32_t get_tty_number( void )
 {
 	/* Extract the PCB from the KBP */
@@ -989,4 +1013,3 @@ uint32_t get_tty_number( void )
 	
 	return process_control_block->tty_number;
 }
-
