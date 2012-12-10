@@ -9,121 +9,41 @@
 #include "keyboard.h"
 #include "interrupthandler.h"
 
-
-
-/* Divide Error Exception */
-void exception_DE(){
-	printf("Divide Error!\n");
-	while(1){}
+/*
+ * Exceptions!
+ *
+ * Description:
+ * This macro defines exepctions. Exceptions, when fired, print a message 
+ * and then spin forever.
+ * Inputs: none
+ * Retvals: none
+ */
+#define EXCEPTION(name,msg)	\
+void name() {				\
+	printf("%s\n",#msg);	\
+	while(1);				\
 }
 
-/* Debug Exception */
-void exception_DB(){
-	printf("Debug Exception!\n");
-	while(1){}
-}
-
-/* Non Maskable Interrupt Exception */
-void exception_NMI(){
-	printf("Non Maskable Interrupt Exception!\n");
-	while(1){}
-}
-
-/* Breakpoint Exception */
-void exception_BP(){
-	printf("Breakpoint Exception!\n");
-	while(1){}
-}
-
-/* Overflow Exception */
-void exception_OF(){
-	printf("Overflow Exception!\n");
-	while(1){}
-}
-
-/* BOUND Range Exceeded Exception */
-void exception_BR(){
-	printf("BOUND Range Exceeded Exception!\n");
-	while(1){}
-}
-
-/* Invalid Opcode Exception */
-void exception_UD(){
-	printf("Invalid Opcode Exception!\n");
-	while(1){}
-}
-
-/* Device Not Available Exception */
-void exception_NM(){
-	printf("Device Not Available Exception!\n");
-	while(1){}
-}
-
-/* Double Fault Exception */
-void exception_DF(){
-	printf("Double Fault Exception!\n");
-	while(1){}
-}
-
-/* Coprocessor Segment Exception */
-void exception_CS(){
-	printf("Coprocessor Segment Exception!\n");
-	while(1){}
-}
-
-/* Invalid TSS Exception */
-void exception_TS(){
-	printf("Invalid TSS Exception!\n");
-	while(1){}
-}
-
-/* Segment Not Present */
-void exception_NP(){
-	printf("Segment Not Present!\n");
-	while(1){}
-}
-
-/* Stack Fault Exception */
-void exception_SS(){
-	printf("Stack Fault Exception!\n");
-	while(1){}
-}
-
-/* General Protection Exception */
-void exception_GP(){
-	printf("General Protection Exception!\n");
-	while(1){}
-}
-
-/* Page Fault Exception */
-void exception_PF(){
-	printf("Page Fault Exception!\n");
-	while(1){}
-}
-
-/* Floating Point Exception */
-void exception_MF(){
-	printf("Floating Point Exception!\n");
-	while(1){}
-}
-
-/* Alignment Check Exception */
-void exception_AC(){
-	printf("Alignment Check Exception!\n");
-	while(1){}
-}
-
-/* Machine Check Exception */
-void exception_MC(){
-	printf("Machine Check Exception!\n");
-	while(1){}
-}
-
-/* SIMD Floating-Point Exception */
-void exception_XF(){
-	printf("SIMD Floating-Point Exception!\n");
-	while(1){}
-}
+/* Exceptions sent to the exception creator macro. */
+EXCEPTION(exception_DE,"Divide Error!");
+EXCEPTION(exception_DB,"Debug Exception!");
+EXCEPTION(exception_NMI,"Non Maskable Interrupt Exception!");
+EXCEPTION(exception_BP,"Breakpoint Exception!");
+EXCEPTION(exception_OF,"Overflow Exception!");
+EXCEPTION(exception_BR,"BOUND Range Exceeded Exception!");
+EXCEPTION(exception_UD,"Invalid Opcode Exception!");
+EXCEPTION(exception_NM,"Device Not Available Exception!");
+EXCEPTION(exception_DF,"Double Fault Exception!");
+EXCEPTION(exception_CS,"Coprocessor Segment Exception!");
+EXCEPTION(exception_TS,"Invalid TSS Exception!");
+EXCEPTION(exception_NP,"Segment Not Present!");
+EXCEPTION(exception_SS,"Stack Fault Exception!");
+EXCEPTION(exception_GP,"General Protection Exception!");
+EXCEPTION(exception_PF,"Page Fault Exception!");
+EXCEPTION(exception_MF,"Floating Point Exception");
+EXCEPTION(exception_AC,"Alignment Check Exception!");
+EXCEPTION(exception_MC,"Machine Check Exception!");
+EXCEPTION(exception_XF,"SIMD Floating-Point Exception!");
 
 /* Undefined Interrupt */
 void general_interruption() {

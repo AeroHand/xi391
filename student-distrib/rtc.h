@@ -55,5 +55,8 @@ int32_t rtc_open (void);
 /* Closes the RTC. */
 int32_t rtc_close (void);
 
+/* Redraws the screen from the appropriate video buffer */
+void update_vid( void );
+
 #endif /* RTC_H */
 

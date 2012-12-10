@@ -203,7 +203,8 @@ int32_t terminal_read(unsigned char * buf, int32_t nbytes) {
  * Outputs:
  * successputs: the number of bytes printed
  */
-int32_t terminal_write(const unsigned char * buf, int32_t nbytes) {
+int32_t terminal_write(const unsigned char * buf, int32_t nbytes)
+{
 
 	int i;
 
@@ -214,13 +215,13 @@ int32_t terminal_write(const unsigned char * buf, int32_t nbytes) {
 	for (i = 0; i < nbytes; i++) {
 
 		/* Print a char from the buffer. */
-		putit(buf[i], get_tty_number());
+		putc(buf[i], get_tty_number());
 
 		/* Increment the number of bytes printed. */
 		successputs++;
 
 	}
-
+	
 	/* Return the number of bytes printed. */
 	return successputs;
 }
@@ -332,7 +333,7 @@ void printthebuffer(void) {
 
 	/* Iterate though command buffer and print each char. */
 	for (i = 0; i <= command_length[active_terminal]; i++) {
-		putc(command_buffer[active_terminal][i]);
+		putc(command_buffer[active_terminal][i], active_terminal);
 	}
 
 }

@@ -86,7 +86,7 @@ int32_t file_open(void);
 int32_t file_close(void);
 
 /* Performs a fs_read. */
-int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset);
+int32_t file_read( uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset );
 
 /* Returns -1 */
 int32_t file_write(void);

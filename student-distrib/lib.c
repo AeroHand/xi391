@@ -183,6 +183,7 @@ void carriage_return( void ) {
     screen_y[active_term] = command_y[active_term];
 }
 
+
 /* 
  * set_command_location()
  *
@@ -230,39 +231,9 @@ void update_cursor(int x) {
 
  }
 
-/* 
- * update_cursor()
- *
- * Description:
- * This is the kernel's interface with the cursor. This function will use
- * the current command location plus the offset argument passed in to place
- * the cursor on the screen logically
- *
- * Inputs: 
- * x: the x offset of the cursor location 
- *
- * Outputs: none
- *
- */
-void scrolling_mem(void){
-        
-    int x, y;
 
-    for(y=0; y<NUM_ROWS-1; y++){
-        for(x=0; x<NUM_COLS; x++){
-            *(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS*(y+1) + x) << 1));
-            *(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1) + 1) = *(uint8_t *)(video_mem + ((NUM_COLS*(y+1) + x) << 1) + 1);
-        }
-    }
 
-    for(x=0; x<NUM_COLS; x++){
-        *(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
-        *(uint8_t *)(video_mem + ((NUM_COLS*(NUM_ROWS-1) + x) << 1) + 1) = ATTRIB;
-    }
-    
-}
-
-void scrolling_buff(uint32_t tty){
+void scrolling(uint32_t tty){
         
     int x, y;
 
@@ -282,7 +253,6 @@ void scrolling_buff(uint32_t tty){
         *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(NUM_ROWS-1) + x) << 1)) = ' ';
         *(uint8_t *)(video_buff[tty] + ((NUM_COLS*(NUM_ROWS-1) + x) << 1) + 1) = ATTRIB;
     }
-    
 }
 
 /* 
@@ -302,8 +272,7 @@ void new_line(void){
     if(screen_y[active_term] < NUM_ROWS-1){
         screen_y[active_term]++;
     }else{
-        scrolling_buff(active_term);
-        scrolling_mem();
+    	scrolling(active_term);
     }
 }
 
@@ -347,7 +316,7 @@ format_char_switch:
                                     switch(*buf) {
                                             /* Print a literal '%' character */
                                             case '%':
-                                                    putc('%');
+                                                    putc('%', active_term);
                                                     break;
 
                                             /* Use alternate formatting */
@@ -365,7 +334,7 @@ format_char_switch:
                                                             int8_t conv_buf[64];
                                                             if(alternate == 0) {
                                                                     itoa(*((uint32_t *)esp), conv_buf, 16);
-                                                                    puts(conv_buf);
+                                                                    puts(conv_buf, active_term);
                                                             } else {
                                                                     int32_t starting_index;
                                                                     int32_t i;
@@ -375,7 +344,7 @@ format_char_switch:
                                                                             conv_buf[i] = '0';
                                                                             i++;
                                                                     }
-                                                                    puts(&conv_buf[starting_index]);
+                                                                    puts(&conv_buf[starting_index], active_term);
                                                             }
                                                             esp++;
                                                     }
@@ -386,7 +355,7 @@ format_char_switch:
                                                     {
                                                             int8_t conv_buf[36];
                                                             itoa(*((uint32_t *)esp), conv_buf, 10);
-                                                            puts(conv_buf);
+                                                            puts(conv_buf, active_term);
                                                             esp++;
                                                     }
                                                     break;
@@ -402,20 +371,20 @@ format_char_switch:
                                                             } else {
                                                                     itoa(value, conv_buf, 10);
                                                             }
-                                                            puts(conv_buf);
+                                                            puts(conv_buf, active_term);
                                                             esp++;
                                                     }
                                                     break;
 
                                             /* Print a single character */
                                             case 'c':
-                                                    putc( (uint8_t) *((int32_t *)esp));
+                                                    putc( (uint8_t) *((int32_t *)esp), active_term);
                                                     esp++;
                                                     break;
 
                                             /* Print a NULL-terminated string */
                                             case 's':
-                                                    puts( *((int8_t **)esp) );
+                                                    puts( *((int8_t **)esp), active_term );
                                                     esp++;
                                                     break;
 
@@ -427,7 +396,7 @@ format_char_switch:
                             break;
 
                     default:
-                            putc(*buf);
+                            putc(*buf, active_term);
                             break;
             }
             buf++;
@@ -437,85 +406,45 @@ format_char_switch:
 }
 
 
-void
-putit(uint8_t c, uint32_t tty)
-{
-	if(active_term == tty){
-	    putc(c);
-	}else {     
-        if(c == '\n' || c == '\r') {
-            if(screen_y[tty] < NUM_ROWS-1){
-			    screen_y[tty]++;
-			}else{
-				scrolling_buff(tty);
-			}
-
-            screen_x[tty]=0;
-        } else if(c =='\0'){
-            *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1)) = c;
-            *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1) + 1) = ATTRIB;
-        }else {
-            *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1)) = c;
-            *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1) + 1) = ATTRIB;
-            screen_x[tty]++;
-            if(screen_x[tty] > 79){
-                screen_x[tty] = 0;
-                
-                if(screen_y[tty] < NUM_ROWS-1){
-				    screen_y[tty]++;
-				}else{
-					scrolling_buff(tty);
-				}
-            }
-        }
-    }  
-}
-
-void
-putc(uint8_t c)
-{
-    if(c == '\n' || c == '\r') {
-        if(screen_y[active_term] < NUM_ROWS-1){
-            screen_y[active_term]++;
-        }else{
-            scrolling_buff(active_term);
-            scrolling_mem();
-        }
-        screen_x[active_term]=0;
-    } else if(c =='\0'){
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-    }else {
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-        screen_x[active_term]++;
-        if(screen_x[active_term] > 79){
-                screen_x[active_term] = 0;
-                if(screen_y[active_term] < NUM_ROWS-1){
-                    screen_y[active_term]++;
-                }else{
-                    scrolling_buff(active_term);
-                    scrolling_mem();
-                }
-        }
-    }
-}
-
 /* Output a string to the console */
 int32_t
-puts(int8_t* s)
+puts(int8_t* s, uint32_t tty)
 {
     register int32_t index = 0;
     while(s[index] != '\0') {
-        putc(s[index]);
+        putc(s[index], tty);
         index++;
     }
 
     return index;
+}
+
+void
+putc(uint8_t c, uint32_t tty)
+{
+    if(c == '\n' || c == '\r') {
+		if(screen_y[tty] < NUM_ROWS-1){
+		    screen_y[tty]++;
+		}else{
+			scrolling(tty);
+		}
+        screen_x[tty]=0;
+    } else if(c =='\0'){
+		*(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1)) = c;
+        *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1) + 1) = ATTRIB;
+    }else {
+        *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1)) = c;
+        *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1) + 1) = ATTRIB;
+        screen_x[tty]++;
+        if(screen_x[tty] > 79){
+                screen_x[tty] = 0;
+                if(screen_y[tty] < NUM_ROWS-1){
+				    screen_y[tty]++;
+				}else{
+					scrolling(tty);
+				}
+        }
+    }
 }
 
 
@@ -526,36 +455,32 @@ puts(int8_t* s)
  * adjusts (screen_x,screen_y) to point to the previous location.
  */
 void
-delc(void)
+delc(uint32_t tty)
 {
-    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = ' ';
-    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = ' ';
-    *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
+    *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1)) = ' ';
+    *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1) + 1) = ATTRIB;
         
-    if( screen_x[active_term] == 0 ) {
-        if( screen_y[active_term] == 0 ) {
+    if( screen_x[tty] == 0 ) {
+        if( screen_y[tty] == 0 ) {
                 return;
         }
-        screen_x[active_term] = NUM_COLS - 1;
-        screen_y[active_term]--;
+        screen_x[tty] = NUM_COLS - 1;
+        screen_y[tty]--;
     }
     else {
-        screen_x[active_term]--;
+        screen_x[tty]--;
     }
 }
 
 void
-placec(uint8_t c)
+placec(uint8_t c, uint32_t tty)
 {
     if(c == '\n' || c == '\r') {
-        screen_y[active_term]++;
-        screen_x[active_term]=0;
+        screen_y[tty]++;
+        screen_x[tty]=0;
     } else {
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1)) = c;
-        *(uint8_t *)(video_buff[active_term] + ((NUM_COLS*screen_y[active_term] + screen_x[active_term]) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1)) = c;
+        *(uint8_t *)(video_buff[tty] + ((NUM_COLS*screen_y[tty] + screen_x[tty]) << 1) + 1) = ATTRIB;
         /* No screen_x or screen_y adjustment. */
     }
 }

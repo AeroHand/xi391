@@ -21,7 +21,16 @@
 
 /*** STRUCTS ***/
 /* Explanation: 
- * */
+ * This is the file descriptor used in the fds array for each process's PCB
+ *    jumptable -- A pointer to a file operations table for this file.
+ *                 The fops table has functions like open, close, read, and write.
+ *    inode -- The inode number of this file in the file system.
+ *    fileposition -- The current position within the file that we are reading.
+ *                    This will increment through the file as we read it.
+ *    flags -- The only flag contained within this member is IN_USE or NOT_IN_USE.
+ *             It is used to figure out which fds are available for use when trying
+ *             to open a new file in a process.
+ */
 typedef struct file_descriptor_t {
 	uint32_t * jumptable;
 	int32_t inode;
@@ -30,7 +39,21 @@ typedef struct file_descriptor_t {
 } file_descriptor_t;
 
 /* Explanation:
- * */
+ * This is the PCB structure used by each process.  It is like a header that
+ * contains all the relevant information that the OS might need to know as it
+ * manipulates its processes.
+      fds[8] -- The array of file descriptors, which represent each file that the
+	            process has open.
+	  filenames[8][32] -- An array holding the names of each of the open files
+	                      for quick access by the OS.
+	  parent_ksp -- The kernel stack pointer of the parent process.  This is used
+	                to revert back to the parent kernel stack when we halt.
+	  parent_kbp -- the kernel base pointer of the parent process.  This is used
+					to revert back to the parent kernel stack when we halt.
+	  process_number -- The process number of this process.  It is a number from
+	                    1-7 (process 0 is the "no processes running" process.
+	  parent_process_number -- The process number of the parent process.  It is a
+							    */
 typedef struct pcb_t {
 	file_descriptor_t fds[8];
 	uint8_t filenames[8][32]; 
@@ -113,6 +136,7 @@ int32_t no_function(void);
 
 /* Loads the initial three shells and jumps to the entry point of the first one. */
 int32_t bootup(void);
+
 
 /*** Set/Get functions ***/
 /* Setter function */
