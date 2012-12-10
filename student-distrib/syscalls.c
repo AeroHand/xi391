@@ -85,7 +85,7 @@ int32_t halt(uint8_t status)
 		
 		/* Get the entry point to shell */
 		uint8_t buf[4];
-		if( -1 == fs_read((const int8_t *)("shell"), 24, buf, 4) )
+		if( -1 == fs_read((const int8_t *)("shell"), ENTRY_POINT_OFFSET, buf, 4) )
 		{
 			return -1;
 		}
@@ -273,7 +273,7 @@ int32_t execute(const uint8_t* command)
 	}
 	
 	/* Get the entry point to the program. */
-	if( -1 == fs_read((const int8_t *)fname, 24, buf, 4) )
+	if( -1 == fs_read((const int8_t *)fname, ENTRY_POINT_OFFSET, buf, 4) )
 	{
 		return -1;
 	}
@@ -291,7 +291,7 @@ int32_t execute(const uint8_t* command)
 	}
 	
 	/* Load the program to the appropriate starting address. */
-	fs_load((const int8_t *)fname, 0x08048000);
+	fs_load((const int8_t *)fname, PROGRAM_LOAD_ADDR);
 	
 	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)( _8MB - (_8KB)*(open_process + 1) );
@@ -397,7 +397,7 @@ int32_t bootup(void)
 	entry_point = 0;
 	
 	/* Get the entry point to shell. */
-	if( -1 == fs_read((const int8_t *)("shell"), 24, buf, 4) )
+	if( -1 == fs_read((const int8_t *)("shell"), ENTRY_POINT_OFFSET, buf, 4) )
 	{
 		return -1;
 	}
@@ -418,7 +418,7 @@ int32_t bootup(void)
 		}
 		
 		/* Load the program to the appropriate starting address. */
-		fs_load((const int8_t *)("shell"), 0x08048000);
+		fs_load((const int8_t *)("shell"), PROGRAM_LOAD_ADDR);
 		
 		/* Get a pointer to the PCB. */
 		process_control_block = (pcb_t *)( _8MB - (_8KB)*(i + 1) );
@@ -488,8 +488,10 @@ int32_t bootup(void)
 		}
 		
 		/* Store KSP and KBP before change. */
-		process_control_block->ksp_before_change = kernel_stack_bottom - 60;
-		process_control_block->kbp_before_change = kernel_stack_bottom - 60;
+		process_control_block->ksp_before_change = 
+			kernel_stack_bottom - INITIAL_KERNEL_STACK_SIZE;
+		process_control_block->kbp_before_change = 
+			kernel_stack_bottom - INITIAL_KERNEL_STACK_SIZE;
 
 	
 		/* Call open for stdin and stdout. */
@@ -504,7 +506,7 @@ int32_t bootup(void)
 	
 	
 	/* Update the running processes bitmask. */
-	running_processes |= 0x70;
+	running_processes |= INITIAL_SHELLS_BITMASK;
 	
 	current_process_number = 1;
 	
@@ -821,7 +823,7 @@ int32_t getargs(uint8_t* buf, int32_t nbytes)
 int32_t vidmap(uint8_t** screen_start)
 {
 	/* Ensure screen_start is within proper bounds. */
-	if( (uint32_t) screen_start < 0x08000000 || (uint32_t) screen_start > 0x08400000 )
+	if( (uint32_t) screen_start < _128MB || (uint32_t) screen_start > (_128MB + _4MB) )
 	{
 		return -1;
 	}

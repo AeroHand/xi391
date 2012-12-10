@@ -46,13 +46,16 @@ uint32_t dir_reads;
  */
 int32_t fs_open(uint32_t fs_start, uint32_t fs_end)
 {
+	/* Return error if the file system is already open. */
 	if( 1 == fs_is_open )
 	{
 		return -1;
 	}
 	
+	/* Initialize the file system. */
 	fs_init(fs_start, fs_end);
 	fs_is_open = 1;
+	
 	return 0;
 }
 
@@ -70,12 +73,15 @@ int32_t fs_open(uint32_t fs_start, uint32_t fs_end)
  */
 int32_t fs_close(void)
 {
+	/* Return error if the file system isn't open. */
 	if( 0 == fs_is_open )
 	{
 		return -1;
 	}
 	
+	/* Clear the flag indicating an open file system. */
 	fs_is_open = 0;
+	
 	return 0;
 }
 
@@ -109,11 +115,13 @@ int32_t fs_read(const int8_t * fname, uint32_t offset, uint8_t * buf,
 		return -1;
 	}
 	
+	/* Extract dentry information using the filename passed in. */
 	if( -1 == read_dentry_by_name((uint8_t *)fname, &dentry) )
 	{
 		return -1;
 	}
 	
+	/* Use read_data to read the file into the buffer passed in. */
 	return read_data(dentry.inode, offset, buf, length);
 }
 
@@ -158,13 +166,16 @@ int32_t fs_load(const int8_t * fname, uint32_t address)
 		return -1;
 	}
 	
+	/* Extract dentry information using the filename passed in. */
 	if( -1 == read_dentry_by_name((uint8_t *)fname, &dentry) )
 	{
 		return -1;
 	}
 
+	/* Load the entire file at the address passed in. */
 	if( read_data(dentry.inode, 0, (uint8_t *)address, 
-	                 inodes[dentry.inode].size) ){
+	    inodes[dentry.inode].size) )
+	{
 		return -1;
 	}
 
@@ -200,6 +211,7 @@ void fs_init(uint32_t fs_start, uint32_t fs_end)
 	/* Set the location of the first data block. */
 	data_start = bb_start + (fs_stats.num_inodes+1)*FS_PAGE_SIZE;
 	
+	/* Initialize the number of directory reads to zero. */
 	dir_reads = 0;
 }
 
@@ -222,17 +234,14 @@ int32_t read_dentry_by_name(const uint8_t * fname, dentry_t * dentry)
 {
 	/* Local variables. */
 	int i;
-	int8_t * new_fname;
-
-	/* Convert the file name to a type compatible with lib functions. */
-	new_fname = (int8_t *)fname;
 
 	/* Find the entry in the array. */
 	for( i = 0; i < MAX_NUM_FS_DENTRIES; i++ ) 
 	{
-		if( strlen( fs_dentries[i].filename ) == strlen( new_fname ) ) 
+		if( strlen( fs_dentries[i].filename ) == strlen( (int8_t *)fname ) ) 
 		{
-			if( 0 == strncmp( fs_dentries[i].filename, new_fname, strlen( new_fname ) ) ) 
+			if( 0 == strncmp( fs_dentries[i].filename, (int8_t *)fname, 
+			                  strlen( (int8_t *)fname ) ) ) 
 			{
 				/* Found it! Copy the data into 'dentry'. */
 				strcpy( dentry->filename, fs_dentries[i].filename );
@@ -275,7 +284,6 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t * dentry)
 	dentry->filetype = fs_dentries[index].filetype;
 	dentry->inode = fs_dentries[index].inode;
 
-	/* Return success. */
 	return 0;
 }
 
@@ -305,10 +313,8 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 	uint32_t  total_successful_reads;
 	uint32_t  location_in_block;
 	uint32_t  cur_data_block;
-	uint32_t  valid_data_blocks;
 	uint8_t * read_addr;
 	
-
 	/* Initializations. */
 	total_successful_reads = 0;
 
@@ -323,9 +329,8 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 	{
 		return 0;
 	}
-
-	/* [Check for a "bad data block number" somehow?] */
  
+	/* Calculate the starting data block for this read. */
 	cur_data_block = offset/FS_PAGE_SIZE;
 
 	/* Check for an invalid data block. */
@@ -334,22 +339,13 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t * buf,
 		return -1;
 	}
 	
+	/* Calculate the location within the starting data block. */
 	location_in_block = offset % FS_PAGE_SIZE;
  
 	/* Calculate the address to start reading from. */
 	read_addr = (uint8_t *)(data_start + 
 				(inodes[inode].data_blocks[cur_data_block])*FS_PAGE_SIZE + 
 				offset % FS_PAGE_SIZE);
-
-	/* Calculate the number of valid data blocks. */
-	if( inodes[inode].size % FS_PAGE_SIZE == 0 )
-	{
-		valid_data_blocks = inodes[inode].size/FS_PAGE_SIZE;
-	}
-	else
-	{
-		valid_data_blocks = inodes[inode].size/FS_PAGE_SIZE + 1;
-	}
 
 	/* Read all the data. */
 	while( total_successful_reads < length )
@@ -483,16 +479,23 @@ int32_t dir_close(void)
  */
 int32_t dir_read(uint8_t * buf)
 {
+	/* 
+	 * Reset dir_reads and return if we've already read 
+	 * the whole file system. 
+	 */
 	if( dir_reads >= fs_stats.num_dentries )
 	{
 		dir_reads = 0;
 		return 0;
 	}
 	
+	/* Copy the next filename into buf. */
 	strcpy((int8_t *)buf, (const int8_t *)fs_dentries[dir_reads].filename);
 	
+	/* Increment the number of directory reads. */
 	dir_reads++;
 	
+	/* Return the length of the filename. */
 	return strlen((int8_t *)buf);
 }
 

@@ -198,16 +198,10 @@ extern uint32_t tss_size;
 extern seg_desc_t tss_desc_ptr;
 extern tss_t tss;
 
-/* Page directory entries (declared in x86_desc.S) */
-//extern pde_4KB_t initial_space_pde;
-//extern pde_4MB_t kernel_page_pde;
-//extern pde_4MB_t remaining_pdes[MAX_PAGE_DIRECTORY_SIZE-2];
-
 /* An array of page directories, one for each process. */
 page_directory_t page_directories[8] __attribute__((aligned (0x1000)));
 
 /* Page table entries (declared in x86_desc.S) */
-//extern pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE];
 pte_4KB_t page_table[MAX_PAGE_TABLE_SIZE] __attribute__((aligned (0x1000)));
 
 pte_4KB_t new_page_table[MAX_PAGE_TABLE_SIZE] __attribute__((aligned (0x1000)));

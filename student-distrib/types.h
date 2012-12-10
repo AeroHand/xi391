@@ -7,11 +7,13 @@
 #ifndef _TYPES_H
 #define _TYPES_H
 
-#define NULL 0
-#define _4KB 0x1000
-#define _8MB 0x00800000
-#define _8KB 0x2000
-#define ALIGN_8KB 0xFFFFE000
+#define NULL       0
+#define _4KB       0x1000
+#define _4MB       0x00400000
+#define _8MB       0x00800000
+#define _8KB       0x2000
+#define _128MB     0x08000000
+#define ALIGN_8KB  0xFFFFE000
 
 #ifndef ASM
 

@@ -174,54 +174,8 @@ entry (unsigned long magic, unsigned long addr)
 
 	/** Initialize keyboard **/
 	keyboard_open();
-
-	/* Enable interrupts */
-	//sti();
-
-	//test_syscall(SYS_OPEN,"test", 0 ,0);
-
-	//asm volatile('movl	%1,%EAX;');
-	//asm volatile('movl	%5,%EBX;');  	
-	//asm volatile('movl	%0,%ECX;'); 
-	//asm volatile('movl	%0,%EDX;'); 
-	//asm volatile('int	$0x80 ');
-
-    /* Make buffer */
-	/*
-    while (1){ 
-    	if( terminal_read(command_buffer, TERMINAL_BUFFER_MAX_SIZE)){
-    		terminal_write(command_buffer);
-    	}
-    }
-	*/
-
-	/* Running Handin RTC tests */
-	/*	
-	int bob;
-	for (bob=0; bob < 10; ++bob) {
-		rtc_read();
-		test_interrupts();
-	}
-	int a = 4;
-	rtc_write(&a,4);
-	for (bob=0; bob < 10; ++bob) {
-		rtc_read();
-		test_interrupts();
-	}
-	*/	
-	/* Running rob's rtc tests */
-	/*
-	int test_result = test();
-	if(test_result == 1) {
-		printf("tests successful\n");
-	} else {
-		printf("tests failed\n");
-	}
-	*/
 	
 	/* Execute the first program (`shell') ... */
-	//files_test();
-	//execute_test();
 	clear();
 	bootup();
 	

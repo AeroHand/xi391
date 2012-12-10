@@ -34,7 +34,7 @@ extern void syscall_handler();
 /* System Call interrupt asm wrapper */
 extern void test_syscall(uint32_t syscallnum, uint32_t param1, uint32_t param2, uint32_t param3);
 
-/* */
+/* Jumps to user space. */
 extern void to_the_user_space(int32_t newEIP);
 
 

@@ -12,11 +12,15 @@
 
 
 /*** CONSTANTS ***/
-#define		IN_USE			1
-#define		NOT_IN_USE		0
-#define		FILE_TYPE_RTC			0
-#define		FILE_TYPE_DIRECTORY		1
-#define		FILE_TYPE_REGULAR_FILE	2
+#define		IN_USE			           1
+#define		NOT_IN_USE		           0
+#define		FILE_TYPE_RTC			   0
+#define		FILE_TYPE_DIRECTORY		   1
+#define		FILE_TYPE_REGULAR_FILE	   2
+#define     PROGRAM_LOAD_ADDR          0x08048000
+#define     ENTRY_POINT_OFFSET         24
+#define     INITIAL_SHELLS_BITMASK     0x70
+#define     INITIAL_KERNEL_STACK_SIZE  60
 
 
 /*** STRUCTS ***/
