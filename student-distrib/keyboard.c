@@ -164,11 +164,14 @@ int32_t terminal_read(unsigned char * buf, int32_t nbytes) {
 	int i;
 	int countread = 0;
 	
-	set_command_location( );
+	set_command_location(get_tty_number());
 
 	/* Spin until allow_terminal_read = 1 (we allow it to be read). */
-	while(!allow_terminal_read[active_terminal]);
+	while(!allow_terminal_read[get_tty_number()]);
 
+	/* We can only get here if we are the active terminal and the user
+	 * presses ENTER.
+	 */
 	new_line();
 
 	/* Iterate through nbytes reading (putting) the command buffer into buf. */
@@ -254,13 +257,14 @@ void keyboard_open(void) {
 
 		/* x position of the cursor is initially zero */
 		cursor_x[i] = 0;
+
+		set_command_location(i);
 	}
 	
 	/* the beginning terminal is index 0 */
 	active_terminal = 0;
-	set_active_terminal(0);
+	set_active_term(0);
 
-	set_command_location();
 	update_cursor(CURSOR_START);
 
 	/* Unmask IRQ1 */
@@ -351,7 +355,6 @@ void process_keyboard_input(uint8_t scancode)
 {
 	uint8_t nextcode;
 	uint32_t new_terminal;
-	uint32_t curr_process;
 
 	int32_t cursor_index = cursor_x[active_terminal];
 
@@ -441,10 +444,9 @@ void process_keyboard_input(uint8_t scancode)
 
 		if(keyboardflag[active_terminal] & 0x8){
 			new_terminal = (scancode & 0x7) - 3;
-			curr_process = get_tty_number();
 			if( new_terminal != active_terminal){
 				active_terminal = new_terminal;
-				set_active_terminal(new_terminal);
+				set_active_term(new_terminal);
 				load_video_memory(active_terminal);
 			}
 		}
@@ -539,4 +541,21 @@ void keyboard_interruption() {
 	/* Unmask interrupts */
 	sti();
 
+}
+
+
+/* 
+ * get_active_terminal()
+ *
+ * Description:
+ * Returns the active_terminal to an external source
+ *
+ * Inputs: none
+ *
+ * Outputs:
+ * active_terminal: the value of active_terminal
+ */
+uint32_t get_active_terminal( void )
+{
+	return active_terminal;
 }

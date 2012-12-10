@@ -176,7 +176,7 @@ entry (unsigned long magic, unsigned long addr)
 	keyboard_open();
 
 	/* Enable interrupts */
-	sti();
+	//sti();
 
 	//test_syscall(SYS_OPEN,"test", 0 ,0);
 
@@ -222,6 +222,7 @@ entry (unsigned long magic, unsigned long addr)
 	/* Execute the first program (`shell') ... */
 	//files_test();
 	//execute_test();
+	clear();
 	bootup();
 	
 	/* Spin (nicely, so we don't chew up cycles) */

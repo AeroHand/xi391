@@ -75,6 +75,14 @@ int32_t halt(uint8_t status)
 	/* Extract the PCB from the KBP */
 	pcb_t * process_control_block = (pcb_t *)(kernel_stack_bottom & ALIGN_8KB);
 	
+	
+	/* Prevent the user from closing the final shell */
+	if( process_control_block->parent_process_number == 0 )
+	{
+		printf("Silly rabbit, trix are for kids.\n");
+		return 0;
+	}
+	
 	/* 
 	 * Mark the current process as 0, aka this process is done and its slot
 	 * is now available for new processes.
@@ -88,6 +96,10 @@ int32_t halt(uint8_t status)
 	
 	/* Set the current process number back to the parent */
 	current_process_number = process_control_block->parent_process_number;
+	
+	/* Reset the parent to have no children */
+	pcb_t * parent_pcb = (pcb_t *)( _8MB - (_8KB)*(process_control_block->parent_process_number + 1) );
+	parent_pcb->has_child = 0;
 	
 	/* Load the page directory of the parent. */
 	page_dir_addr = (uint32_t)(&page_directories[process_control_block->parent_process_number]);
@@ -432,13 +444,15 @@ int32_t bootup(void)
 			/* Push things onto the kernel stack to initialize task switching. */
 			asm volatile("movl %%esp, %%eax      ;"
 						 "movl %%ebp, %%ebx      ;"
-						 "movl %0, %%esp         ;"
-						 "movl %0, %%ebp         ;"
+						 "movl %0, %%ecx		 ;"
+						 "movl %3, %%edx		 ;"
+						 "movl %%ecx, %%esp      ;"
+						 "movl %%ecx, %%ebp      ;"
 						 "pushl %1               ;"
 						 "pushl $0x83FFFF0       ;"
 						 "pushl $0               ;"
 						 "pushl %2               ;"
-						 "pushl %3               ;"
+						 "pushl %%edx            ;"
 						 "pushl $0               ;"
 						 "pushl $0               ;"
 						 "pushl $0               ;"
@@ -447,17 +461,18 @@ int32_t bootup(void)
 						 "pushl $0               ;"
 						 "pushl $0               ;"
 						 "pushl $0               ;"
-						 "pushl end_pit_handler  ;"
-						 "pushl %0               ;"
+						 "pushl $end_pit_handler ;"
+						 "pushl %%ecx            ;"
 						 "movl %%eax, %%esp      ;"
 						 "movl %%ebx, %%ebp      ;"
 						 :: "g"(kernel_stack_bottom), "g"(USER_DS), "g"(USER_CS), 
-							"g"(entry_point): "eax", "ebx");
+							"g"(entry_point): "eax", "ebx", "ecx", "edx");
 		}
 		
 		/* Store KSP and KBP before change. */
-		process_control_block->ksp_before_change = kernel_stack_bottom - 56;
-		process_control_block->kbp_before_change = kernel_stack_bottom - 56;
+		process_control_block->ksp_before_change = kernel_stack_bottom - 60;
+		process_control_block->kbp_before_change = kernel_stack_bottom - 60;
+
 	
 		/* Call open for stdin and stdout. */
 		open( (uint8_t*) "stdin" );
@@ -472,6 +487,10 @@ int32_t bootup(void)
 	
 	/* Update the running processes bitmask. */
 	running_processes |= 0x70;
+	
+	current_process_number = 1;
+	
+	sti();
 	
 	/* Jump to the entry point and begin execution. */
 	to_the_user_space(entry_point);
@@ -792,7 +811,19 @@ int32_t vidmap(uint8_t** screen_start)
 		return -1;
 	}
 
-	*screen_start = (uint8_t *) VIDEO;
+	switch( get_tty_number() )
+	{
+		case 0:
+			*screen_start = (uint8_t *) VIDEO_BUF1;
+			break;
+		case 1:
+			*screen_start = (uint8_t *) VIDEO_BUF2;
+			break;
+		case 2:
+			*screen_start = (uint8_t *) VIDEO_BUF3;
+			break;
+	}
+	
 	return 0;
 }
 

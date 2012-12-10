@@ -200,6 +200,8 @@ void keyboard_interruption(void);
 void keyboard_interruption(void);
 
 /* Returns active terminal */
-int32_t get_active(void);
+uint32_t get_active_terminal( void );
+
+
 
 #endif /* KEYBOARD_H */
